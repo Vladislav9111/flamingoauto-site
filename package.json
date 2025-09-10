@@ -1,15 +1,15 @@
 {
-  \"name\": \"flamingo-auto-blog\",
-  \"version\": \"1.0.0\",
-  \"description\": \"Flamingo Auto website with blog functionality\",
-  \"main\": \"index.js\",
-  \"scripts\": {
-    \"build\": \"echo 'Static site - no build required'\"
+  "name": "flamingo-auto-blog",
+  "version": "1.0.0",
+  "description": "Flamingo Auto website with blog functionality",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'Static site - no build required'"
   },
-  \"dependencies\": {
-    \"gray-matter\": \"^4.0.3\",
-    \"@octokit/rest\": \"^19.0.0\"
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "@octokit/rest": "^19.0.0"
   },
-  \"author\": \"Flamingo Auto\",
-  \"license\": \"MIT\"
+  "author": "Flamingo Auto",
+  "license": "MIT"
 }
