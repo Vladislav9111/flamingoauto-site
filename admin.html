@@ -41,7 +41,7 @@
 
         <div id="login-area">
             <div id="netlify-login" style="text-align: center; margin: 2rem 0;">
-                <div data-netlify-identity-button>Вход / Регистрация</div>
+                <!-- Netlify Identity widget will be inserted here automatically -->
             </div>
             <div class="admin-actions">
                 <a href="blog.html" class="btn" style="background:#fff;color:var(--primary-color);border:1px solid #eee;">Блог</a>
@@ -123,6 +123,16 @@
                 netlifyIdentity.on('login', showEditor);
                 netlifyIdentity.on('logout', showLogin);
                 netlifyIdentity.init();
+                
+                // Create single login widget
+                const loginDiv = document.getElementById('netlify-login');
+                if (loginDiv && !loginDiv.querySelector('.netlify-identity-button')) {
+                    const button = document.createElement('button');
+                    button.textContent = 'Вход / Регистрация';
+                    button.className = 'btn netlify-identity-button';
+                    button.onclick = () => netlifyIdentity.open();
+                    loginDiv.appendChild(button);
+                }
             } else {
                 // Wait for script to load
                 setTimeout(() => {
@@ -131,6 +141,16 @@
                         netlifyIdentity.on('login', showEditor);
                         netlifyIdentity.on('logout', showLogin);
                         netlifyIdentity.init();
+                        
+                        // Create single login widget
+                        const loginDiv = document.getElementById('netlify-login');
+                        if (loginDiv && !loginDiv.querySelector('.netlify-identity-button')) {
+                            const button = document.createElement('button');
+                            button.textContent = 'Вход / Регистрация';
+                            button.className = 'btn netlify-identity-button';
+                            button.onclick = () => netlifyIdentity.open();
+                            loginDiv.appendChild(button);
+                        }
                     }
                 }, 1000);
             }
