@@ -1,0 +1,95 @@
+backend:
+  name: git-gateway
+  branch: main
+  repo: Vladislav9111/flamingoauto-site
+
+media_folder: "static/images/uploads"
+public_folder: "/static/images/uploads"
+
+publish_mode: editorial_workflow
+
+collections:
+  - name: "blog"
+    label: "Blog Posts"
+    label_singular: "Blog Post"
+    description: "Create and manage blog posts with multiple language support"
+    folder: "content/blog"
+    extension: "md"
+    format: "yaml-frontmatter"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    preview_path: "blog/{{ slug || 'post-preview' }}"
+
+    fields:
+      - label: "Title"
+        name: "title"
+        widget: "string"
+        hint: "The main title of your blog post"
+
+      - label: "Description (SEO)"
+        name: "description"
+        widget: "text"
+        required: false
+        hint: "Short description for SEO and previews"
+
+      - label: "Date"
+        name: "date"
+        widget: "datetime"
+        time_format: false
+        format: "YYYY-MM-DDTHH:mm:ss.sss+ZZ"
+        hint: "Publication date and time"
+
+      - label: "Language"
+        name: "lang"
+        widget: "select"
+        options: ["ru", "et", "en"]
+        default: "ru"
+        hint: "Article language for proper categorization"
+
+      - label: "Tags"
+        name: "tags"
+        widget: "list"
+        required: false
+        hint: "Optional tags for categorization"
+
+      - label: "Thumbnail Image"
+        name: "thumbnail"
+        widget: "image"
+        required: false
+        hint: "Main article image (optional)"
+
+      - label: "Body"
+        name: "body"
+        widget: "markdown"
+        hint: "Main article content with full Markdown support"
+
+  - name: "pages"
+    label: "Pages"
+    label_singular: "Page"
+    description: "Static pages like About, Contact, etc."
+    folder: "content/pages"
+    extension: "md"
+    format: "yaml-frontmatter"
+    create: true
+    slug: "{{slug}}"
+    preview_path: "{{ slug || 'page-preview' }}"
+
+    fields:
+      - label: "Title"
+        name: "title"
+        widget: "string"
+
+      - label: "Description (SEO)"
+        name: "description"
+        widget: "text"
+        required: false
+
+      - label: "Language"
+        name: "lang"
+        widget: "select"
+        options: ["ru", "et", "en"]
+        default: "ru"
+
+      - label: "Body"
+        name: "body"
+        widget: "markdown"

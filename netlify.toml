@@ -1,0 +1,69 @@
+[build]
+  publish = "."
+  command = "echo 'Static site - deployment ready'"
+  ignore = ""
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Netlify CMS configuration
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.github.com/repos/Vladislav9111/flamingoauto-site/:splat"
+  status = 200
+
+# Blogs with language variants
+[[redirects]]
+  from = "/blog"
+  to = "/blog.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/blog-et"
+  to = "/blog-et.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/blog-ru"
+  to = "/blog-ru.html"
+  status = 301
+  force = true
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Custom headers for admin area
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Custom headers for static assets
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+# Content Security Policy
+[[headers]]
+  for = "*.html"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.telegram.org https://*.telegram.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*; object-src 'none'; base-uri 'self'; form-action 'self';"
+
+# Gzip compression
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Encoding = "gzip"
