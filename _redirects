@@ -1,0 +1,8 @@
+# Netlify Identity redirects
+/.netlify/identity/signup /admin.html 302
+/.netlify/identity/recovery /admin.html 302
+/.netlify/identity/email-change /admin.html 302
+
+# Admin redirects
+/admin /admin.html 301
+/admin/* /admin.html 301

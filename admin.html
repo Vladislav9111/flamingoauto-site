@@ -41,11 +41,15 @@
 
         <div id="login-area">
             <div id="netlify-login" style="text-align: center; margin: 2rem 0;">
+                <p>Загрузка виджета авторизации...</p>
                 <div data-netlify-identity-menu></div>
                 <div data-netlify-identity-button>Вход / Регистрация</div>
             </div>
             <div class="admin-actions">
                 <a href="blog.html" class="btn" style="background:#fff;color:var(--primary-color);border:1px solid #eee;">Блог</a>
+            </div>
+            <div id="identity-status" style="margin-top: 1rem; padding: 1rem; background: #f0f0f0; border-radius: 4px; font-size: 0.9rem;">
+                Статус: Проверка подключения Netlify Identity...
             </div>
         </div>
 
@@ -93,11 +97,17 @@
             const logoutBtn = document.getElementById('logout-btn');
             const feedback = document.getElementById('admin-feedback');
             const photosInput = document.getElementById('post-photos');
+            const statusDiv = document.getElementById('identity-status');
+
+            function updateStatus(message) {
+                if (statusDiv) statusDiv.textContent = 'Статус: ' + message;
+            }
 
             function showEditor() {
                 loginArea.style.display = 'none';
                 editorArea.style.display = '';
                 if (feedback) feedback.textContent = '';
+                updateStatus('Авторизован. Можно создавать посты.');
             }
 
             function showLogin() {
@@ -106,31 +116,64 @@
                 if (feedback) feedback.textContent = '';
             }
 
+            // Check if Netlify Identity is available
+            function checkNetlifyIdentity() {
+                if (typeof netlifyIdentity === 'undefined') {
+                    updateStatus('Ошибка: Netlify Identity не загружен. Проверьте настройки Netlify.');
+                    return false;
+                }
+                updateStatus('Netlify Identity загружен. Проверка авторизации...');
+                return true;
+            }
+
             // Check if user is logged in
             function checkAuthStatus() {
+                if (!checkNetlifyIdentity()) return;
+                
                 const user = netlifyIdentity.currentUser();
                 if (user) {
+                    updateStatus('Пользователь вошел: ' + (user.email || user.user_metadata?.full_name || 'Неизвестный'));
                     showEditor();
                 } else {
+                    updateStatus('Пользователь не авторизован. Нажмите \"Вход\" для входа.');
                     showLogin();
                 }
             }
 
-            // Initialize Netlify Identity
-            netlifyIdentity.on('init', user => {
-                checkAuthStatus();
-            });
+            // Wait for Netlify Identity to load
+            function initializeIdentity() {
+                if (typeof netlifyIdentity !== 'undefined') {
+                    // Initialize Netlify Identity events
+                    netlifyIdentity.on('init', user => {
+                        updateStatus('Инициализация завершена.');
+                        checkAuthStatus();
+                    });
 
-            netlifyIdentity.on('login', user => {
-                showEditor();
-            });
+                    netlifyIdentity.on('login', user => {
+                        updateStatus('Вход выполнен: ' + (user.email || 'Неизвестный'));
+                        showEditor();
+                    });
 
-            netlifyIdentity.on('logout', () => {
-                showLogin();
-            });
+                    netlifyIdentity.on('logout', () => {
+                        updateStatus('Выход выполнен.');
+                        showLogin();
+                    });
 
-            // Initialize the widget
-            netlifyIdentity.init();
+                    netlifyIdentity.on('error', err => {
+                        updateStatus('Ошибка: ' + err.message);
+                    });
+
+                    // Initialize the widget
+                    netlifyIdentity.init();
+                } else {
+                    updateStatus('Ошибка: Не удалось загрузить Netlify Identity. Повторная попытка...');
+                    setTimeout(initializeIdentity, 1000);
+                }
+            }
+
+            // Start initialization
+            updateStatus('Запуск инициализации...');
+            initializeIdentity();
 
             // Logout button handler
             if (logoutBtn) {
