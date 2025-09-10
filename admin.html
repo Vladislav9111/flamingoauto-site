@@ -71,7 +71,7 @@
             </select>
 
             <div class="admin-actions">
-                <button id="save-post" class="btn">Сохранить запись</button>
+                <button id="save-post" class="btn">Опубликовать</button>
                 <button id="clear-posts" class="btn" style="background:#fff;color:var(--primary-color);border:1px solid #eee;">Очистить все</button>
                 <button id="logout-btn" class="btn" style="background:#fff;color:#dc3545;border:1px solid #eee;">Выйти</button>
             </div>
@@ -183,7 +183,13 @@
                     }
                     
                     try {
-                        if (feedback) feedback.textContent = 'Сохранение статьи...';
+                        if (feedback) feedback.textContent = 'Публикация статьи...';
+                        
+                        // Получаем токен сразу
+                        const token = user.token?.access_token;
+                        if (!token) {
+                            throw new Error('Нет токена доступа');
+                        }
                         
                         // Обработка изображений
                         const files = photosInput ? Array.from(photosInput.files).slice(0,6) : [];
@@ -243,10 +249,6 @@ ${imageUrls.length > 0 ? `images:\n${imageUrls.map(url => `  - "${url}"`).join('
 ${contentWithImages}`;
                         
                         // Отправляем через Netlify Git Gateway
-                        const token = user.token?.access_token;
-                        if (!token) {
-                            throw new Error('Нет токена доступа');
-                        }
                         
                         const response = await fetch('/.netlify/git/github/contents/content/blog/' + filename, {
                             method: 'PUT',
@@ -269,7 +271,7 @@ ${contentWithImages}`;
                             throw new Error(`Ошибка сохранения: ${response.status} - ${errorData}`);
                         }
                         
-                        if (feedback) feedback.textContent = 'Статья успешно сохранена в репозиторий! Обновите страницу блога.';
+                        if (feedback) feedback.textContent = 'Статья успешно опубликована! Она появится на сайте через несколько минут.';
                         
                         // Очищаем поля
                         document.getElementById('post-title').value = '';
@@ -296,74 +298,6 @@ ${contentWithImages}`;
                     if (!confirm('Удалить все записи блога? Это действие нельзя отменить.')) return;
                     localStorage.removeItem(window.FlamingoBlog.POSTS_KEY);
                     if (feedback) feedback.textContent = 'Все записи удалены.';
-                });
-            }
-
-            // helper: read file as data URL (used for small demo storage)
-            function readFileAsDataURL(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
-            }
-
-            saveBtn.addEventListener('click', async () => {
-                const title = document.getElementById('post-title').value.trim();
-                const excerpt = document.getElementById('post-excerpt').value.trim();
-                const content = document.getElementById('post-content').value.trim();
-                const localeSelect = document.getElementById('post-locale');
-                const locale = localeSelect ? localeSelect.value : 'all';
-                if (!title || !excerpt) {
-                    feedback.textContent = 'Укажите заголовок и короткое описание.';
-                    return;
-                }
-                // read selected photos (max 6) as data URLs and include in post
-                const files = photosInput ? Array.from(photosInput.files).slice(0,6) : [];
-                const photosData = [];
-                for (const file of files) {
-                    try {
-                        photosData.push(await readFileAsDataURL(file));
-                    } catch (e) { console.warn('Failed to read photo', e); }
-                }
-                const raw = localStorage.getItem(window.FlamingoBlog.POSTS_KEY) || '[]';
-                let posts = [];
-                try { posts = JSON.parse(raw); } catch (e) { posts = []; }
-                posts.push({
-                    id: Date.now(),
-                    title, excerpt, content, created: new Date().toISOString(),
-                    locale, // possible values: 'et', 'ru', 'all'
-                    photos: photosData
-                });
-                localStorage.setItem(window.FlamingoBlog.POSTS_KEY, JSON.stringify(posts));
-                feedback.textContent = 'Запись сохранена. Перейдите на страницу блога, чтобы увидеть её.';
-                // reset fields
-                document.getElementById('post-title').value = '';
-                document.getElementById('post-excerpt').value = '';
-                document.getElementById('post-content').value = '';
-                if (localeSelect) localeSelect.value = 'ru';
-                if (photosInput) photosInput.value = '';
-            });
-
-            clearBtn.addEventListener('click', () => {
-                if (!confirm('Удалить все записи блога? Это действие нельзя отменить.')) return;
-                localStorage.removeItem(window.FlamingoBlog.POSTS_KEY);
-                feedback.textContent = 'Все записи удалены.';
-            });
-
-            // allow Enter key to submit login
-            loginInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') loginBtn.click();
-            });
-
-            // helper: read file as data URL (used for small demo storage)
-            function readFileAsDataURL(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
                 });
             }
         })();
