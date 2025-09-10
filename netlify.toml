@@ -6,11 +6,18 @@
 [build.environment]
   NODE_VERSION = "18"
 
-# Netlify CMS configuration
+# Admin panel redirect
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "/admin/*"
-  to = "/admin/index.html"
-  status = 200
+  to = "/admin.html"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/api/*"
@@ -62,8 +69,4 @@
   [headers.values]
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.telegram.org https://*.telegram.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*; object-src 'none'; base-uri 'self'; form-action 'self';"
 
-# Gzip compression
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Content-Encoding = "gzip"
+# Netlify handles gzip compression automatically
