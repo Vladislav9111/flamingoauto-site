@@ -163,6 +163,19 @@
 
     <script type="module" src="script.js"></script>
 
+    <!-- Netlify Identity for admin access -->
+    <script>
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.on("init", user => {
+                if (!user) {
+                    window.netlifyIdentity.on("login", () => {
+                        document.location.href = "/admin/";
+                    });
+                }
+            });
+        }
+    </script>
+
     <!-- Footer -->
     <footer class="site-footer">
         <div class="container footer-inner">

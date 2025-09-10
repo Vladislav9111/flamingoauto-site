@@ -14,6 +14,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
     <link rel="shortcut icon" href="/favicon.ico">
     
+    <!-- Netlify Identity Widget -->
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    
     <style>
         /* small admin specific tweaks */
         .admin-panel { max-width:900px; margin:2rem auto; padding:1.25rem; background:#fff; border-radius:8px; }
@@ -33,17 +36,17 @@
                 <a class="lang-btn" href="ru.html" aria-pressed="false" role="tab">RU</a>
             </div>
         </div>
-        <h1>Administratiivne paneel</h1>
-        <p class="muted">Logige sisse, et lisada blogisse uusi plokke. </p>
+        <h1>Административная панель</h1>
+        <p class="muted">Войдите через Netlify Identity для управления блогом.</p>
 
         <div id="login-area">
-            <label for="admin-password">Parool</label>
-            <input id="admin-password" type="password" placeholder="Sisestage parool" />
-            <div class="admin-actions">
-                <button id="login-btn" class="btn">Logima</button>
-                <a href="blog.html" class="btn" style="background:#fff;color:var(--primary-color);border:1px solid #eee;">Blogi</a>
+            <div id="netlify-login" style="text-align: center; margin: 2rem 0;">
+                <div data-netlify-identity-menu></div>
+                <div data-netlify-identity-button>Вход / Регистрация</div>
             </div>
-            <p id="login-error" class="error-message" style="display:none;"></p>
+            <div class="admin-actions">
+                <a href="blog.html" class="btn" style="background:#fff;color:var(--primary-color);border:1px solid #eee;">Блог</a>
+            </div>
         </div>
 
         <div id="editor-area" style="display:none; margin-top:1.25rem;">
@@ -80,56 +83,138 @@
     </main>
 
     <script type="module" src="script.js"></script>
-    <script type="module">
-        import { ADMIN_PASS } from './config.js';
-
-        // Admin simple client-side logic — password protected with "pasword"
+    <script>
+        // Netlify Identity authentication logic
         (function() {
-            const photosInput = document.getElementById('post-photos');
-            const PASS = ADMIN_PASS;
-            const loginBtn = document.getElementById('login-btn');
-            const loginInput = document.getElementById('admin-password');
-            const loginError = document.getElementById('login-error');
             const loginArea = document.getElementById('login-area');
             const editorArea = document.getElementById('editor-area');
             const saveBtn = document.getElementById('save-post');
             const clearBtn = document.getElementById('clear-posts');
             const logoutBtn = document.getElementById('logout-btn');
             const feedback = document.getElementById('admin-feedback');
+            const photosInput = document.getElementById('post-photos');
 
             function showEditor() {
                 loginArea.style.display = 'none';
                 editorArea.style.display = '';
-                feedback.textContent = '';
+                if (feedback) feedback.textContent = '';
             }
 
             function showLogin() {
                 loginArea.style.display = '';
                 editorArea.style.display = 'none';
-                loginInput.value = '';
-                feedback.textContent = '';
+                if (feedback) feedback.textContent = '';
             }
 
-            // check session flag in sessionStorage
-            if (sessionStorage.getItem('flamingo_admin_authed') === '1') {
-                showEditor();
-            }
-
-            loginBtn.addEventListener('click', () => {
-                loginError.style.display = 'none';
-                if (loginInput.value === PASS) {
-                    sessionStorage.setItem('flamingo_admin_authed', '1');
+            // Check if user is logged in
+            function checkAuthStatus() {
+                const user = netlifyIdentity.currentUser();
+                if (user) {
                     showEditor();
                 } else {
-                    loginError.textContent = 'Неверный пароль';
-                    loginError.style.display = '';
+                    showLogin();
                 }
+            }
+
+            // Initialize Netlify Identity
+            netlifyIdentity.on('init', user => {
+                checkAuthStatus();
             });
 
-            logoutBtn.addEventListener('click', () => {
-                sessionStorage.removeItem('flamingo_admin_authed');
+            netlifyIdentity.on('login', user => {
+                showEditor();
+            });
+
+            netlifyIdentity.on('logout', () => {
                 showLogin();
             });
+
+            // Initialize the widget
+            netlifyIdentity.init();
+
+            // Logout button handler
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    netlifyIdentity.logout();
+                });
+            }
+
+            // Blog post management logic
+            if (saveBtn) {
+                saveBtn.addEventListener('click', async () => {
+                    const user = netlifyIdentity.currentUser();
+                    if (!user) {
+                        if (feedback) feedback.textContent = 'Необходимо войти в систему.';
+                        return;
+                    }
+
+                    const title = document.getElementById('post-title').value.trim();
+                    const excerpt = document.getElementById('post-excerpt').value.trim();
+                    const content = document.getElementById('post-content').value.trim();
+                    const localeSelect = document.getElementById('post-locale');
+                    const locale = localeSelect ? localeSelect.value : 'all';
+                    
+                    if (!title || !excerpt) {
+                        if (feedback) feedback.textContent = 'Укажите заголовок и короткое описание.';
+                        return;
+                    }
+                    
+                    // read selected photos (max 6) as data URLs and include in post
+                    const files = photosInput ? Array.from(photosInput.files).slice(0,6) : [];
+                    const photosData = [];
+                    for (const file of files) {
+                        try {
+                            photosData.push(await readFileAsDataURL(file));
+                        } catch (e) { console.warn('Failed to read photo', e); }
+                    }
+                    
+                    const raw = localStorage.getItem(window.FlamingoBlog.POSTS_KEY) || '[]';
+                    let posts = [];
+                    try { posts = JSON.parse(raw); } catch (e) { posts = []; }
+                    
+                    posts.push({
+                        id: Date.now(),
+                        title, excerpt, content, created: new Date().toISOString(),
+                        locale, // possible values: 'et', 'ru', 'all'
+                        photos: photosData,
+                        author: user.email || user.user_metadata?.full_name || 'Администратор'
+                    });
+                    
+                    localStorage.setItem(window.FlamingoBlog.POSTS_KEY, JSON.stringify(posts));
+                    if (feedback) feedback.textContent = 'Запись сохранена. Перейдите на страницу блога, чтобы увидеть её.';
+                    
+                    // reset fields
+                    document.getElementById('post-title').value = '';
+                    document.getElementById('post-excerpt').value = '';
+                    document.getElementById('post-content').value = '';
+                    if (localeSelect) localeSelect.value = 'ru';
+                    if (photosInput) photosInput.value = '';
+                });
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    const user = netlifyIdentity.currentUser();
+                    if (!user) {
+                        if (feedback) feedback.textContent = 'Необходимо войти в систему.';
+                        return;
+                    }
+                    
+                    if (!confirm('Удалить все записи блога? Это действие нельзя отменить.')) return;
+                    localStorage.removeItem(window.FlamingoBlog.POSTS_KEY);
+                    if (feedback) feedback.textContent = 'Все записи удалены.';
+                });
+            }
+
+            // helper: read file as data URL (used for small demo storage)
+            function readFileAsDataURL(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
 
             saveBtn.addEventListener('click', async () => {
                 const title = document.getElementById('post-title').value.trim();

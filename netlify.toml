@@ -6,7 +6,7 @@
 [build.environment]
   NODE_VERSION = "18"
 
-# Admin panel redirect
+# Admin panel redirect with role-based access
 [[redirects]]
   from = "/admin"
   to = "/admin.html"
