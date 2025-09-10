@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Admin — Flamingo Auto</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* small admin specific tweaks */
+        .admin-panel { max-width:900px; margin:2rem auto; padding:1.25rem; background:#fff; border-radius:8px; }
+        .admin-panel h1 { margin-bottom:0.5rem; }
+        .admin-panel label { display:block; margin-top:0.75rem; font-weight:600; }
+        .admin-panel input[type="text"], .admin-panel textarea { width:100%; padding:0.75rem; border:1px solid #ddd; border-radius:6px; }
+        .admin-actions { margin-top:1rem; display:flex; gap:0.75rem; flex-wrap:wrap; }
+        .muted { color:#666; font-size:0.95rem; }
+    </style>
+</head>
+<body>
+    <main class="container admin-panel">
+        <div class="hero-header">
+            <a class="logo" href="index.html">FLAMINGO AUTO</a>
+            <div class="lang-switch" role="tablist" aria-label="Language switch">
+                <a class="lang-btn" href="index.html" aria-pressed="true" role="tab">ET</a>
+                <a class="lang-btn" href="ru.html" aria-pressed="false" role="tab">RU</a>
+            </div>
+        </div>
+        <h1>Administratiivne paneel</h1>
+        <p class="muted">Logige sisse, et lisada blogisse uusi plokke. </p>
+
+        <div id="login-area">
+            <label for="admin-password">Parool</label>
+            <input id="admin-password" type="password" placeholder="Sisestage parool" />
+            <div class="admin-actions">
+                <button id="login-btn" class="btn">Logima</button>
+                <a href="blog.html" class="btn" style="background:#fff;color:var(--primary-color);border:1px solid #eee;">Blogi</a>
+            </div>
+            <p id="login-error" class="error-message" style="display:none;"></p>
+        </div>
+
+        <div id="editor-area" style="display:none; margin-top:1.25rem;">
+            <label for="post-title">Заголовок</label>
+            <input id="post-title" type="text" placeholder="Заголовок записи" />
+
+            <label for="post-excerpt">Короткое описание / анонс</label>
+            <input id="post-excerpt" type="text" placeholder="Короткий текст, который будет виден в списке" />
+
+            <label for="post-content">Тело (разрешены простые теги: b, i, strong, em, p, br)</label>
+            <textarea id="post-content" rows="6" placeholder="Полный текст записи (HTML ограничен)"></textarea>
+
+            <label for="post-photos">Фотографии (до 6)</label>
+            <input id="post-photos" type="file" accept="image/*" multiple />
+            <small class="muted">Вы можете добавить до 6 изображений. Они будут отображаться в карточке записи.(рекомендуется не более 1 фото, если больше 1 фото я это тоже адаптировал) </small>
+
+            <!-- Locale selector: choose target blog language -->
+            <label for="post-locale" style="margin-top:0.75rem;">Публиковать в</label>
+            <select id="post-locale" style="padding:0.6rem;border:1px solid #ddd;border-radius:6px;">
+                <option value="all">Обе (ET + RU)</option>
+                <option value="et">Эстонская страница (ET)</option>
+                <option value="ru" selected>Русская страница (RU)</option>
+            </select>
+
+            <div class="admin-actions">
+                <button id="save-post" class="btn">Сохранить запись</button>
+                <button id="clear-posts" class="btn" style="background:#fff;color:var(--primary-color);border:1px solid #eee;">Очистить все</button>
+                <button id="logout-btn" class="btn" style="background:#fff;color:#dc3545;border:1px solid #eee;">Выйти</button>
+            </div>
+
+            <div id="admin-feedback" class="muted" style="margin-top:0.75rem;"></div>
+        </div>
+
+    </main>
+
+    <script type="module" src="script.js"></script>
+    <script type="module">
+        import { ADMIN_PASS } from './config.js';
+
+        // Admin simple client-side logic — password protected with "pasword"
+        (function() {
+            const photosInput = document.getElementById('post-photos');
+            const PASS = ADMIN_PASS;
+            const loginBtn = document.getElementById('login-btn');
+            const loginInput = document.getElementById('admin-password');
+            const loginError = document.getElementById('login-error');
+            const loginArea = document.getElementById('login-area');
+            const editorArea = document.getElementById('editor-area');
+            const saveBtn = document.getElementById('save-post');
+            const clearBtn = document.getElementById('clear-posts');
+            const logoutBtn = document.getElementById('logout-btn');
+            const feedback = document.getElementById('admin-feedback');
+
+            function showEditor() {
+                loginArea.style.display = 'none';
+                editorArea.style.display = '';
+                feedback.textContent = '';
+            }
+
+            function showLogin() {
+                loginArea.style.display = '';
+                editorArea.style.display = 'none';
+                loginInput.value = '';
+                feedback.textContent = '';
+            }
+
+            // check session flag in sessionStorage
+            if (sessionStorage.getItem('flamingo_admin_authed') === '1') {
+                showEditor();
+            }
+
+            loginBtn.addEventListener('click', () => {
+                loginError.style.display = 'none';
+                if (loginInput.value === PASS) {
+                    sessionStorage.setItem('flamingo_admin_authed', '1');
+                    showEditor();
+                } else {
+                    loginError.textContent = 'Неверный пароль';
+                    loginError.style.display = '';
+                }
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                sessionStorage.removeItem('flamingo_admin_authed');
+                showLogin();
+            });
+
+            saveBtn.addEventListener('click', async () => {
+                const title = document.getElementById('post-title').value.trim();
+                const excerpt = document.getElementById('post-excerpt').value.trim();
+                const content = document.getElementById('post-content').value.trim();
+                const localeSelect = document.getElementById('post-locale');
+                const locale = localeSelect ? localeSelect.value : 'all';
+                if (!title || !excerpt) {
+                    feedback.textContent = 'Укажите заголовок и короткое описание.';
+                    return;
+                }
+                // read selected photos (max 6) as data URLs and include in post
+                const files = photosInput ? Array.from(photosInput.files).slice(0,6) : [];
+                const photosData = [];
+                for (const file of files) {
+                    try {
+                        photosData.push(await readFileAsDataURL(file));
+                    } catch (e) { console.warn('Failed to read photo', e); }
+                }
+                const raw = localStorage.getItem(window.FlamingoBlog.POSTS_KEY) || '[]';
+                let posts = [];
+                try { posts = JSON.parse(raw); } catch (e) { posts = []; }
+                posts.push({
+                    id: Date.now(),
+                    title, excerpt, content, created: new Date().toISOString(),
+                    locale, // possible values: 'et', 'ru', 'all'
+                    photos: photosData
+                });
+                localStorage.setItem(window.FlamingoBlog.POSTS_KEY, JSON.stringify(posts));
+                feedback.textContent = 'Запись сохранена. Перейдите на страницу блога, чтобы увидеть её.';
+                // reset fields
+                document.getElementById('post-title').value = '';
+                document.getElementById('post-excerpt').value = '';
+                document.getElementById('post-content').value = '';
+                if (localeSelect) localeSelect.value = 'ru';
+                if (photosInput) photosInput.value = '';
+            });
+
+            clearBtn.addEventListener('click', () => {
+                if (!confirm('Удалить все записи блога? Это действие нельзя отменить.')) return;
+                localStorage.removeItem(window.FlamingoBlog.POSTS_KEY);
+                feedback.textContent = 'Все записи удалены.';
+            });
+
+            // allow Enter key to submit login
+            loginInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') loginBtn.click();
+            });
+
+            // helper: read file as data URL (used for small demo storage)
+            function readFileAsDataURL(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

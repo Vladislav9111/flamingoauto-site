@@ -1,0 +1,196 @@
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Müü auto kiiresti ja õiglase hinnaga — Flamingo Auto</title>
+    <meta name="description" content="Müü oma auto kiiresti ja õiglaselt. Täida müügivorm, saada hinnapakkumine ühe tööpäeva jooksul — dokumentide vormistamine ja kohene makse.">
+    <meta name="keywords" content="auto müük, müü auto, hinnapakkumine, osta autod, Flamingo Auto, Tallinn">
+    <link rel="canonical" href="https://example.com/index.html">
+    <link rel="alternate" hreflang="et" href="https://example.com/index.html">
+    <link rel="alternate" hreflang="ru" href="https://example.com/ru.html">
+    <meta name="robots" content="index, follow">
+    <meta property="og:site_name" content="Flamingo Auto">
+    <meta property="og:title" content="Müü oma auto kiiresti ja õiglase hinnaga — Flamingo Auto">
+    <meta property="og:description" content="Täida müügivorm ja saa aus hinnapakkumine ühe tööpäeva jooksul. Dokumentide vormistamine ning kohene makse.">
+    <meta property="og:image" content="https://example.com/hero-image.png">
+    <meta property="og:url" content="https://example.com/index.html">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Müü oma auto kiiresti — Flamingo Auto">
+    <meta name="twitter:description" content="Täida müügivorm, saada hinnapakkumine ja korraldame tehingu kiiresti.">
+    <meta name="twitter:image" content="https://example.com/hero-image.png">
+
+    <!-- JSON-LD Organization + LocalBusiness for better indexing and rich results -->
+    <script type="application/ld+json">
+    {
+      "@context":"https://schema.org",
+      "@type":"LocalBusiness",
+      "name":"Flamingo Auto",
+      "url":"https://example.com",
+      "logo":"https://example.com/hero-image.png",
+      "image":"https://example.com/hero-image.png",
+      "description":"Ostame autosid üle Eesti — sõltumata margist, mudelist või seisukorrast. Anname ausa hinnapakkumise ühe tööpäeva jooksul.",
+      "telephone":"+372-000-0000",
+      "address": {
+        "@type":"PostalAddress",
+        "addressLocality":"Tallinn",
+        "addressCountry":"EE"
+      },
+      "openingHours":"Mo-Fr 09:00-18:00",
+      "sameAs":[
+        "https://www.facebook.com/",
+        "https://www.linkedin.com/"
+      ]
+    }
+    </script>
+
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+    <link rel="stylesheet" href="style.css">
+    <!-- Add responsive-friendly web font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="site-header" role="banner">
+        <div class="container">
+            <div class="hero-header">
+                <a class="logo" href="index.html">FLAMINGO AUTO</a>
+                <div class="lang-switch" role="tablist" aria-label="Language switch">
+                    <a class="lang-btn" href="index.html" aria-pressed="true" role="tab">ET</a>
+                    <a class="lang-btn" href="ru.html" aria-pressed="false" role="tab">RU</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="hero">
+        <div class="container">
+            <div class="hero-header">
+                
+            </div>
+            <div class="hero-inner">
+                <div class="hero-content">
+                    <h1>Müü oma auto kiiresti<br>ja õiglase hinnaga</h1>
+                    <p class="subtitle">Ilma liigse sebimiseta — vormistame dokumendid ja maksame kohe.</p>
+                    <p>Ostame autosid üle Eesti — sõltumata margist, mudelist või seisukorrast. Anname ausa hinnapakkumise ühe tööpäeva jooksul ja korraldame kõik toimingud kiiresti ja mugavalt.</p>
+                    <a href="#form-container" class="btn">Saada päring</a>
+                </div>
+                <div class="hero-image" aria-hidden="true">
+                    <img src="flamingo.PNG" alt="Flamingo portrait" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="how-it-works">
+        <div class="container">
+            <div class="steps-container">
+                <div class="step">
+                    <h3>1. Täida vorm</h3>
+                    <p>Registreerimisnumber, mark ja mudel, aasta, läbisõit, käigukast.</p>
+                </div>
+                <div class="step">
+                    <h3>2. Saad hinnapakkumise</h3>
+                    <p>Anname hinna ühe tööpäeva jooksul.</p>
+                </div>
+                <div class="step">
+                    <h3>3. Tehing</h3>
+                    <p>Vormistame kõik dokumendid ja maksame raha kohe.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="form-container">
+        <h2 class="quote-heading">Hinnapakkumise saamine</h2>
+        <p class="quote-sub">Vastame ühe tööpäeva jooksul</p>
+        <form id="car-form" novalidate>
+            <h2>Auto andmed</h2>
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label for="reg-number">Registreerimisnumber*</label>
+                    <input type="text" id="reg-number" name="reg-number" required placeholder="123 ABC">
+                </div>
+                <div class="form-group">
+                    <label for="make">Mark</label>
+                    <input type="text" id="make" name="make" placeholder="Volkswagen">
+                </div>
+                <div class="form-group">
+                    <label for="model">Mudel</label>
+                    <input type="text" id="model" name="model" placeholder="Golf">
+                </div>
+                <div class="form-group">
+                    <label for="year">Väljalaskeaasta</label>
+                    <input type="text" id="year" name="year" placeholder="2019">
+                </div>
+                <div class="form-group">
+                    <label for="mileage">Läbisõit</label>
+                    <input type="text" id="mileage" name="mileage" placeholder="km">
+                </div>
+                <div class="form-group">
+                    <label for="transmission">Käigukast</label>
+                    <input type="text" id="transmission" name="transmission" placeholder="manuaal / automaat">
+                </div>
+                <div class="form-group">
+                    <label for="engine">Mootor</label>
+                    <input type="text" id="engine" name="engine" placeholder="nt 1.9 diisel / 2.5 bensiin">
+                </div>
+                <div class="form-group">
+                    <label for="price">Soovitud hind (€)</label>
+                    <input type="text" id="price" name="price" placeholder="€">
+                </div>
+                <div class="form-group full-width">
+                    <label for="photos">Fotod (kuni 6)</label>
+                    <input type="file" id="photos" name="photos" multiple accept="image/*">
+                    <small class="photo-hint">Lisage kuni 6 fotot: väljast, seest ja armatuurlaualt. (rohkem kui 1 foto valimiseks kasutage nuppu ctrl)</small>
+                    <small id="photo-error" class="error-message"></small>
+                </div>
+            </div>
+
+            <h2>Kontaktandmed</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">Nimi*</label>
+                    <input type="text" id="name" name="name" required placeholder="Teie nimi">
+                </div>
+                <div class="form-group">
+                    <label for="email">E-post*</label>
+                    <input type="email" id="email" name="email" required placeholder="teie@post.ee">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Telefon*</label>
+                    <input type="tel" id="phone" name="phone" required placeholder="+372 ...">
+                </div>
+                <div class="form-group">
+                    <label for="city">Linn*</label>
+                    <input type="text" id="city" name="city" required placeholder="Tallinn">
+                </div>
+                <div class="form-group full-width">
+                    <label for="note">Lisainfo</label>
+                    <textarea id="note" name="note" rows="4" placeholder="Lisainfo..."></textarea>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn">Saada päring</button>
+        </form>
+    </div>
+
+    <div id="popup" class="popup hidden">
+        <div class="popup-content">
+            <span class="close-btn">&times;</span>
+            <p>Teie ankeet on saadetud</p>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>Flamingo Auto. Kõik õigused kaitstud. Tallinn, Eesti — <span id="year-et"></span></p>
+            <a class="blog-btn" href="blog-et.html" aria-label="Blog">Blogi</a>
+        </div>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+
+</body>
+</html>
