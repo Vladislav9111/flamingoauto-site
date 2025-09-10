@@ -1,4 +1,17 @@
-import { BOT_TOKEN, CHAT_ID } from './config.js';
+// Configuration - использует переменные окружения Netlify или локальный config.js
+let BOT_TOKEN, CHAT_ID;
+
+try {
+    // Пытаемся загрузить локальную конфигурацию для разработки
+    const config = await import('./config.js');
+    BOT_TOKEN = config.BOT_TOKEN;
+    CHAT_ID = config.CHAT_ID;
+} catch (e) {
+    // Для продакшн используем переменные окружения Netlify
+    // В Netlify они будут внедрены в процессе сборки
+    BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || 'your_telegram_bot_token_here';
+    CHAT_ID = process.env.TELEGRAM_CHAT_ID || 'your_telegram_chat_id_here';
+}
 
 const form = document.getElementById('car-form');
 const popup = document.getElementById('popup');
