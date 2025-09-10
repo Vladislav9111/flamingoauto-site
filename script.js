@@ -25,57 +25,84 @@ const POSTS_KEY = 'flamingo_posts';
 /**
  * Render posts into the blog page (if posts-container exists)
  */
-function renderPosts() {
+async function renderPosts() {
     const container = document.getElementById('posts-container');
     const noPosts = document.getElementById('no-posts');
     if (!container) return;
-    const raw = localStorage.getItem(POSTS_KEY);
-    let posts = [];
-    try { posts = raw ? JSON.parse(raw) : []; } catch (e) { posts = []; }
-    container.innerHTML = '';
-    // determine current page locale: 'et', 'ru', or null (show all)
-    const path = (location.pathname || '').toLowerCase();
-    let currentLocale = null;
-    // robust detection: check for explicit blog filenames or page language hints
-    if (path.includes('blog-et') || path.includes('index.html') || path.endsWith('/')) currentLocale = 'et';
-    else if (path.includes('blog-ru') || path.includes('ru.html')) currentLocale = 'ru';
-    // if currentLocale is null, we show all posts (generic blog page / admin preview)
-    if (currentLocale) {
-        posts = posts.filter(p => {
-            // posts with locale 'all' should be shown on any localized blog,
-            // posts specifically tagged 'et' shown on Estonian blog only, 'ru' on Russian only.
-            const locale = (p.locale || 'all').toLowerCase();
-            if (locale === 'all') return true;
-            return locale === currentLocale;
-        });
-    }
-    if (!posts || posts.length === 0) {
-        if (noPosts) noPosts.style.display = '';
-        return;
-    }
-    if (noPosts) noPosts.style.display = 'none';
-    posts.slice().reverse().forEach(post => {
-        const article = document.createElement('article');
-        article.className = 'blog-post';
-        article.style.background = '#fff';
-        article.style.padding = '1.25rem';
-        article.style.borderRadius = '8px';
-        // build gallery html if photos exist
-        const hasPhotos = post.photos && post.photos.length;
-        const galleryClass = hasPhotos && post.photos.length > 1 ? 'post-gallery multiple' : 'post-gallery';
-        const photosHtml = hasPhotos ? `<div class="${galleryClass}">${post.photos.slice(0,6).map((p, idx) => `<img src="${p}" alt="Post image ${idx+1}">`).join('')}</div>` : '';
-        article.innerHTML = `
-            <div class="post-grid">
-                <div class="post-text">
-                    <h2>${escapeHtml(post.title)}</h2>
-                    <p style="color:#444">${escapeHtml(post.excerpt)}</p>
-                    ${post.content ? `<div style="margin-top:0.75rem;color:#333">${sanitizeSimpleHtml(post.content)}</div>` : ''}
+    
+    try {
+        // Пытаемся загрузить статьи из папки content/blog
+        const response = await fetch('/.netlify/functions/get-posts');
+        let posts = [];
+        
+        if (response.ok) {
+            posts = await response.json();
+        } else {
+            // Если нет функции, пробуем localStorage (для обратной совместимости)
+            const raw = localStorage.getItem(POSTS_KEY);
+            try { posts = raw ? JSON.parse(raw) : []; } catch (e) { posts = []; }
+        }
+        
+        container.innerHTML = '';
+        
+        // determine current page locale: 'et', 'ru', or null (show all)
+        const path = (location.pathname || '').toLowerCase();
+        let currentLocale = null;
+        
+        if (path.includes('blog-et') || path.includes('index.html') || path.endsWith('/')) currentLocale = 'et';
+        else if (path.includes('blog-ru') || path.includes('ru.html')) currentLocale = 'ru';
+        
+        // Фильтруем по языку
+        if (currentLocale) {
+            posts = posts.filter(p => {
+                const locale = (p.locale || 'all').toLowerCase();
+                if (locale === 'all') return true;
+                return locale === currentLocale;
+            });
+        }
+        
+        if (!posts || posts.length === 0) {
+            if (noPosts) noPosts.style.display = '';
+            return;
+        }
+        
+        if (noPosts) noPosts.style.display = 'none';
+        
+        // Отображаем посты (новые сверху)
+        posts.slice().reverse().forEach(post => {
+            const article = document.createElement('article');
+            article.className = 'blog-post';
+            article.style.background = '#fff';
+            article.style.padding = '1.25rem';
+            article.style.borderRadius = '8px';
+            
+            // Посты из markdown могут не иметь photos
+            const hasPhotos = post.photos && post.photos.length;
+            const galleryClass = hasPhotos && post.photos.length > 1 ? 'post-gallery multiple' : 'post-gallery';
+            const photosHtml = hasPhotos ? `<div class="${galleryClass}">${post.photos.slice(0,6).map((p, idx) => `<img src="${p}" alt="Post image ${idx+1}">`).join('')}</div>` : '';
+            
+            article.innerHTML = `
+                <div class="post-grid">
+                    <div class="post-text">
+                        <h2>${escapeHtml(post.title)}</h2>
+                        <p style="color:#444">${escapeHtml(post.excerpt)}</p>
+                        ${post.content ? `<div style="margin-top:0.75rem;color:#333">${sanitizeSimpleHtml(post.content)}</div>` : ''}
+                        ${post.author ? `<small style="color:#666;margin-top:0.5rem;display:block;">Автор: ${escapeHtml(post.author)}</small>` : ''}
+                        ${post.date ? `<small style="color:#666;">Дата: ${new Date(post.date).toLocaleDateString()}</small>` : ''}
+                    </div>
+                    ${photosHtml || '<div class="post-gallery"></div>'}
                 </div>
-                ${photosHtml || '<div class="post-gallery"></div>'}
-            </div>
-        `;
-        container.appendChild(article);
-    });
+            `;
+            container.appendChild(article);
+        });
+        
+    } catch (error) {
+        console.error('Error loading posts:', error);
+        if (noPosts) {
+            noPosts.style.display = '';
+            noPosts.innerHTML = '<h2>Ошибка загрузки</h2><p>Не удалось загрузить статьи блога.</p>';
+        }
+    }
 }
 
 /**

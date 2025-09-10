@@ -182,36 +182,106 @@
                         return;
                     }
                     
-                    // read selected photos (max 6) as data URLs and include in post
-                    const files = photosInput ? Array.from(photosInput.files).slice(0,6) : [];
-                    const photosData = [];
-                    for (const file of files) {
-                        try {
-                            photosData.push(await readFileAsDataURL(file));
-                        } catch (e) { console.warn('Failed to read photo', e); }
+                    try {
+                        if (feedback) feedback.textContent = 'Сохранение статьи...';
+                        
+                        // Обработка изображений
+                        const files = photosInput ? Array.from(photosInput.files).slice(0,6) : [];
+                        const imageUrls = [];
+                        
+                        // Загружаем изображения если есть
+                        for (let i = 0; i < files.length; i++) {
+                            const file = files[i];
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            
+                            try {
+                                const uploadResponse = await fetch('/.netlify/functions/upload-image', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': `Bearer ${token}`
+                                    },
+                                    body: formData
+                                });
+                                
+                                if (uploadResponse.ok) {
+                                    const result = await uploadResponse.json();
+                                    imageUrls.push(result.url);
+                                } else {
+                                    console.warn('Failed to upload image:', file.name);
+                                }
+                            } catch (uploadError) {
+                                console.warn('Error uploading image:', uploadError);
+                            }
+                        }
+                        
+                        // Создаем содержимое markdown файла
+                        const now = new Date();
+                        const dateStr = now.toISOString().split('T')[0];
+                        const slug = title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+                        const filename = `${dateStr}-${slug}.md`;
+                        
+                        // Добавляем изображения в контент если есть
+                        let contentWithImages = content;
+                        if (imageUrls.length > 0) {
+                            const imagesMarkdown = imageUrls.map((url, index) => 
+                                `![Изображение ${index + 1}](${url})`
+                            ).join('\n\n');
+                            contentWithImages = content + '\n\n' + imagesMarkdown;
+                        }
+                        
+                        const frontmatter = `---
+title: "${title}"
+date: ${now.toISOString()}
+excerpt: "${excerpt}"
+author: "${user.email || user.user_metadata?.full_name || 'Администратор'}"
+locale: "${locale}"
+published: true
+${imageUrls.length > 0 ? `images:\n${imageUrls.map(url => `  - "${url}"`).join('\n')}` : ''}
+---
+
+${contentWithImages}`;
+                        
+                        // Отправляем через Netlify Git Gateway
+                        const token = user.token?.access_token;
+                        if (!token) {
+                            throw new Error('Нет токена доступа');
+                        }
+                        
+                        const response = await fetch('/.netlify/git/github/contents/content/blog/' + filename, {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                message: `Новая статья: ${title}`,
+                                content: btoa(unescape(encodeURIComponent(frontmatter))),
+                                author: {
+                                    name: user.user_metadata?.full_name || user.email,
+                                    email: user.email
+                                }
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            const errorData = await response.text();
+                            throw new Error(`Ошибка сохранения: ${response.status} - ${errorData}`);
+                        }
+                        
+                        if (feedback) feedback.textContent = 'Статья успешно сохранена в репозиторий! Обновите страницу блога.';
+                        
+                        // Очищаем поля
+                        document.getElementById('post-title').value = '';
+                        document.getElementById('post-excerpt').value = '';
+                        document.getElementById('post-content').value = '';
+                        if (localeSelect) localeSelect.value = 'ru';
+                        if (photosInput) photosInput.value = '';
+                        
+                    } catch (error) {
+                        console.error('Error saving post:', error);
+                        if (feedback) feedback.textContent = `Ошибка: ${error.message}`;
                     }
-                    
-                    const raw = localStorage.getItem(window.FlamingoBlog.POSTS_KEY) || '[]';
-                    let posts = [];
-                    try { posts = JSON.parse(raw); } catch (e) { posts = []; }
-                    
-                    posts.push({
-                        id: Date.now(),
-                        title, excerpt, content, created: new Date().toISOString(),
-                        locale, // possible values: 'et', 'ru', 'all'
-                        photos: photosData,
-                        author: user.email || user.user_metadata?.full_name || 'Администратор'
-                    });
-                    
-                    localStorage.setItem(window.FlamingoBlog.POSTS_KEY, JSON.stringify(posts));
-                    if (feedback) feedback.textContent = 'Запись сохранена. Перейдите на страницу блога, чтобы увидеть её.';
-                    
-                    // reset fields
-                    document.getElementById('post-title').value = '';
-                    document.getElementById('post-excerpt').value = '';
-                    document.getElementById('post-content').value = '';
-                    if (localeSelect) localeSelect.value = 'ru';
-                    if (photosInput) photosInput.value = '';
                 });
             }
 
