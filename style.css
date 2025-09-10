@@ -1,0 +1,636 @@
+:root {
+    --primary-color: #007bff;
+    --primary-color-hover: #0056b3;
+    --error-color: #dc3545;
+    --background-color: #f4f7f9;
+    --form-background: #ffffff;
+    --text-color: #000;
+    --border-color: #ced4da;
+    --input-border-color: var(--lang-active-color); /* use purple for form field borders */
+    --lang-active-color: #5b4fc7; /* new: purple for active language */
+    --lang-inactive-color: #000000; /* new: black for inactive language */
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+/* New separated site header */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #ffffff;
+    border-bottom: 1px solid #eee;
+    padding: 0.5rem 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.site-header .container {
+    display: flex;
+    justify-content: center; /* center single logo independent from other controls */
+    align-items: center;
+    gap: 1rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    flex-wrap: wrap;
+}
+.site-header .logo {
+    background: transparent;
+    color: var(--lang-active-color);
+    font-weight: 900;
+    padding: 0.6rem 1.25rem; /* increased padding for larger logo */
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    font-size: 1.5rem; /* increased from 1.25rem */
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    transform: translateZ(0);
+}
+
+/* New shared logo rule for hero and header to ensure consistent scale */
+.logo {
+    font-family: 'Noto Sans', Calibri, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: inline-block;
+    line-height: 1;
+    will-change: transform;
+    font-size: 1.35rem; /* larger base logo size to affect instances */
+    text-decoration: none; /* ensure anchor looks like the styled logo */
+    color: inherit;
+}
+
+.logo-block {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+.logo-block .logo {
+    background: transparent;
+    color: var(--lang-active-color);
+    font-weight: 900;
+    padding: 0.6rem 1rem; /* slightly larger padding for block logo */
+    border-radius: 8px;
+    font-size: 1.15rem; /* increased from 1rem */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.hero {
+    /* Make hero a neutral wrapper so the colored panel is constrained to the inner container */
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    margin-bottom: 0.5rem; /* reduced distance from bottom edge */
+    overflow: visible;
+    position: relative;
+}
+
+/* New header with logo and language switch */
+.hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.lang-switch {
+    display: inline-flex;
+    gap: 0.25rem;
+    background: #fff;
+    border: 1px solid #e9e9ef;
+    padding: 4px;
+    border-radius: 999px;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.lang-btn {
+    background: transparent;
+    color: var(--lang-inactive-color);
+    border: none;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 600;
+    min-width: 36px;
+    font-size: 0.95rem;
+    transition: background-color 0.12s, color 0.12s, transform 0.08s;
+}
+.lang-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(0,0,0,0.03);
+}
+.lang-btn.active,
+.lang-btn[aria-pressed="true"] {
+    background: rgba(91,79,199,0.08); /* subtle purple tint */
+    color: var(--lang-active-color);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.hero .container {
+    background: linear-gradient(135deg, #ff6b9f 0%, #5b4fc7 100%);
+    color: inherit; /* keep text color consistent with document (black) */
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    padding: 0 1.5rem;
+    max-width: 1100px;
+    margin: 1rem auto 0; /* lower the panel (push it down) by adding top margin and keep no extra bottom margin */
+    border-radius: 12px;
+    overflow: visible; /* allow children (image) to extend beyond rounded panel */
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    color: inherit; /* use global text color (black) */
+    margin-bottom: 1rem;
+}
+
+.hero-inner {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.hero-content {
+    flex: 1 1 540px;
+    min-width: 260px;
+    text-align: left;
+    color: #fff;
+}
+
+.hero-image {
+    flex: 0 0 420px;
+    min-width: 200px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow: visible; /* allow the image to extend outside the hero panel */
+}
+
+.hero-image img {
+    max-width: 70%; /* larger than container so it can protrude */
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+    transform: translateX(60%); /* nudge the image so it breaks the panel edge */
+    transition: transform 0.25s ease;
+}
+
+.hero p {
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto 1.5rem auto;
+}
+
+.hero .subtitle {
+    font-size: 1.25rem;
+    font-weight: 300;
+    margin-bottom: 2rem;
+    color: #fff; /* subtitle set to white as requested */
+}
+
+.hero .btn {
+    display: inline-block;
+    padding: 0.75rem 1rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--lang-active-color); /* use purple for hero CTA */
+    border: 0;
+    border-radius: 12px; /* square with rounded edges */
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.14s ease, box-shadow 0.14s ease, opacity 0.14s ease;
+    box-shadow: 0 6px 20px rgba(91,79,199,0.12);
+}
+/* subtle hover/focus state that keeps it elegant */
+.hero .btn:hover,
+.hero .btn:focus {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(91,79,199,0.22);
+    opacity: 0.98;
+}
+
+.how-it-works {
+    background-color: var(--form-background);
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.steps-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    text-align: center;
+}
+
+.step {
+    flex: 1;
+    background: #fff;
+    padding: 1.25rem;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.step h3 {
+    color: var(--text-color); /* ensure step headings are black as requested */
+    margin-bottom: 0.5rem;
+}
+
+.step p {
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.25rem;
+    background: var(--form-background);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.how-it-works .container {
+    box-shadow: none;
+    padding: 0 2rem;
+    max-width: 900px;
+}
+
+h1, h2 {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+h2 {
+    margin-top: 2rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.5rem;
+    grid-column: 1 / -1; /* Make h2 span all columns in a grid */
+}
+
+h1+h2, form>h2:first-of-type {
+    margin-top: 0;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+/* Ensure explicit spacing between stacked fields so inputs below the full-width reg-number appear visually lower */
+.form-grid .form-group + .form-group {
+    margin-top: 0.35rem;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group {
+    margin-bottom: 0;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+textarea,
+select,
+input[type="file"] {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid var(--input-border-color);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--input-border-color);
+    /* subtle purple focus ring */
+    box-shadow: 0 0 0 4px rgba(91,79,199,0.12);
+}
+
+input[type="file"] {
+    display: block;
+    margin-top: 0.5rem;
+}
+
+small {
+    color: #6c757d;
+}
+
+textarea {
+    resize: vertical;
+}
+
+button[type="submit"] {
+    display: block;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 2rem;
+}
+
+button[type="submit"]:hover {
+    background-color: var(--primary-color-hover);
+}
+
+/* New styles for the added form header */
+.quote-heading {
+    color: var(--text-color); /* make the quote heading black as requested */
+    text-align: center;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+    font-size: 1.25rem;
+}
+.quote-sub {
+    text-align: center;
+    color: #555;
+    margin-bottom: 1rem;
+}
+
+.photo-hint {
+    display: block;
+    margin-top: 0.35rem;
+    margin-bottom: 0.35rem;
+    color: #6c757d;
+    font-size: 0.92rem;
+}
+
+/* Footer styles (visible on both pages) */
+.site-footer {
+    background: #fff;
+    border-top: 1px solid #eee;
+    padding: 1rem 0;
+    margin-top: 2rem;
+}
+.site-footer .footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    justify-content: center;
+    color: #666;
+    font-size: 0.95rem;
+    gap: 1rem;
+    align-items: center;
+}
+
+/* Blog button in footer */
+.blog-btn {
+    display: inline-block;
+    padding: 0.45rem 0.75rem;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--primary-color);
+    border: 1px solid rgba(0,0,0,0.06);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.15s, transform 0.08s;
+}
+.blog-btn:hover {
+    background-color: rgba(0,0,0,0.03);
+    transform: translateY(-1px);
+}
+
+/* Improved mobile responsiveness tweaks */
+@media (max-width: 600px) {
+    .hero {
+        padding: 0; /* remove vertical spacing on small screens */
+        border-radius: 8px;
+    }
+    .hero h1 {
+        font-size: 1.6rem;
+    }
+    .hero p {
+        font-size: 1rem;
+    }
+    .hero-inner {
+        gap: 1rem;
+    }
+    .hero-image { width: 90%; margin: 0 auto 1rem; }
+    .container {
+        padding: 1rem;
+        max-width: 100%;
+        border-radius: 6px;
+    }
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .steps-container {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .container {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 900px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .steps-container {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .container {
+        padding: 1.5rem;
+    }
+
+    .hero-inner {
+        flex-direction: column-reverse;
+        text-align: center;
+        align-items:center;
+    }
+
+    .hero-content { text-align: center; }
+
+    .hero-image { width: 80%; margin: 0 auto 1rem auto; flex-basis:auto; overflow: visible; }
+    .hero-image img { max-width: 85%; transform: translateX(0%); } /* on small screens keep centered */
+}
+
+/* Improved breakpoints for small devices */
+@media (max-width: 480px) {
+    .site-header .logo { font-size: 1.05rem; padding: 0.35rem 0.6rem; }
+    .hero .logo { font-size: 1.05rem; }
+    .hero { padding: 0; border-radius: 8px; } /* remove vertical spacing on very small screens */
+    .hero h1 { font-size: 1.25rem; line-height:1.25; }
+    .hero p, .hero .subtitle { font-size: 0.95rem; }
+    .hero-image { width: 100%; }
+    .popup-content { width: calc(100% - 2rem); padding: 1.25rem; min-width: auto; }
+}
+
+/* Ensure footer and other elements have comfortable spacing on small screens */
+@media (max-width: 900px) {
+    .site-footer .footer-inner { padding: 0 1rem; flex-direction: column; gap: 0.25rem; text-align:center; }
+}
+
+/* Validation styles */
+input:invalid:not(:placeholder-shown) {
+    border-color: var(--error-color);
+}
+
+input:invalid:not(:placeholder-shown):focus {
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
+}
+
+.error-message {
+    color: var(--error-color);
+    font-size: 0.875rem;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+/* Popup styles */
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+.popup.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.popup-content {
+    background: #fff;
+    padding: 2rem 3rem;
+    border-radius: 8px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    min-width: 300px;
+}
+
+.popup-content p {
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.post-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 1rem;
+    align-items: start;
+}
+.post-text {
+    min-width: 0;
+    /* ensure long unbroken strings wrap cleanly and don't overflow their column */
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+}
+.post-text h2 { margin-top: 0; }
+.post-gallery {
+    display: grid;
+    gap: 0.5rem;
+}
+/* When gallery has multiple images, present them as a compact grid with smaller thumbnails */
+.post-gallery.multiple {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    align-items: start;
+}
+.post-gallery.multiple img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #eee;
+    display: block;
+}
+/* keep single-image galleries large and prominent */
+.post-gallery:not(.multiple) img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #eee;
+    display: block;
+}
+
+/* single-column on small screens */
+@media (max-width: 800px) {
+    .post-grid {
+        grid-template-columns: 1fr;
+    }
+    /* make gallery images appear before text on small screens if desired */
+    .post-gallery { order: -1; }
+}

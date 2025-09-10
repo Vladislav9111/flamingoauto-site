@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Flamingo Auto — Блог</title>
+    <meta name="description" content="Блог Flamingo Auto — полезные советы по продаже автомобилей, истории и инструкции.">
+    <link rel="canonical" href="https://mellifluous-moxie-db6fec.netlify.app/blog-ru.html">
+    <link rel="alternate" hreflang="ru" href="https://mellifluous-moxie-db6fec.netlify.app/blog-ru.html">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Flamingo Auto — Блог">
+    <meta property="og:description" content="Полезные материалы о продаже автомобилей, советы и истории.">
+    <meta property="og:image" content="https://mellifluous-moxie-db6fec.netlify.app/flamingo.PNG">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="site-header" role="banner">
+        <div class="container">
+            <div class="hero-header">
+                <a class="logo" href="index.html">FLAMINGO AUTO</a>
+                <div class="lang-switch" role="tablist" aria-label="Language switch">
+                    <a class="lang-btn" href="index.html" aria-pressed="false" role="tab">ET</a>
+                    <a class="lang-btn" href="ru.html" aria-pressed="true" role="tab">RU</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="max-width:900px; padding-top:2rem;">
+        <h1>Блог</h1>
+        <p class="quote-sub">Полезные материалы о продаже автомобилей, советы и истории.</p>
+
+        <!-- dynamic posts will be injected here -->
+        <div id="posts-container" style="margin-top:1rem; display:grid; gap:1rem;"></div>
+
+        <!-- fallback for no posts -->
+        <div id="no-posts" style="background:#fff;padding:1.25rem;border-radius:8px;margin-top:1rem; display:none;">
+            <h2>Пока нет публикаций</h2>
+            <p>Добавьте первую запись через панель администратора.</p>
+            
+        </div>
+
+    </main>
+
+    <footer class="site-footer" style="margin-top:2rem;">
+        <div class="container footer-inner">
+            <p>Flamingo Auto. Все права защищены. Таллин, Эстония — <span id="year-ru"></span></p>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+                <a class="blog-btn" href="blog-ru.html" aria-label="Блог">Блог</a>
+                <a class="blog-btn" href="admin.html" aria-label="Admin panel" style="background:#fff;color:var(--primary-color);border:1px solid #eee;">Админ</a>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+    <script>
+        // ensure footer year appears on this localized blog page
+        (function setYear(){
+            const el = document.getElementById('year-ru');
+            if (el) el.textContent = new Date().getFullYear();
+        })();
+    </script>
+</body>
+</html>
