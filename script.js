@@ -93,15 +93,225 @@ function sanitizeSimpleHtml(input = '') {
     return escaped;
 }
 
-// expose renderPosts for pages that load this script
+// GitHub API blog loading functionality
+async function loadBlogPosts() {
+    try {
+        // Fetch blog posts directly from GitHub API
+        const response = await fetch('https://api.github.com/repos/Vladislav9111/flamingoauto-site/contents/content/blog');
+        if (response.ok) {
+            const files = await response.json();
+            const markdownFiles = files.filter(file => file.name.endsWith('.md'));
+            
+            if (markdownFiles.length > 0) {
+                const posts = await Promise.all(
+                    markdownFiles.map(async (file) => {
+                        const contentResponse = await fetch(file.download_url);
+                        const content = await contentResponse.text();
+                        return parseMarkdownPost(content, file.name);
+                    })
+                );
+                
+                // Sort by date (newest first)
+                posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                displayBlogPosts(posts);
+            } else {
+                showNoPosts();
+            }
+        } else {
+            showNoPosts();
+        }
+    } catch (error) {
+        console.log('Error loading blog posts:', error);
+        showNoPosts();
+    }
+}
+
+// Parse Markdown file to extract front matter and metadata
+function parseMarkdownPost(content, filename) {
+    const lines = content.split('\n');
+    const frontmatter = {};
+    let contentStart = 0;
+    
+    // Parse frontmatter (metadata between ---)
+    if (lines[0] === '---') {
+        let i = 1;
+        while (i < lines.length && lines[i] !== '---') {
+            const line = lines[i].trim();
+            if (line && !line.startsWith('#')) {
+                const colonIndex = line.indexOf(':');
+                if (colonIndex > 0) {
+                    const key = line.substring(0, colonIndex).trim();
+                    let value = line.substring(colonIndex + 1).trim();
+                    
+                    // Remove quotes from value
+                    if ((value.startsWith('"') && value.endsWith('"')) || 
+                        (value.startsWith("'") && value.endsWith("'"))) {
+                        value = value.slice(1, -1);
+                    }
+                    
+                    // Handle arrays (tags)
+                    if (value.startsWith('[') && value.endsWith(']')) {
+                        try {
+                            value = JSON.parse(value);
+                        } catch (e) {
+                            // Keep as string if JSON parsing fails
+                        }
+                    }
+                    
+                    frontmatter[key] = value;
+                }
+            }
+            i++;
+        }
+        contentStart = i + 1;
+    }
+    
+    // Extract content after frontmatter
+    const bodyLines = lines.slice(contentStart);
+    const body = bodyLines.join('\n').trim();
+    
+    // Extract excerpt from body (first paragraph or 150 chars)
+    let excerpt = '';
+    if (frontmatter.description) {
+        excerpt = frontmatter.description;
+    } else if (body) {
+        const firstParagraph = body.split('\n\n')[0].replace(/#+\s*/, '').trim();
+        excerpt = firstParagraph.length > 150 ? 
+            firstParagraph.substring(0, 150) + '...' : 
+            firstParagraph;
+    }
+    
+    return {
+        title: frontmatter.title || 'Без названия',
+        excerpt: excerpt,
+        content: body,
+        date: frontmatter.date || new Date().toISOString(),
+        locale: frontmatter.lang || 'ru',
+        tags: frontmatter.tags || [],
+        thumbnail: frontmatter.thumbnail || '',
+        photos: frontmatter.thumbnail ? [frontmatter.thumbnail] : []
+    };
+}
+
+// Display blog posts in the container
+function displayBlogPosts(posts) {
+    const container = document.getElementById('posts-container');
+    const noPosts = document.getElementById('no-posts');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Filter posts by current page locale
+    const path = (location.pathname || '').toLowerCase();
+    let currentLocale = null;
+    if (path.includes('blog-et') || path.includes('index.html') || path.endsWith('/')) {
+        currentLocale = 'et';
+    } else if (path.includes('blog-ru') || path.includes('ru.html')) {
+        currentLocale = 'ru';
+    }
+    
+    let filteredPosts = posts;
+    if (currentLocale) {
+        filteredPosts = posts.filter(p => {
+            const locale = (p.locale || 'all').toLowerCase();
+            if (locale === 'all') return true;
+            return locale === currentLocale;
+        });
+    }
+    
+    if (!filteredPosts || filteredPosts.length === 0) {
+        if (noPosts) noPosts.style.display = '';
+        return;
+    }
+    
+    if (noPosts) noPosts.style.display = 'none';
+    
+    filteredPosts.forEach(post => {
+        const article = document.createElement('article');
+        article.className = 'blog-post';
+        article.style.cssText = `
+            background: #fff;
+            padding: 1.25rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        `;
+        
+        // Add hover effect
+        article.addEventListener('mouseenter', () => {
+            article.style.transform = 'translateY(-2px)';
+            article.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+        });
+        article.addEventListener('mouseleave', () => {
+            article.style.transform = 'translateY(0)';
+            article.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+        });
+        
+        // Build gallery HTML if photos exist
+        const hasPhotos = post.photos && post.photos.length;
+        const galleryClass = hasPhotos && post.photos.length > 1 ? 'post-gallery multiple' : 'post-gallery';
+        const photosHtml = hasPhotos ? 
+            `<div class="${galleryClass}" style="margin-top: 1rem;">
+                ${post.photos.slice(0, 6).map((p, idx) => 
+                    `<img src="${p}" alt="Post image ${idx + 1}" style="max-width: 100%; height: auto; border-radius: 4px;">`
+                ).join('')}
+            </div>` : '';
+        
+        // Format date
+        const dateObj = new Date(post.date);
+        const formattedDate = dateObj.toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        article.innerHTML = `
+            <div class="post-content">
+                <h2 style="margin: 0 0 0.5rem 0; color: #333;">${escapeHtml(post.title)}</h2>
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 0.75rem;">${formattedDate}</p>
+                <p style="color: #444; line-height: 1.5;">${escapeHtml(post.excerpt)}</p>
+                ${photosHtml}
+                ${post.tags && post.tags.length > 0 ? 
+                    `<div style="margin-top: 1rem;">
+                        ${post.tags.map(tag => 
+                            `<span style="display: inline-block; background: #e3f2fd; color: #1976d2; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem; margin-right: 0.5rem; margin-bottom: 0.5rem;">#${escapeHtml(tag)}</span>`
+                        ).join('')}
+                    </div>` : 
+                    ''
+                }
+            </div>
+        `;
+        
+        container.appendChild(article);
+    });
+}
+
+// Show no posts message
+function showNoPosts() {
+    const container = document.getElementById('posts-container');
+    const noPosts = document.getElementById('no-posts');
+    if (container) container.innerHTML = '';
+    if (noPosts) noPosts.style.display = '';
+}
+
+// expose functions for pages that load this script
 window.FlamingoBlog = {
     renderPosts,
+    loadBlogPosts,
     POSTS_KEY
 };
 
 // initialize posts render on pages where posts-container exists
 document.addEventListener('DOMContentLoaded', () => {
-    renderPosts();
+    // Check if we're on a blog page
+    const container = document.getElementById('posts-container');
+    if (container) {
+        // Load real blog posts from GitHub API
+        loadBlogPosts();
+    } else {
+        // Fallback to localStorage posts if not on blog page
+        renderPosts();
+    }
 });
 
 function validatePhotos() {
