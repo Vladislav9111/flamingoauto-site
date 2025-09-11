@@ -34,13 +34,28 @@ async function renderPosts() {
         // Пытаемся загрузить статьи из папки content/blog
         const response = await fetch('/.netlify/functions/get-posts');
         let posts = [];
-        
+
         if (response.ok) {
             posts = await response.json();
+            console.log('Loaded posts from Netlify function:', posts);
         } else {
-            // Если нет функции, пробуем localStorage (для обратной совместимости)
-            const raw = localStorage.getItem(POSTS_KEY);
-            try { posts = raw ? JSON.parse(raw) : []; } catch (e) { posts = []; }
+            console.log('Netlify function not available, trying posts.json');
+            // Пробуем загрузить из posts.json
+            try {
+                const jsonResponse = await fetch('./posts.json');
+                if (jsonResponse.ok) {
+                    posts = await jsonResponse.json();
+                    console.log('Loaded posts from posts.json:', posts);
+                } else {
+                    throw new Error('posts.json not found');
+                }
+            } catch (jsonError) {
+                console.log('posts.json not available, trying localStorage');
+                // Если нет posts.json, пробуем localStorage (для обратной совместимости)
+                const raw = localStorage.getItem(POSTS_KEY);
+                try { posts = raw ? JSON.parse(raw) : []; } catch (e) { posts = []; }
+                console.log('Loaded posts from localStorage:', posts);
+            }
         }
         
         container.innerHTML = '';
@@ -98,9 +113,10 @@ async function renderPosts() {
         
     } catch (error) {
         console.error('Error loading posts:', error);
+        console.error('Error details:', error.message, error.stack);
         if (noPosts) {
             noPosts.style.display = '';
-            noPosts.innerHTML = '<h2>Ошибка загрузки</h2><p>Не удалось загрузить статьи блога.</p>';
+            noPosts.innerHTML = `<h2>Ошибка загрузки</h2><p>Не удалось загрузить статьи блога.</p><p>Ошибка: ${error.message}</p>`;
         }
     }
 }
