@@ -222,12 +222,13 @@ ${formData.body}`;
         
         // Инициализация Netlify Identity с проверкой домена
         if (window.netlifyIdentity) {
-            // Проверяем, что мы на Netlify домене
+            // Проверяем, что мы на Netlify домене или кастомном домене
             const isNetlifyDomain = window.location.hostname.includes('netlify.app') || 
-                                   window.location.hostname.includes('netlify.com');
+                                   window.location.hostname.includes('netlify.com') ||
+                                   window.location.hostname === 'flamingoauto.eu';
             
             if (!isNetlifyDomain) {
-                showStatus('ОШИБКА: Сайт открыт не на домене Netlify. Netlify Identity работает только на *.netlify.app доменах. Текущий домен: ' + window.location.hostname, 'error');
+                showStatus('ОШИБКА: Сайт открыт на неподдерживаемом домене. Netlify Identity работает только на доменах Netlify (*.netlify.app) или настроенных кастомных доменах. Текущий домен: ' + window.location.hostname, 'error');
                 return;
             }
             
