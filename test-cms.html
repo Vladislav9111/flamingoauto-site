@@ -148,7 +148,47 @@ ${formData.body}`;
             console.log('Token available:', !!token);
             console.log('User:', currentUser);
             
-            const response = await fetch(apiUrl, {
+            // Сначала проверяем, существует ли файл
+            let existingFile = null;
+            try {
+                const checkResponse = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'User-Agent': 'Netlify-CMS'
+                    }
+                });
+                
+                if (checkResponse.ok) {
+                    existingFile = await checkResponse.json();
+                }
+            } catch (error) {
+                // Файл не существует, это нормально для нового файла
+                console.log('File does not exist, creating new file');
+            }
+            
+            // Если файл существует, добавляем уникальный суффикс
+            let finalFilename = filename;
+            let finalApiUrl = apiUrl;
+            if (existingFile) {
+                const timestamp = Date.now();
+                const baseName = filename.replace('.md', '');
+                finalFilename = `${baseName}-${timestamp}.md`;
+                finalApiUrl = `https://api.github.com/repos/Vladislav9111/flamingoauto-site/contents/content/blog/${finalFilename}`;
+                console.log(`File exists, using new name: ${finalFilename}`);
+            }
+            
+            const requestBody = {
+                message: `Новая статья: ${formData.title}`,
+                content: btoa(unescape(encodeURIComponent(frontmatter))),
+                author: {
+                    name: currentUser.user_metadata?.full_name || currentUser.email,
+                    email: currentUser.email
+                }
+            };
+            
+            const response = await fetch(finalApiUrl, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -156,14 +196,7 @@ ${formData.body}`;
                     'Accept': 'application/vnd.github.v3+json',
                     'User-Agent': 'Netlify-CMS'
                 },
-                body: JSON.stringify({
-                    message: `Новая статья: ${formData.title}`,
-                    content: btoa(unescape(encodeURIComponent(frontmatter))),
-                    author: {
-                        name: currentUser.user_metadata?.full_name || currentUser.email,
-                        email: currentUser.email
-                    }
-                })
+                body: JSON.stringify(requestBody)
             });
             
             if (!response.ok) {

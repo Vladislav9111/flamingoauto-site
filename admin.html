@@ -251,20 +251,57 @@ ${contentWithImages}`;
                         // Отправляем через Netlify Git Gateway
                         const apiUrl = `/.netlify/git/github/contents/content/blog/${filename}`;
                         
-                        const response = await fetch(apiUrl, {
+                        // Сначала проверяем, существует ли файл
+                        let existingFile = null;
+                        try {
+                            const checkResponse = await fetch(apiUrl, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            
+                            if (checkResponse.ok) {
+                                existingFile = await checkResponse.json();
+                            }
+                        } catch (error) {
+                            // Файл не существует, это нормально для нового файла
+                            console.log('File does not exist, creating new file');
+                        }
+                        
+                        // Если файл существует, добавляем уникальный суффикс к имени
+                        let finalFilename = filename;
+                        if (existingFile) {
+                            const timestamp = Date.now();
+                            const baseName = filename.replace('.md', '');
+                            finalFilename = `${baseName}-${timestamp}.md`;
+                            console.log(`File exists, using new name: ${finalFilename}`);
+                        }
+                        
+                        const finalApiUrl = `/.netlify/git/github/contents/content/blog/${finalFilename}`;
+                        
+                        const requestBody = {
+                            message: `Новая статья: ${title}`,
+                            content: btoa(unescape(encodeURIComponent(frontmatter))),
+                            author: {
+                                name: user.user_metadata?.full_name || user.email,
+                                email: user.email
+                            }
+                        };
+                        
+                        // Если файл существует и мы обновляем его, добавляем SHA
+                        if (existingFile && finalFilename === filename) {
+                            requestBody.sha = existingFile.sha;
+                        }
+                        
+                        const response = await fetch(finalApiUrl, {
                             method: 'PUT',
                             headers: {
                                 'Authorization': `Bearer ${token}`,
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({
-                                message: `Новая статья: ${title}`,
-                                content: btoa(unescape(encodeURIComponent(frontmatter))),
-                                author: {
-                                    name: user.user_metadata?.full_name || user.email,
-                                    email: user.email
-                                }
-                            })
+                            body: JSON.stringify(requestBody)
                         });
                         
                         if (!response.ok) {
