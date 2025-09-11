@@ -156,8 +156,11 @@ ${formData.body}`;
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/vnd.github.v3+json',
-                        'User-Agent': 'Netlify-CMS',
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'User-Agent': 'Netlify-CMS/2.0',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                        'X-Netlify-Site-Id': window.ENV?.NETLIFY_SITE_ID || window.location.hostname,
+                        'Origin': window.location.origin
                     }
                 });
                 
@@ -195,8 +198,10 @@ ${formData.body}`;
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                     'Accept': 'application/vnd.github.v3+json',
-                    'User-Agent': 'Netlify-CMS',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'User-Agent': 'Netlify-CMS/2.0',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-Netlify-Site-Id': window.ENV?.NETLIFY_SITE_ID || window.location.hostname,
+                    'Origin': window.location.origin
                 },
                 body: JSON.stringify(requestBody)
             });
