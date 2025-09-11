@@ -258,7 +258,8 @@ ${contentWithImages}`;
                                 method: 'GET',
                                 headers: {
                                     'Authorization': `Bearer ${token}`,
-                                    'Content-Type': 'application/json'
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
                                 }
                             });
                             
@@ -299,7 +300,8 @@ ${contentWithImages}`;
                             method: 'PUT',
                             headers: {
                                 'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'application/json'
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
                             },
                             body: JSON.stringify(requestBody)
                         });

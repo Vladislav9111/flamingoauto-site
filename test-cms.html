@@ -156,7 +156,8 @@ ${formData.body}`;
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/vnd.github.v3+json',
-                        'User-Agent': 'Netlify-CMS'
+                        'User-Agent': 'Netlify-CMS',
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
                 
@@ -194,7 +195,8 @@ ${formData.body}`;
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                     'Accept': 'application/vnd.github.v3+json',
-                    'User-Agent': 'Netlify-CMS'
+                    'User-Agent': 'Netlify-CMS',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify(requestBody)
             });
