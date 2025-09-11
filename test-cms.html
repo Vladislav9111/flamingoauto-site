@@ -220,8 +220,17 @@ ${formData.body}`;
             }
         });
         
-        // Инициализация Netlify Identity
+        // Инициализация Netlify Identity с проверкой домена
         if (window.netlifyIdentity) {
+            // Проверяем, что мы на Netlify домене
+            const isNetlifyDomain = window.location.hostname.includes('netlify.app') || 
+                                   window.location.hostname.includes('netlify.com');
+            
+            if (!isNetlifyDomain) {
+                showStatus('ОШИБКА: Сайт открыт не на домене Netlify. Netlify Identity работает только на *.netlify.app доменах. Текущий домен: ' + window.location.hostname, 'error');
+                return;
+            }
+            
             window.netlifyIdentity.on('init', user => {
                 currentUser = user;
                 if (user) {
@@ -245,7 +254,7 @@ ${formData.body}`;
             
             window.netlifyIdentity.init();
         } else {
-            showStatus('Ошибка: Netlify Identity не загружен', 'error');
+            showStatus('ОШИБКА: Netlify Identity не загружен. Проверьте, что сайт открыт на домене Netlify (.netlify.app)', 'error');
         }
     </script>
 </body>

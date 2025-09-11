@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Диагностика CMS</title>
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js" async defer></script>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
         .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
@@ -20,7 +20,8 @@
     
     <div id="status-container">
         <div class="status warning">
-            <strong>Проверка...</strong> Инициализация диагностики
+            <strong>Проверка...</strong> Инициализация диагностики<br>
+            <small>Текущий URL: <span id="current-url"></span></small>
         </div>
     </div>
 
@@ -133,15 +134,23 @@
             }
         }
 
-        // Инициализация при загрузке страницы
-        window.addEventListener('load', function() {
+        // Инициализация при загрузке страницы с повторными попытками
+        let initAttempts = 0;
+        const maxAttempts = 10;
+        
+        function tryInitialize() {
+            initAttempts++;
+            
             if (window.netlifyIdentity) {
+                // Netlify Identity загружен успешно
+                updateStatus('Netlify Identity загружен успешно', 'success');
+                
                 window.netlifyIdentity.on('init', user => {
                     updateUserInfo(user);
                     if (user) {
                         updateStatus('Пользователь уже авторизован', 'success');
                     } else {
-                        updateStatus('Необходима авторизация', 'warning');
+                        updateStatus('Необходима авторизация для публикации статей', 'warning');
                     }
                 });
 
@@ -156,9 +165,44 @@
                 });
 
                 window.netlifyIdentity.init();
+            } else if (initAttempts < maxAttempts) {
+                // Попытка загрузки еще не завершена, ждем
+                updateStatus(`Ожидание загрузки Netlify Identity... (попытка ${initAttempts}/${maxAttempts})`, 'warning');
+                setTimeout(tryInitialize, 500);
             } else {
-                updateStatus('Netlify Identity не загружен - проверьте подключение скрипта', 'error');
+                // Превышено максимальное количество попыток
+                updateStatus('ОШИБКА: Netlify Identity не загружен. Возможные причины:', 'error');
+                const container = document.getElementById('status-container');
+                container.innerHTML += `
+                    <div class="status error">
+                        <strong>Возможные причины:</strong><br>
+                        1. Сайт не развернут на Netlify (скрипт работает только на Netlify)<br>
+                        2. Netlify Identity не включен в настройках сайта<br>
+                        3. Проблемы с сетевым соединением<br>
+                        4. Блокировка скрипта антивирусом или AdBlock<br><br>
+                        <strong>Решение:</strong><br>
+                        • Откройте консоль разработчика (F12) и проверьте ошибки<br>
+                        • Убедитесь, что сайт доступен через домен Netlify<br>
+                        • Проверьте настройки Netlify Identity в панели управления
+                    </div>
+                `;
             }
+        }
+        
+        window.addEventListener('load', function() {
+            // Отображаем текущий URL
+            document.getElementById('current-url').textContent = window.location.href;
+            
+            // Проверяем, что мы на Netlify домене
+            const isNetlifyDomain = window.location.hostname.includes('netlify.app') || 
+                                   window.location.hostname.includes('netlify.com');
+            
+            if (!isNetlifyDomain) {
+                updateStatus('ПРЕДУПРЕЖДЕНИЕ: Сайт открыт не на домене Netlify. Netlify Identity работает только на *.netlify.app доменах.', 'error');
+                return;
+            }
+            
+            tryInitialize();
         });
     </script>
 
