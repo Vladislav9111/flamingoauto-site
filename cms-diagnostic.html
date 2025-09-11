@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Диагностика CMS</title>
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Диагностика CMS - Проблемы с публикацией</h1>
+    
+    <div id="status-container">
+        <div class="status warning">
+            <strong>Проверка...</strong> Инициализация диагностики
+        </div>
+    </div>
+
+    <div id="user-info"></div>
+    
+    <div id="controls" style="margin-top: 20px;">
+        <button class="btn-primary" onclick="checkAuth()">Проверить аутентификацию</button>
+        <button class="btn-secondary" onclick="openLogin()">Войти в систему</button>
+        <button class="btn-secondary" onclick="logout()">Выйти</button>
+        <button class="btn-primary" onclick="testAPI()">Тест API</button>
+    </div>
+
+    <div id="api-test-results" style="margin-top: 20px;"></div>
+
+    <script>
+        let user = null;
+        
+        function updateStatus(message, type = 'warning') {
+            const container = document.getElementById('status-container');
+            container.innerHTML = `<div class="status ${type}"><strong>${type === 'error' ? 'Ошибка:' : type === 'success' ? 'Успех:' : 'Статус:'}</strong> ${message}</div>`;
+        }
+
+        function updateUserInfo(user) {
+            const userInfo = document.getElementById('user-info');
+            if (user) {
+                userInfo.innerHTML = `
+                    <div class="status success">
+                        <strong>Пользователь авторизован:</strong><br>
+                        Email: ${user.email}<br>
+                        ID: ${user.id}<br>
+                        Роли: ${user.app_metadata?.roles?.join(', ') || 'Не указаны'}<br>
+                        Токен: ${user.token ? 'Присутствует' : 'Отсутствует'}
+                    </div>
+                `;
+            } else {
+                userInfo.innerHTML = `
+                    <div class="status error">
+                        <strong>Пользователь не авторизован</strong><br>
+                        Необходимо войти в систему для публикации статей
+                    </div>
+                `;
+            }
+        }
+
+        function checkAuth() {
+            if (window.netlifyIdentity) {
+                user = window.netlifyIdentity.currentUser();
+                updateUserInfo(user);
+                
+                if (user) {
+                    updateStatus('Аутентификация успешна', 'success');
+                } else {
+                    updateStatus('Пользователь не авторизован', 'error');
+                }
+            } else {
+                updateStatus('Netlify Identity не загружен', 'error');
+            }
+        }
+
+        function openLogin() {
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.open();
+            } else {
+                updateStatus('Netlify Identity не загружен', 'error');
+            }
+        }
+
+        function logout() {
+            if (window.netlifyIdentity && window.netlifyIdentity.currentUser()) {
+                window.netlifyIdentity.logout();
+            } else {
+                updateStatus('Пользователь уже не авторизован', 'warning');
+            }
+        }
+
+        async function testAPI() {
+            const resultsDiv = document.getElementById('api-test-results');
+            resultsDiv.innerHTML = '<div class="status warning">Тестирование API...</div>';
+            
+            try {
+                // Проверяем доступность GitHub API
+                const response = await fetch('https://api.github.com/repos/Vladislav9111/flamingoauto-site');
+                
+                if (response.ok) {
+                    const repoData = await response.json();
+                    resultsDiv.innerHTML = `
+                        <div class="status success">
+                            <strong>GitHub API доступен:</strong><br>
+                            Репозиторий: ${repoData.full_name}<br>
+                            Ветка по умолчанию: ${repoData.default_branch}<br>
+                            Последнее обновление: ${new Date(repoData.updated_at).toLocaleString()}
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="status error">
+                            <strong>Ошибка доступа к GitHub API:</strong><br>
+                            Статус: ${response.status}<br>
+                            ${response.statusText}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="status error">
+                        <strong>Ошибка сети:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        window.addEventListener('load', function() {
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.on('init', user => {
+                    updateUserInfo(user);
+                    if (user) {
+                        updateStatus('Пользователь уже авторизован', 'success');
+                    } else {
+                        updateStatus('Необходима авторизация', 'warning');
+                    }
+                });
+
+                window.netlifyIdentity.on('login', user => {
+                    updateUserInfo(user);
+                    updateStatus('Успешная авторизация', 'success');
+                });
+
+                window.netlifyIdentity.on('logout', () => {
+                    updateUserInfo(null);
+                    updateStatus('Выход из системы', 'warning');
+                });
+
+                window.netlifyIdentity.init();
+            } else {
+                updateStatus('Netlify Identity не загружен - проверьте подключение скрипта', 'error');
+            }
+        });
+    </script>
+
+    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 5px;">
+        <h3>Инструкции по решению проблемы:</h3>
+        <ol>
+            <li><strong>Убедитесь, что Netlify Identity включен:</strong> Site Settings → Identity → Enable Identity</li>
+            <li><strong>Включите Git Gateway:</strong> Identity → Services → Enable Git Gateway</li>
+            <li><strong>Пригласите пользователей:</strong> Identity → Invite users</li>
+            <li><strong>Проверьте настройки регистрации:</strong> Registration → Invite only</li>
+            <li><strong>Войдите в систему</strong> используя кнопку "Войти в систему" выше</li>
+            <li><strong>После авторизации</strong> перейдите на <a href="/admin/">/admin/</a> для публикации статей</li>
+        </ol>
+        
+        <p><strong>Если проблема сохраняется:</strong></p>
+        <ul>
+            <li>Очистите кеш браузера (Ctrl+F5)</li>
+            <li>Попробуйте режим инкогнито</li>
+            <li>Проверьте консоль разработчика на наличие ошибок JavaScript</li>
+            <li>Убедитесь, что в настройках Netlify указан правильный репозиторий</li>
+        </ul>
+    </div>
+</body>
+</html>

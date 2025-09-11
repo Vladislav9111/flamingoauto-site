@@ -185,10 +185,10 @@
                     try {
                         if (feedback) feedback.textContent = 'Публикация статьи...';
                         
-                        // Получаем токен сразу
+                        // Получаем токен для Git Gateway
                         const token = user.token?.access_token;
                         if (!token) {
-                            throw new Error('Нет токена доступа');
+                            throw new Error('Нет токена доступа. Попробуйте выйти и войти снова.');
                         }
                         
                         // Обработка изображений
@@ -249,8 +249,9 @@ ${imageUrls.length > 0 ? `images:\n${imageUrls.map(url => `  - "${url}"`).join('
 ${contentWithImages}`;
                         
                         // Отправляем через Netlify Git Gateway
+                        const apiUrl = `/.netlify/git/github/contents/content/blog/${filename}`;
                         
-                        const response = await fetch('/.netlify/git/github/contents/content/blog/' + filename, {
+                        const response = await fetch(apiUrl, {
                             method: 'PUT',
                             headers: {
                                 'Authorization': `Bearer ${token}`,
@@ -267,8 +268,23 @@ ${contentWithImages}`;
                         });
                         
                         if (!response.ok) {
-                            const errorData = await response.text();
-                            throw new Error(`Ошибка сохранения: ${response.status} - ${errorData}`);
+                            const errorText = await response.text();
+                            let errorMessage;
+                            try {
+                                const errorData = JSON.parse(errorText);
+                                errorMessage = errorData.message || errorData.msg || errorText;
+                            } catch {
+                                errorMessage = errorText;
+                            }
+                            
+                            console.error('API Error:', {
+                                status: response.status,
+                                statusText: response.statusText,
+                                headers: Object.fromEntries(response.headers.entries()),
+                                body: errorText
+                            });
+                            
+                            throw new Error(`Ошибка сохранения: ${response.status} - ${errorMessage}`);
                         }
                         
                         if (feedback) feedback.textContent = 'Статья успешно опубликована! Она появится на сайте через несколько минут.';

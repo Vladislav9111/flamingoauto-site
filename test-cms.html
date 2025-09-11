@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Тест CMS - Публикация статьи</title>
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        textarea { min-height: 120px; }
+        button { background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>Тест публикации статьи</h1>
+    
+    <div id="login-section">
+        <div class="status warning">
+            Необходимо войти в систему для публикации статей
+        </div>
+        <button onclick="login()">Войти в систему</button>
+    </div>
+
+    <div id="editor-section" class="hidden">
+        <div class="status success">
+            Вы авторизованы. Можете создавать статьи.
+        </div>
+        
+        <form id="article-form">
+            <div class="form-group">
+                <label for="title">Заголовок статьи:</label>
+                <input type="text" id="title" required placeholder="Введите заголовок статьи">
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Краткое описание:</label>
+                <input type="text" id="description" placeholder="Краткое описание для SEO">
+            </div>
+            
+            <div class="form-group">
+                <label for="lang">Язык:</label>
+                <select id="lang">
+                    <option value="ru">Русский</option>
+                    <option value="et">Эстонский</option>
+                    <option value="en">Английский</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="body">Содержимое статьи:</label>
+                <textarea id="body" required placeholder="Введите текст статьи в формате Markdown"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="tags">Теги (через запятую):</label>
+                <input type="text" id="tags" placeholder="тег1, тег2, тег3">
+            </div>
+            
+            <button type="submit">Опубликовать статью</button>
+            <button type="button" onclick="logout()">Выйти</button>
+        </form>
+    </div>
+
+    <div id="status-message"></div>
+
+    <script>
+        let currentUser = null;
+        
+        function showStatus(message, type = 'warning') {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function showLoginSection() {
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('editor-section').classList.add('hidden');
+        }
+        
+        function showEditorSection() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('editor-section').classList.remove('hidden');
+        }
+        
+        function login() {
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.open();
+            } else {
+                showStatus('Ошибка: Netlify Identity не загружен', 'error');
+            }
+        }
+        
+        function logout() {
+            if (window.netlifyIdentity && currentUser) {
+                window.netlifyIdentity.logout();
+            }
+        }
+        
+        function generateSlug(title) {
+            return title
+                .toLowerCase()
+                .replace(/[^\u0400-\u04FF\w\s-]/g, '') // Keep Cyrillic, Latin, numbers, spaces, hyphens
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+        }
+        
+        async function publishArticle(formData) {
+            if (!currentUser) {
+                throw new Error('Пользователь не авторизован');
+            }
+            
+            const token = currentUser.token?.access_token;
+            if (!token) {
+                throw new Error('Нет токена доступа');
+            }
+            
+            // Подготавливаем данные статьи
+            const now = new Date();
+            const slug = generateSlug(formData.title);
+            const filename = `${now.toISOString().split('T')[0]}-${slug}.md`;
+            
+            // Обрабатываем теги
+            const tags = formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+            
+            // Создаем frontmatter
+            const frontmatter = `---
+title: "${formData.title}"
+date: ${now.toISOString()}
+description: "${formData.description || ''}"
+lang: ${formData.lang}
+tags: [${tags.map(tag => `"${tag}"`).join(', ')}]
+---
+
+${formData.body}`;
+            
+            // Используем GitHub API напрямую для тестирования
+            const apiUrl = `https://api.github.com/repos/Vladislav9111/flamingoauto-site/contents/content/blog/${filename}`;
+            
+            console.log('Publishing to:', apiUrl);
+            console.log('Token available:', !!token);
+            console.log('User:', currentUser);
+            
+            const response = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/vnd.github.v3+json',
+                    'User-Agent': 'Netlify-CMS'
+                },
+                body: JSON.stringify({
+                    message: `Новая статья: ${formData.title}`,
+                    content: btoa(unescape(encodeURIComponent(frontmatter))),
+                    author: {
+                        name: currentUser.user_metadata?.full_name || currentUser.email,
+                        email: currentUser.email
+                    }
+                })
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: errorText
+                });
+                
+                let errorMessage;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorData.msg || errorText;
+                } catch {
+                    errorMessage = errorText;
+                }
+                
+                throw new Error(`Ошибка сохранения: ${response.status} - ${errorMessage}`);
+            }
+            
+            return await response.json();
+        }
+        
+        // Обработчик формы
+        document.getElementById('article-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                title: document.getElementById('title').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                lang: document.getElementById('lang').value,
+                body: document.getElementById('body').value.trim(),
+                tags: document.getElementById('tags').value.trim()
+            };
+            
+            if (!formData.title || !formData.body) {
+                showStatus('Заполните обязательные поля: заголовок и содержимое', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('Публикация статьи...', 'warning');
+                const result = await publishArticle(formData);
+                showStatus('Статья успешно опубликована!', 'success');
+                
+                // Очищаем форму
+                document.getElementById('article-form').reset();
+                
+            } catch (error) {
+                console.error('Ошибка публикации:', error);
+                showStatus(`Ошибка: ${error.message}`, 'error');
+            }
+        });
+        
+        // Инициализация Netlify Identity
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.on('init', user => {
+                currentUser = user;
+                if (user) {
+                    showEditorSection();
+                } else {
+                    showLoginSection();
+                }
+            });
+            
+            window.netlifyIdentity.on('login', user => {
+                currentUser = user;
+                showEditorSection();
+                showStatus('Успешная авторизация', 'success');
+            });
+            
+            window.netlifyIdentity.on('logout', () => {
+                currentUser = null;
+                showLoginSection();
+                showStatus('Выход из системы', 'warning');
+            });
+            
+            window.netlifyIdentity.init();
+        } else {
+            showStatus('Ошибка: Netlify Identity не загружен', 'error');
+        }
+    </script>
+</body>
+</html>
