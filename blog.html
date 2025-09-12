@@ -48,18 +48,12 @@
 
     <footer class="site-footer" style="margin-top:2rem;">
         <div class="container footer-inner">
-            <p>Flamingo Auto. Все права защищены. Таллин, Эстония — <span id="year-blog"></span></p>
+            <p>Flamingo Auto. Все права защищены. Таллин, Эстония</p>
             <a class="blog-btn" href="blog.html" aria-label="Blog">Блог</a>
         </div>
     </footer>
 
     <script src="blog-simple.js"></script>
-    <script>
-        // ensure footer year appears on blog page too
-        (function setBlogYear(){
-            const el = document.getElementById('year-blog');
-            if (el) el.textContent = new Date().getFullYear();
-        })();
-    </script>
+
 </body>
 </html>

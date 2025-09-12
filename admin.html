@@ -195,11 +195,8 @@
             <div style="background: #e3f2fd; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
                 <p style="margin: 0 0 1rem 0; color: #1976d2;">🔐 Для сохранения в GitHub войдите через Netlify Identity</p>
                 <div id="netlify-login">
-                    <button id="login-btn" style="background: #007bff; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; margin-right: 1rem;">
+                    <button id="login-btn" style="background: #007bff; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">
                         🔑 Войти
-                    </button>
-                    <button id="signup-btn" style="background: #28a745; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">
-                        📝 Регистрация
                     </button>
                 </div>
                 <div id="user-info" style="display: none;">
@@ -579,13 +576,7 @@
                 }
             });
 
-            document.getElementById('signup-btn').addEventListener('click', function() {
-                if (window.netlifyIdentity) {
-                    window.netlifyIdentity.open('signup');
-                } else {
-                    alert('Netlify Identity не загружен');
-                }
-            });
+
 
             document.getElementById('logout-btn').addEventListener('click', function() {
                 if (window.netlifyIdentity) {

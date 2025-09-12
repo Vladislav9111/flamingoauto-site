@@ -53,18 +53,12 @@
 
     <footer class="site-footer" style="margin-top:2rem;">
         <div class="container footer-inner">
-            <p>Flamingo Auto. Kõik õigused kaitstud. Tallinn, Eesti — <span id="year-et"></span></p>
+            <p>Flamingo Auto. Kõik õigused kaitstud. Tallinn, Eesti</p>
             <a class="blog-btn" href="blog-et.html" aria-label="Blog">Blogi</a>
         </div>
     </footer>
 
     <script src="blog-simple.js"></script>
-    <script>
-        // ensure footer year appears on this localized blog page
-        (function setYear(){
-            const el = document.getElementById('year-et');
-            if (el) el.textContent = new Date().getFullYear();
-        })();
-    </script>
+
 </body>
 </html>
