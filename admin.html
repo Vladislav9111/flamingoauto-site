@@ -233,7 +233,7 @@
 
             <div class="form-group">
                 <label for="post-author">Автор</label>
-                <input type="text" id="post-author" name="author" placeholder="Имя автора" value="Администратор">
+                <input type="text" id="post-author" name="author" placeholder="Имя автора" value="Flamingo Auto">
             </div>
 
             <div class="form-group">
@@ -356,7 +356,7 @@
 
             const title = document.getElementById('post-title').value;
             const content = document.getElementById('post-content').value;
-            const author = document.getElementById('post-author').value || 'Администратор';
+            const author = document.getElementById('post-author').value || 'Flamingo Auto';
             const locale = document.getElementById('post-locale').value;
 
             // Показываем индикатор загрузки
@@ -393,7 +393,7 @@
 
                     // Сбрасываем форму
                     document.getElementById('post-form').reset();
-                    document.getElementById('post-author').value = 'Администратор';
+                    document.getElementById('post-author').value = 'Flamingo Auto';
                     selectedPhotos = [];
                     updatePhotosPreview();
 
@@ -555,7 +555,7 @@
             document.getElementById('cancel-edit-btn').style.display = 'none';
 
             document.getElementById('post-form').reset();
-            document.getElementById('post-author').value = 'Администратор';
+            document.getElementById('post-author').value = 'Flamingo Auto';
             selectedPhotos = [];
             updatePhotosPreview();
 

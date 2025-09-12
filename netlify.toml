@@ -6,22 +6,6 @@
 [build.environment]
   NODE_VERSION = "18"
 
-# Netlify Identity redirects
-[[redirects]]
-  from = "/.netlify/identity/signup"
-  to = "/admin.html"
-  status = 302
-
-[[redirects]]
-  from = "/.netlify/identity/recovery"
-  to = "/admin.html"
-  status = 302
-
-[[redirects]]
-  from = "/.netlify/identity/email-change"
-  to = "/admin.html"
-  status = 302
-
 # Admin panel redirect with role-based access
 [[redirects]]
   from = "/admin"

@@ -277,7 +277,15 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
     console.log('Отображаем посты:', posts.length, 'для языка:', locale);
 
     if (posts.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666;padding:2rem;">Пока нет опубликованных статей.</p>';
+        // Локализованные сообщения для разных языков
+        const noPostsMessages = {
+            'et': 'Artikleid pole veel avaldatud.',
+            'ru': 'Пока нет опубликованных статей.',
+            'all': 'Пока нет опубликованных статей.'
+        };
+
+        const message = noPostsMessages[locale] || noPostsMessages['all'];
+        container.innerHTML = `<p style="text-align:center;color:#666;padding:2rem;">${message}</p>`;
         return;
     }
 
