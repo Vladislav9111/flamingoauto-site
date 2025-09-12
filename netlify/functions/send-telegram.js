@@ -123,37 +123,51 @@ function parseNetlifyMultipart(event) {
     return result;
 }
 
-// Simple multipart form data builder for Telegram
+// Telegram-specific multipart form data builder
 function createTelegramFormData(fields, files) {
     const boundary = `----formdata-${Date.now()}`;
     const chunks = [];
+
+    console.log('🔨 Building Telegram form data...');
+    console.log('📋 Fields:', Object.keys(fields));
+    console.log('📁 Files:', files.length);
 
     // Add text fields
     for (const [key, value] of Object.entries(fields)) {
         chunks.push(`--${boundary}\r\n`);
         chunks.push(`Content-Disposition: form-data; name="${key}"\r\n\r\n`);
         chunks.push(`${value}\r\n`);
+        console.log(`✅ Added field: ${key}`);
     }
 
     // Add files
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const photoKey = `photo${i}`;
+        // Use the fieldname from the file, or default naming
+        const fieldName = file.fieldname || `photo${i}`;
+        const fileName = file.filename || `photo${i}.jpg`;
+        const contentType = file.contentType || 'image/jpeg';
 
         chunks.push(`--${boundary}\r\n`);
-        chunks.push(`Content-Disposition: form-data; name="${photoKey}"; filename="${file.filename || `photo${i}.jpg`}"\r\n`);
-        chunks.push(`Content-Type: ${file.contentType || 'image/jpeg'}\r\n\r\n`);
+        chunks.push(`Content-Disposition: form-data; name="${fieldName}"; filename="${fileName}"\r\n`);
+        chunks.push(`Content-Type: ${contentType}\r\n\r\n`);
         chunks.push(file.content);
         chunks.push('\r\n');
+
+        console.log(`✅ Added file: ${fieldName} (${fileName}) - ${file.content.length} bytes`);
     }
 
     chunks.push(`--${boundary}--\r\n`);
 
+    const body = Buffer.concat(chunks.map(chunk =>
+        typeof chunk === 'string' ? Buffer.from(chunk, 'utf8') : chunk
+    ));
+
+    console.log(`🔨 Form data built: ${body.length} bytes total`);
+
     return {
         boundary,
-        body: Buffer.concat(chunks.map(chunk =>
-            typeof chunk === 'string' ? Buffer.from(chunk) : chunk
-        ))
+        body
     };
 }
 
@@ -305,55 +319,141 @@ exports.handler = async (event, context) => {
 
         // Send message to Telegram
         if (photos.length > 0) {
-            console.log(`Sending message with ${photos.length} photos to Telegram...`);
+            console.log(`📸 Sending message with ${photos.length} photos to Telegram...`);
 
-            // Prepare media array
-            const media = [];
-            for (let i = 0; i < photos.length; i++) {
-                const mediaItem = {
-                    type: 'photo',
-                    media: `attach://photo${i}`
-                };
-
-                // Add caption to first photo
-                if (i === 0) {
-                    mediaItem.caption = message;
-                    mediaItem.parse_mode = 'HTML';
-                }
-
-                media.push(mediaItem);
-            }
-
-            // Create form data
-            const formFields = {
-                chat_id: CHAT_ID,
-                media: JSON.stringify(media)
-            };
-
-            const telegramFormData = createTelegramFormData(formFields, photos);
-
-            const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': `multipart/form-data; boundary=${telegramFormData.boundary}`
-                },
-                body: telegramFormData.body
+            // Log photo details
+            photos.forEach((photo, i) => {
+                console.log(`Photo ${i}:`, {
+                    fieldname: photo.fieldname,
+                    filename: photo.filename,
+                    contentType: photo.contentType,
+                    size: photo.content.length
+                });
             });
 
-            console.log('Telegram response status:', telegramResponse.status);
+            try {
+                // Try sending photos one by one first (simpler approach)
+                if (photos.length === 1) {
+                    console.log('📤 Sending single photo...');
 
-            if (!telegramResponse.ok) {
-                const errorText = await telegramResponse.text();
-                console.error('Telegram API error:', {
-                    status: telegramResponse.status,
-                    statusText: telegramResponse.statusText,
-                    error: errorText
+                    // Use our custom form builder for single photo
+                    const singlePhotoFields = {
+                        chat_id: CHAT_ID,
+                        caption: message,
+                        parse_mode: 'HTML'
+                    };
+
+                    // Rename photo for sendPhoto API
+                    const photoForSingle = [{
+                        fieldname: 'photo',
+                        filename: photos[0].filename || 'photo.jpg',
+                        contentType: photos[0].contentType || 'image/jpeg',
+                        content: photos[0].content
+                    }];
+
+                    const singlePhotoFormData = createTelegramFormData(singlePhotoFields, photoForSingle);
+
+                    const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': `multipart/form-data; boundary=${singlePhotoFormData.boundary}`
+                        },
+                        body: singlePhotoFormData.body
+                    });
+
+                    if (!telegramResponse.ok) {
+                        const errorText = await telegramResponse.text();
+                        console.error('❌ Single photo send failed:', errorText);
+                        throw new Error(`Telegram sendPhoto error: ${telegramResponse.status} - ${errorText}`);
+                    }
+
+                    const result = await telegramResponse.json();
+                    console.log('✅ Single photo sent successfully:', result);
+
+                } else {
+                    console.log('📤 Sending multiple photos as media group...');
+
+                    // Prepare media array for sendMediaGroup
+                    const media = [];
+                    for (let i = 0; i < photos.length; i++) {
+                        const mediaItem = {
+                            type: 'photo',
+                            media: `attach://photo${i}`
+                        };
+
+                        // Add caption to first photo
+                        if (i === 0) {
+                            mediaItem.caption = message;
+                            mediaItem.parse_mode = 'HTML';
+                        }
+
+                        media.push(mediaItem);
+                    }
+
+                    // Create form data for sendMediaGroup
+                    const formFields = {
+                        chat_id: CHAT_ID,
+                        media: JSON.stringify(media)
+                    };
+
+                    console.log('📋 Media array:', media);
+                    console.log('📋 Form fields:', formFields);
+
+                    const telegramFormData = createTelegramFormData(formFields, photos);
+
+                    console.log('📦 Form data boundary:', telegramFormData.boundary);
+                    console.log('📦 Form data size:', telegramFormData.body.length);
+
+                    const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': `multipart/form-data; boundary=${telegramFormData.boundary}`
+                        },
+                        body: telegramFormData.body
+                    });
+
+                    console.log('📡 Telegram response status:', telegramResponse.status);
+
+                    if (!telegramResponse.ok) {
+                        const errorText = await telegramResponse.text();
+                        console.error('❌ Media group send failed:', {
+                            status: telegramResponse.status,
+                            statusText: telegramResponse.statusText,
+                            error: errorText
+                        });
+                        throw new Error(`Telegram sendMediaGroup error: ${telegramResponse.status} - ${errorText}`);
+                    }
+
+                    const telegramResult = await telegramResponse.json();
+                    console.log('✅ Media group sent successfully:', telegramResult);
+                }
+
+            } catch (photoError) {
+                console.error('❌ Photo sending failed, falling back to text only:', photoError.message);
+
+                // Fallback: send text message only
+                const fallbackPayload = {
+                    chat_id: CHAT_ID,
+                    text: message + `\n\n⚠️ Не удалось отправить ${photos.length} фотографий. Ошибка: ${photoError.message}`,
+                    parse_mode: 'HTML'
+                };
+
+                const fallbackResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(fallbackPayload)
                 });
-                throw new Error(`Telegram API error: ${telegramResponse.status} - ${errorText}`);
-            }
 
-            const telegramResult = await telegramResponse.json();
-            console.log('Telegram success with photos:', telegramResult);
+                if (fallbackResponse.ok) {
+                    console.log('✅ Fallback text message sent');
+                } else {
+                    const fallbackError = await fallbackResponse.text();
+                    console.error('❌ Even fallback failed:', fallbackError);
+                    throw new Error(`Complete failure: ${fallbackError}`);
+                }
+            }
 
         } else {
             console.log('Sending text message to Telegram...');
