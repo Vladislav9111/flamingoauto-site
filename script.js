@@ -31,30 +31,34 @@ async function renderPosts() {
     if (!container) return;
     
     try {
+        console.log('Starting to load posts...');
         // Пытаемся загрузить статьи из папки content/blog
         const response = await fetch('/.netlify/functions/get-posts');
         let posts = [];
 
+        console.log('Netlify function response status:', response.status);
         if (response.ok) {
             posts = await response.json();
-            console.log('Loaded posts from Netlify function:', posts);
+            console.log('✅ Loaded posts from Netlify function:', posts);
         } else {
-            console.log('Netlify function not available, trying posts.json');
+            console.log('❌ Netlify function not available, trying posts.json');
             // Пробуем загрузить из posts.json
             try {
                 const jsonResponse = await fetch('./posts.json');
+                console.log('posts.json response status:', jsonResponse.status);
                 if (jsonResponse.ok) {
                     posts = await jsonResponse.json();
-                    console.log('Loaded posts from posts.json:', posts);
+                    console.log('✅ Loaded posts from posts.json:', posts);
                 } else {
                     throw new Error('posts.json not found');
                 }
             } catch (jsonError) {
-                console.log('posts.json not available, trying localStorage');
+                console.log('❌ posts.json not available, trying localStorage');
+                console.error('posts.json error:', jsonError);
                 // Если нет posts.json, пробуем localStorage (для обратной совместимости)
                 const raw = localStorage.getItem(POSTS_KEY);
                 try { posts = raw ? JSON.parse(raw) : []; } catch (e) { posts = []; }
-                console.log('Loaded posts from localStorage:', posts);
+                console.log('📦 Loaded posts from localStorage:', posts);
             }
         }
         
@@ -63,18 +67,25 @@ async function renderPosts() {
         // determine current page locale: 'et', 'ru', or null (show all)
         const path = (location.pathname || '').toLowerCase();
         let currentLocale = null;
-        
+
         if (path.includes('blog-et') || path.includes('index.html') || path.endsWith('/')) currentLocale = 'et';
         else if (path.includes('blog-ru') || path.includes('ru.html')) currentLocale = 'ru';
-        
+
+        console.log('Current path:', path);
+        console.log('Detected locale:', currentLocale);
+        console.log('Posts before filtering:', posts);
+
         // Фильтруем по языку
         if (currentLocale) {
             posts = posts.filter(p => {
                 const locale = (p.locale || 'all').toLowerCase();
-                if (locale === 'all') return true;
-                return locale === currentLocale;
+                const shouldShow = locale === 'all' || locale === currentLocale;
+                console.log(`Post "${p.title}" with locale "${locale}" should show: ${shouldShow}`);
+                return shouldShow;
             });
         }
+
+        console.log('Posts after filtering:', posts);
         
         if (!posts || posts.length === 0) {
             if (noPosts) noPosts.style.display = '';
