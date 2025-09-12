@@ -2,7 +2,7 @@
 const POSTS_STORAGE_KEY = 'flamingo_blog_posts';
 
 // Простая структура поста
-function createPost(title, content, author, locale = 'all') {
+function createPost(title, content, author, locale = 'all', photos = []) {
     return {
         id: Date.now().toString(),
         title: title.trim(),
@@ -10,7 +10,8 @@ function createPost(title, content, author, locale = 'all') {
         author: author.trim(),
         locale: locale,
         date: new Date().toISOString(),
-        published: true
+        published: true,
+        photos: photos || []
     };
 }
 
@@ -141,7 +142,7 @@ async function syncPosts() {
 }
 
 // Добавление нового поста (с сохранением в GitHub)
-async function addPost(title, content, author, locale = 'all') {
+async function addPost(title, content, author, locale = 'all', photos = []) {
     if (!title || !content) {
         alert('Заполните заголовок и содержание!');
         return false;
@@ -149,7 +150,7 @@ async function addPost(title, content, author, locale = 'all') {
 
     try {
         // Создаем пост
-        const newPost = createPost(title, content, author, locale);
+        const newPost = createPost(title, content, author, locale, photos);
 
         // Сохраняем в localStorage для быстрого доступа
         const posts = loadPosts();
@@ -169,6 +170,79 @@ async function addPost(title, content, author, locale = 'all') {
     } catch (error) {
         console.error('Ошибка при добавлении поста:', error);
         alert('Ошибка при сохранении статьи: ' + error.message);
+        return false;
+    }
+}
+
+// Обновление существующего поста
+async function updatePost(postId, title, content, author, locale = 'all', photos = []) {
+    if (!title || !content) {
+        alert('Заполните заголовок и содержание!');
+        return false;
+    }
+
+    try {
+        const posts = loadPosts();
+        const postIndex = posts.findIndex(p => p.id === postId);
+
+        if (postIndex === -1) {
+            alert('Пост не найден!');
+            return false;
+        }
+
+        // Обновляем пост, сохраняя оригинальные ID и дату создания
+        const originalPost = posts[postIndex];
+        const updatedPost = {
+            ...originalPost,
+            title: title.trim(),
+            content: content.trim(),
+            author: author.trim(),
+            locale: locale,
+            photos: photos || [],
+            updatedAt: new Date().toISOString()
+        };
+
+        posts[postIndex] = updatedPost;
+        savePosts(posts);
+
+        // Сохраняем в GitHub
+        const success = await saveToGitHub(updatedPost);
+
+        if (success) {
+            return true;
+        } else {
+            console.warn('GitHub сохранение не удалось, статья обновлена локально');
+            return true;
+        }
+    } catch (error) {
+        console.error('Ошибка при обновлении поста:', error);
+        alert('Ошибка при обновлении статьи: ' + error.message);
+        return false;
+    }
+}
+
+// Удаление поста
+async function deletePost(postId) {
+    try {
+        const posts = loadPosts();
+        const postIndex = posts.findIndex(p => p.id === postId);
+
+        if (postIndex === -1) {
+            alert('Пост не найден!');
+            return false;
+        }
+
+        // Удаляем из localStorage
+        posts.splice(postIndex, 1);
+        savePosts(posts);
+
+        // TODO: Удаление из GitHub (требует дополнительной реализации)
+        console.log('Пост удален из localStorage. Удаление из GitHub пока не реализовано.');
+
+        return true;
+    } catch (error) {
+        console.error('Ошибка при удалении поста:', error);
+        alert('Ошибка при удалении статьи: ' + error.message);
         return false;
     }
 }
@@ -212,9 +286,19 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
             <h2 style="margin:0 0 0.5rem 0;color:#333;">${escapeHtml(post.title)}</h2>
             <div style="color:#666;font-size:0.9rem;margin-bottom:1rem;">
                 ${new Date(post.date).toLocaleDateString('ru-RU')} • ${escapeHtml(post.author)}
+                ${post.updatedAt ? ` • <em>обновлено ${new Date(post.updatedAt).toLocaleDateString('ru-RU')}</em>` : ''}
             </div>
+            ${post.photos && post.photos.length > 0 ? `
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.5rem;margin-bottom:1rem;">
+                    ${post.photos.slice(0, 6).map(photo => `
+                        <img src="${photo.dataUrl}" alt="${escapeHtml(photo.name)}"
+                             style="width:100%;height:120px;object-fit:cover;border-radius:6px;cursor:pointer;"
+                             onclick="window.open('${photo.dataUrl}', '_blank')">
+                    `).join('')}
+                </div>
+            ` : ''}
             <div style="line-height:1.6;color:#444;">
-                ${escapeHtml(post.content).replace(/\n/g, '<br>')}
+                ${sanitizeHtml(post.content)}
             </div>
         </article>
     `).join('');
@@ -227,6 +311,39 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Безопасная обработка HTML (разрешены только определенные теги)
+function sanitizeHtml(html) {
+    // Разрешенные теги: b, i, strong, em, p, br
+    const allowedTags = ['b', 'i', 'strong', 'em', 'p', 'br'];
+
+    // Создаем временный элемент для парсинга
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+
+    // Рекурсивно очищаем содержимое
+    function cleanNode(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            return node.textContent;
+        }
+
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            const tagName = node.tagName.toLowerCase();
+
+            if (allowedTags.includes(tagName)) {
+                const children = Array.from(node.childNodes).map(cleanNode).join('');
+                return `<${tagName}>${children}</${tagName}>`;
+            } else {
+                // Если тег не разрешен, возвращаем только содержимое
+                return Array.from(node.childNodes).map(cleanNode).join('');
+            }
+        }
+
+        return '';
+    }
+
+    return Array.from(temp.childNodes).map(cleanNode).join('').replace(/\n/g, '<br>');
 }
 
 // Определение текущего языка страницы
@@ -253,11 +370,15 @@ document.addEventListener('DOMContentLoaded', async function() {
 // Экспорт функций для использования в админке
 window.FlamingoBlogSimple = {
     addPost,
+    updatePost,
+    deletePost,
     getPosts,
     renderBlogPosts,
     getCurrentLocale,
     loadPosts,
     savePosts,
     loadPostsFromGitHub,
-    syncPosts
+    syncPosts,
+    sanitizeHtml,
+    escapeHtml
 };
