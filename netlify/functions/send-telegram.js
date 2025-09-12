@@ -34,16 +34,33 @@ function createFormData(fields, files) {
 
 // Simple multipart parser for Netlify Functions
 function parseMultipart(body, boundary) {
-    const parts = body.split(`--${boundary}`);
+    console.log('Parsing multipart with boundary:', boundary);
+
+    // Split by boundary
+    const boundaryStr = `--${boundary}`;
+    const parts = body.split(boundaryStr);
     const result = { fields: {}, files: [] };
 
-    for (const part of parts) {
-        if (part.trim() === '' || part.trim() === '--') continue;
+    console.log('Found parts:', parts.length);
 
-        const [headers, ...contentParts] = part.split('\r\n\r\n');
-        if (!headers || contentParts.length === 0) continue;
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        if (!part || part.trim() === '' || part.trim() === '--' || part.trim() === '--\r\n') {
+            continue;
+        }
 
-        const content = contentParts.join('\r\n\r\n').replace(/\r\n$/, '');
+        // Find the double CRLF that separates headers from content
+        const doubleCrlfIndex = part.indexOf('\r\n\r\n');
+        if (doubleCrlfIndex === -1) {
+            console.log(`Part ${i}: No double CRLF found, skipping`);
+            continue;
+        }
+
+        const headers = part.substring(0, doubleCrlfIndex);
+        const content = part.substring(doubleCrlfIndex + 4);
+
+        // Remove trailing CRLF from content
+        const cleanContent = content.replace(/\r\n$/, '');
 
         // Parse headers
         const headerLines = headers.split('\r\n');
@@ -63,28 +80,55 @@ function parseMultipart(body, boundary) {
             }
         }
 
-        if (filename) {
+        console.log(`Part ${i}: name="${name}", filename="${filename}", contentType="${contentType}"`);
+
+        if (filename && name) {
             // It's a file
             result.files.push({
                 fieldname: name,
                 filename: filename,
-                contentType: contentType,
-                content: Buffer.from(content, 'binary')
+                contentType: contentType || 'application/octet-stream',
+                content: Buffer.from(cleanContent, 'binary')
             });
+            console.log(`Added file: ${filename}, size: ${cleanContent.length}`);
         } else if (name) {
             // It's a field
-            result.fields[name] = content;
+            result.fields[name] = cleanContent;
+            console.log(`Added field: ${name} = ${cleanContent.substring(0, 50)}...`);
         }
     }
+
+    console.log('Parse result:', {
+        fields: Object.keys(result.fields),
+        files: result.files.length
+    });
 
     return result;
 }
 
 exports.handler = async (event, context) => {
+    // CORS headers for all responses
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Content-Type': 'application/json'
+    };
+
+    // Handle preflight requests
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers: corsHeaders,
+            body: JSON.stringify({ message: 'CORS preflight' })
+        };
+    }
+
     // Only allow POST requests
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
+            headers: corsHeaders,
             body: JSON.stringify({ error: 'Method not allowed' })
         };
     }
@@ -108,11 +152,7 @@ exports.handler = async (event, context) => {
             });
             return {
                 statusCode: 500,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                    'Access-Control-Allow-Methods': 'POST'
-                },
+                headers: corsHeaders,
                 body: JSON.stringify({
                     error: 'Server configuration error',
                     details: 'TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not found in environment variables'
@@ -123,6 +163,8 @@ exports.handler = async (event, context) => {
         // Check content type and parse accordingly
         const contentType = event.headers['content-type'] || event.headers['Content-Type'] || '';
         console.log('Content-Type:', contentType);
+        console.log('Event body type:', typeof event.body);
+        console.log('Event body length:', event.body ? event.body.length : 0);
 
         let formData;
         let photos = [];
@@ -136,10 +178,25 @@ exports.handler = async (event, context) => {
             console.log('Parsing multipart data...');
             const boundary = contentType.split('boundary=')[1];
             if (!boundary) {
+                console.error('No boundary found in content-type:', contentType);
                 throw new Error('No boundary found in multipart data');
             }
 
-            const parsed = parseMultipart(event.body, boundary);
+            console.log('Using boundary:', boundary);
+
+            // Convert base64 body to buffer if needed
+            let bodyBuffer;
+            if (event.isBase64Encoded) {
+                console.log('Converting base64 body to buffer...');
+                bodyBuffer = Buffer.from(event.body, 'base64');
+            } else {
+                console.log('Using body as string...');
+                bodyBuffer = Buffer.from(event.body, 'binary');
+            }
+
+            console.log('Body buffer length:', bodyBuffer.length);
+
+            const parsed = parseMultipart(bodyBuffer.toString('binary'), boundary);
             formData = parsed.fields;
 
             // Extract photos
@@ -151,11 +208,17 @@ exports.handler = async (event, context) => {
 
             console.log('Parsed multipart:', {
                 fields: Object.keys(formData),
-                photos: photos.length
+                photos: photos.length,
+                photoSizes: photos.map(p => p.content.length)
             });
         } else {
             console.log('Unknown content type, trying JSON...');
-            formData = JSON.parse(event.body);
+            try {
+                formData = JSON.parse(event.body);
+            } catch (e) {
+                console.error('Failed to parse as JSON:', e.message);
+                throw new Error('Invalid request format');
+            }
         }
 
         // Build message
@@ -273,26 +336,20 @@ exports.handler = async (event, context) => {
 
         return {
             statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST'
-            },
+            headers: corsHeaders,
             body: JSON.stringify({ success: true, message: 'Message sent successfully' })
         };
 
     } catch (error) {
         console.error('Function error:', error);
+        console.error('Error stack:', error.stack);
         return {
             statusCode: 500,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST'
-            },
-            body: JSON.stringify({ 
+            headers: corsHeaders,
+            body: JSON.stringify({
                 error: 'Failed to send message',
-                details: error.message 
+                details: error.message,
+                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
             })
         };
     }
