@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Простая админка — Flamingo Auto</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    
+    <style>
+        .admin-panel { 
+            max-width: 800px; 
+            margin: 2rem auto; 
+            padding: 2rem; 
+            background: #fff; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .form-group { 
+            margin-bottom: 1.5rem; 
+        }
+        .form-group label { 
+            display: block; 
+            margin-bottom: 0.5rem; 
+            font-weight: 600; 
+            color: #333;
+        }
+        .form-group input, .form-group textarea, .form-group select { 
+            width: 100%; 
+            padding: 0.75rem; 
+            border: 2px solid #e1e5e9; 
+            border-radius: 8px; 
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { 
+            outline: none;
+            border-color: #007bff; 
+        }
+        .form-group textarea { 
+            min-height: 150px; 
+            resize: vertical; 
+        }
+        .btn-publish { 
+            background: #28a745; 
+            color: white; 
+            padding: 1rem 2rem; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1.1rem; 
+            font-weight: 600;
+            cursor: pointer; 
+            transition: background 0.3s;
+        }
+        .btn-publish:hover { 
+            background: #218838; 
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 1rem;
+        }
+        .posts-preview {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e1e5e9;
+        }
+        .post-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .post-meta {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <main class="container admin-panel">
+        <div class="hero-header">
+            <a class="logo" href="index.html">FLAMINGO AUTO</a>
+            <div class="lang-switch" role="tablist" aria-label="Language switch">
+                <a class="lang-btn" href="index.html" aria-pressed="true" role="tab">ET</a>
+                <a class="lang-btn" href="ru.html" aria-pressed="false" role="tab">RU</a>
+            </div>
+        </div>
+
+        <h1>📝 Простая админка блога</h1>
+        <p style="color: #666; margin-bottom: 2rem;">Создавайте и публикуйте статьи без сложностей</p>
+
+        <div id="success-message" class="success-message"></div>
+        <div id="error-message" class="error-message"></div>
+
+        <form id="post-form">
+            <div class="form-group">
+                <label for="post-title">Заголовок статьи *</label>
+                <input type="text" id="post-title" name="title" required placeholder="Введите заголовок статьи">
+            </div>
+
+            <div class="form-group">
+                <label for="post-content">Содержание статьи *</label>
+                <textarea id="post-content" name="content" required placeholder="Введите текст статьи..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="post-author">Автор</label>
+                <input type="text" id="post-author" name="author" placeholder="Имя автора" value="Администратор">
+            </div>
+
+            <div class="form-group">
+                <label for="post-locale">Язык статьи</label>
+                <select id="post-locale" name="locale">
+                    <option value="all">Все языки</option>
+                    <option value="et">Эстонский (ET)</option>
+                    <option value="ru">Русский (RU)</option>
+                </select>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <button type="submit" class="btn-publish">🚀 Опубликовать статью</button>
+                <a href="blog.html" class="btn-secondary">👀 Посмотреть блог</a>
+            </div>
+        </form>
+
+        <div class="posts-preview">
+            <h2>📚 Опубликованные статьи</h2>
+            <div id="posts-list">
+                <!-- Список статей будет загружен здесь -->
+            </div>
+        </div>
+    </main>
+
+    <script src="blog-simple.js"></script>
+    <script>
+        // Обработка формы публикации
+        document.getElementById('post-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('post-title').value;
+            const content = document.getElementById('post-content').value;
+            const author = document.getElementById('post-author').value || 'Администратор';
+            const locale = document.getElementById('post-locale').value;
+            
+            if (window.FlamingoBlogSimple.addPost(title, content, author, locale)) {
+                // Успешно опубликовано
+                showMessage('success', '✅ Статья успешно опубликована!');
+                document.getElementById('post-form').reset();
+                document.getElementById('post-author').value = 'Администратор';
+                loadPostsList();
+            } else {
+                showMessage('error', '❌ Ошибка при публикации статьи!');
+            }
+        });
+
+        // Показ сообщений
+        function showMessage(type, text) {
+            const successEl = document.getElementById('success-message');
+            const errorEl = document.getElementById('error-message');
+            
+            // Скрываем все сообщения
+            successEl.style.display = 'none';
+            errorEl.style.display = 'none';
+            
+            // Показываем нужное
+            if (type === 'success') {
+                successEl.textContent = text;
+                successEl.style.display = 'block';
+            } else {
+                errorEl.textContent = text;
+                errorEl.style.display = 'block';
+            }
+            
+            // Автоматически скрываем через 5 секунд
+            setTimeout(() => {
+                successEl.style.display = 'none';
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // Загрузка списка статей
+        function loadPostsList() {
+            const posts = window.FlamingoBlogSimple.loadPosts();
+            const container = document.getElementById('posts-list');
+            
+            if (posts.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center; padding: 2rem;">Пока нет опубликованных статей</p>';
+                return;
+            }
+            
+            const postsHTML = posts.map(post => `
+                <div class="post-item">
+                    <div class="post-meta">
+                        ${new Date(post.date).toLocaleDateString('ru-RU')} • ${post.author} • ${post.locale.toUpperCase()}
+                    </div>
+                    <h3 style="margin: 0.5rem 0;">${post.title}</h3>
+                    <p style="margin: 0; color: #666;">${post.content.substring(0, 150)}${post.content.length > 150 ? '...' : ''}</p>
+                </div>
+            `).join('');
+            
+            container.innerHTML = postsHTML;
+        }
+
+        // Загружаем список при загрузке страницы
+        document.addEventListener('DOMContentLoaded', loadPostsList);
+    </script>
+</body>
+</html>
