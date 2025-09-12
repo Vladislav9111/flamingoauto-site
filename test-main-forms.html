@@ -174,7 +174,10 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Отключаем оригинальный script.js для тестирования
+        console.log('🧪 Диагностическая страница загружена');
+    </script>
     <script>
         function showResult(elementId, message, type = 'info') {
             const element = document.getElementById(elementId);
