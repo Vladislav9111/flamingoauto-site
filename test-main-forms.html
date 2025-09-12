@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест основных форм сайта</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .test-button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .test-button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .result.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .result.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 80px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест основных форм сайта</h1>
+        <p>Проверяем работу форм с главных страниц index.html и ru.html</p>
+        
+        <button class="test-button" onclick="testScriptJsLoading()">1. Проверить загрузку script.js</button>
+        <div id="scriptResult" class="result" style="display: none;"></div>
+        
+        <button class="test-button" onclick="testFormElements()">2. Проверить элементы формы</button>
+        <div id="elementsResult" class="result" style="display: none;"></div>
+        
+        <button class="test-button" onclick="testFormSubmission()">3. Тест отправки формы</button>
+        <div id="submissionResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="container">
+        <h2>🔧 Тестовая форма (копия с главной страницы)</h2>
+        
+        <form id="car-form" novalidate>
+            <h3>Данные об автомобиле</h3>
+            <div class="form-group">
+                <label for="reg-number">Регистрационный номер*</label>
+                <input type="text" id="reg-number" name="reg-number" required placeholder="123 ABC" value="TEST123">
+            </div>
+            <div class="form-group">
+                <label for="make">Марка</label>
+                <input type="text" id="make" name="make" placeholder="BMW" value="BMW">
+            </div>
+            <div class="form-group">
+                <label for="model">Модель</label>
+                <input type="text" id="model" name="model" placeholder="X5" value="X5">
+            </div>
+            <div class="form-group">
+                <label for="year">Год</label>
+                <input type="number" id="year" name="year" placeholder="2020" value="2020">
+            </div>
+            <div class="form-group">
+                <label for="mileage">Пробег</label>
+                <input type="number" id="mileage" name="mileage" placeholder="50000" value="50000">
+            </div>
+            <div class="form-group">
+                <label for="transmission">КПП</label>
+                <select id="transmission" name="transmission">
+                    <option value="automatic" selected>Автоматическая</option>
+                    <option value="manual">Механическая</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="engine">Двигатель</label>
+                <input type="text" id="engine" name="engine" placeholder="2.0 TDI" value="2.0 TDI">
+            </div>
+            <div class="form-group">
+                <label for="price">Желаемая цена (€)</label>
+                <input type="text" id="price" name="price" placeholder="€" value="25000">
+            </div>
+            <div class="form-group">
+                <label for="photos">Фото (до 6)</label>
+                <input type="file" id="photos" name="photos" multiple accept="image/*">
+                <small id="photo-error" class="error-message"></small>
+            </div>
+            
+            <h3>Контактные данные</h3>
+            <div class="form-group">
+                <label for="name">Имя*</label>
+                <input type="text" id="name" name="name" required placeholder="Ваше имя" value="Тест Тестович">
+            </div>
+            <div class="form-group">
+                <label for="email">Email*</label>
+                <input type="email" id="email" name="email" required placeholder="email@example.com" value="test@example.com">
+            </div>
+            <div class="form-group">
+                <label for="phone">Телефон*</label>
+                <input type="tel" id="phone" name="phone" required placeholder="+372 1234567" value="+372 1234567">
+            </div>
+            <div class="form-group">
+                <label for="city">Город*</label>
+                <input type="text" id="city" name="city" required placeholder="Tallinn" value="Таллинн">
+            </div>
+            <div class="form-group">
+                <label for="note">Доп. информация</label>
+                <textarea id="note" name="note" placeholder="Сообщение…">Тестовое сообщение с основной формы сайта</textarea>
+            </div>
+            
+            <button type="submit" class="test-button">📤 Отправить заявку</button>
+        </form>
+        
+        <div id="formResult" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- Popup для успешной отправки -->
+    <div id="popup" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 30px; border-radius: 10px; text-align: center; max-width: 400px;">
+            <span class="close-btn" style="position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer;">&times;</span>
+            <p>Ваша анкета отправлена</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+
+        function testScriptJsLoading() {
+            showResult('scriptResult', 'Проверяем загрузку script.js...', 'info');
+            
+            try {
+                // Проверяем, что основные элементы script.js загружены
+                const form = document.getElementById('car-form');
+                const photoInput = document.getElementById('photos');
+                
+                if (!form) {
+                    throw new Error('Форма car-form не найдена');
+                }
+                
+                if (!photoInput) {
+                    throw new Error('Поле photos не найдено');
+                }
+                
+                // Проверяем, что обработчики событий добавлены
+                const hasSubmitHandler = form.onsubmit !== null || form.addEventListener;
+                
+                showResult('scriptResult', 
+                    `✅ script.js загружен успешно!\n` +
+                    `- Форма найдена: ${!!form}\n` +
+                    `- Поле фото найдено: ${!!photoInput}\n` +
+                    `- Обработчики событий: ${hasSubmitHandler}`, 
+                    'success'
+                );
+                
+            } catch (error) {
+                showResult('scriptResult', `❌ Ошибка загрузки script.js: ${error.message}`, 'error');
+            }
+        }
+
+        function testFormElements() {
+            showResult('elementsResult', 'Проверяем элементы формы...', 'info');
+            
+            try {
+                const form = document.getElementById('car-form');
+                const requiredFields = ['reg-number', 'name', 'email', 'phone', 'city'];
+                const allFields = ['reg-number', 'make', 'model', 'year', 'mileage', 'transmission', 'engine', 'price', 'name', 'email', 'phone', 'city', 'note', 'photos'];
+                
+                let report = '📋 Проверка элементов формы:\n\n';
+                
+                for (const fieldName of allFields) {
+                    const field = form.elements[fieldName];
+                    const isRequired = requiredFields.includes(fieldName);
+                    const hasValue = field && field.value && field.value.trim() !== '';
+                    
+                    report += `${field ? '✅' : '❌'} ${fieldName}: ${field ? 'найдено' : 'НЕ НАЙДЕНО'}`;
+                    if (field && isRequired) {
+                        report += ` (обязательное${hasValue ? ', заполнено' : ', ПУСТОЕ'})`;
+                    }
+                    report += '\n';
+                }
+                
+                showResult('elementsResult', report, 'success');
+                
+            } catch (error) {
+                showResult('elementsResult', `❌ Ошибка проверки элементов: ${error.message}`, 'error');
+            }
+        }
+
+        function testFormSubmission() {
+            showResult('submissionResult', 'Тестируем отправку формы...', 'info');
+            
+            try {
+                const form = document.getElementById('car-form');
+                const photoInput = document.getElementById('photos');
+                
+                // Создаем тестовые данные
+                const formData = new FormData();
+                const formElements = form.elements;
+                
+                // Добавляем текстовые поля
+                formData.append('regNumber', formElements['reg-number'].value);
+                formData.append('make', formElements['make'].value);
+                formData.append('model', formElements['model'].value);
+                formData.append('year', formElements['year'].value);
+                formData.append('mileage', formElements['mileage'].value);
+                formData.append('transmission', formElements['transmission'].value);
+                formData.append('engine', formElements['engine'].value);
+                formData.append('price', formElements['price'].value);
+                formData.append('name', formElements['name'].value);
+                formData.append('email', formElements['email'].value);
+                formData.append('phone', formElements['phone'].value);
+                formData.append('city', formElements['city'].value);
+                formData.append('note', formElements['note'].value);
+                
+                // Добавляем фото
+                const files = photoInput.files;
+                for (let i = 0; i < files.length && i < 6; i++) {
+                    formData.append(`photo${i}`, files[i]);
+                }
+                formData.append('photoCount', files.length.toString());
+                
+                // Отправляем
+                fetch('/.netlify/functions/send-telegram', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showResult('submissionResult', 
+                            `✅ Форма отправлена успешно!\n` +
+                            `Фотографий: ${files.length}\n` +
+                            `Ответ: ${JSON.stringify(result, null, 2)}`, 
+                            'success'
+                        );
+                    } else {
+                        showResult('submissionResult', 
+                            `❌ Ошибка отправки: ${result.error}\n` +
+                            `Детали: ${JSON.stringify(result, null, 2)}`, 
+                            'error'
+                        );
+                    }
+                })
+                .catch(error => {
+                    showResult('submissionResult', `❌ Сетевая ошибка: ${error.message}`, 'error');
+                });
+                
+            } catch (error) {
+                showResult('submissionResult', `❌ Ошибка тестирования: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
