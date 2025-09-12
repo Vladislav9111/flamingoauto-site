@@ -10,6 +10,9 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+
+    <!-- Netlify Identity Widget -->
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     
     <style>
         .admin-panel { 
@@ -117,6 +120,17 @@
         <h1>📝 Простая админка блога</h1>
         <p style="color: #666; margin-bottom: 2rem;">Создавайте и публикуйте статьи без сложностей</p>
 
+        <!-- Секция авторизации -->
+        <div id="auth-section" style="display: none;">
+            <div style="background: #e3f2fd; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
+                <p style="margin: 0 0 1rem 0; color: #1976d2;">🔐 Для сохранения в GitHub войдите через Netlify Identity</p>
+                <div id="netlify-login"></div>
+                <p style="margin: 1rem 0 0 0; font-size: 0.9rem; color: #666;">
+                    Без авторизации статьи сохраняются только локально в браузере
+                </p>
+            </div>
+        </div>
+
         <div id="success-message" class="success-message"></div>
         <div id="error-message" class="error-message"></div>
 
@@ -161,23 +175,70 @@
 
     <script src="blog-simple.js"></script>
     <script>
+        // Инициализация Netlify Identity
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.on("init", user => {
+                updateAuthUI(user);
+            });
+
+            window.netlifyIdentity.on("login", user => {
+                updateAuthUI(user);
+                showMessage('success', '✅ Авторизация успешна! Теперь статьи будут сохраняться в GitHub');
+            });
+
+            window.netlifyIdentity.on("logout", () => {
+                updateAuthUI(null);
+                showMessage('info', 'ℹ️ Вы вышли из системы. Статьи будут сохраняться только локально');
+            });
+        }
+
+        // Обновление интерфейса авторизации
+        function updateAuthUI(user) {
+            const authSection = document.getElementById('auth-section');
+            if (user) {
+                authSection.style.display = 'none';
+            } else {
+                authSection.style.display = 'block';
+            }
+        }
+
         // Обработка формы публикации
-        document.getElementById('post-form').addEventListener('submit', function(e) {
+        document.getElementById('post-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const title = document.getElementById('post-title').value;
             const content = document.getElementById('post-content').value;
             const author = document.getElementById('post-author').value || 'Администратор';
             const locale = document.getElementById('post-locale').value;
-            
-            if (window.FlamingoBlogSimple.addPost(title, content, author, locale)) {
-                // Успешно опубликовано
-                showMessage('success', '✅ Статья успешно опубликована!');
-                document.getElementById('post-form').reset();
-                document.getElementById('post-author').value = 'Администратор';
-                loadPostsList();
-            } else {
-                showMessage('error', '❌ Ошибка при публикации статьи!');
+
+            // Показываем индикатор загрузки
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '🔄 Публикуем...';
+            submitBtn.disabled = true;
+
+            try {
+                const success = await window.FlamingoBlogSimple.addPost(title, content, author, locale);
+
+                if (success) {
+                    // Успешно опубликовано
+                    const user = window.netlifyIdentity?.currentUser();
+                    const message = user
+                        ? '✅ Статья опубликована и сохранена в GitHub!'
+                        : '✅ Статья опубликована локально!';
+                    showMessage('success', message);
+
+                    document.getElementById('post-form').reset();
+                    document.getElementById('post-author').value = 'Администратор';
+                    await loadPostsList();
+                } else {
+                    showMessage('error', '❌ Ошибка при публикации статьи!');
+                }
+            } catch (error) {
+                showMessage('error', '❌ Ошибка: ' + error.message);
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
             }
         });
 
@@ -207,30 +268,46 @@
         }
 
         // Загрузка списка статей
-        function loadPostsList() {
-            const posts = window.FlamingoBlogSimple.loadPosts();
+        async function loadPostsList() {
             const container = document.getElementById('posts-list');
-            
-            if (posts.length === 0) {
-                container.innerHTML = '<p style="color: #666; text-align: center; padding: 2rem;">Пока нет опубликованных статей</p>';
-                return;
-            }
-            
-            const postsHTML = posts.map(post => `
-                <div class="post-item">
-                    <div class="post-meta">
-                        ${new Date(post.date).toLocaleDateString('ru-RU')} • ${post.author} • ${post.locale.toUpperCase()}
+            container.innerHTML = '<p style="color: #666; text-align: center; padding: 2rem;">🔄 Загружаем статьи...</p>';
+
+            try {
+                const posts = await window.FlamingoBlogSimple.getPosts();
+
+                if (posts.length === 0) {
+                    container.innerHTML = '<p style="color: #666; text-align: center; padding: 2rem;">Пока нет опубликованных статей</p>';
+                    return;
+                }
+
+                const postsHTML = posts.map(post => `
+                    <div class="post-item">
+                        <div class="post-meta">
+                            ${new Date(post.date).toLocaleDateString('ru-RU')} • ${post.author} • ${post.locale.toUpperCase()}
+                        </div>
+                        <h3 style="margin: 0.5rem 0;">${post.title}</h3>
+                        <p style="margin: 0; color: #666;">${post.content.substring(0, 150)}${post.content.length > 150 ? '...' : ''}</p>
                     </div>
-                    <h3 style="margin: 0.5rem 0;">${post.title}</h3>
-                    <p style="margin: 0; color: #666;">${post.content.substring(0, 150)}${post.content.length > 150 ? '...' : ''}</p>
-                </div>
-            `).join('');
-            
-            container.innerHTML = postsHTML;
+                `).join('');
+
+                container.innerHTML = postsHTML;
+            } catch (error) {
+                container.innerHTML = '<p style="color: #dc3545; text-align: center; padding: 2rem;">❌ Ошибка загрузки статей</p>';
+                console.error('Ошибка загрузки списка постов:', error);
+            }
         }
 
         // Загружаем список при загрузке страницы
-        document.addEventListener('DOMContentLoaded', loadPostsList);
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Инициализируем Netlify Identity
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.init();
+                updateAuthUI(window.netlifyIdentity.currentUser());
+            }
+
+            // Загружаем список постов
+            await loadPostsList();
+        });
     </script>
 </body>
 </html>
