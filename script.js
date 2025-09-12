@@ -122,7 +122,7 @@ popup.addEventListener('click', function(event) {
 (function initLangSwitch() {
     const switchContainer = document.querySelector('.lang-switch');
     if (!switchContainer) return;
-    
+
     const buttons = switchContainer.querySelectorAll('.lang-btn');
     buttons.forEach(btn => {
         // Make Enter/Space activate link for keyboard users
@@ -132,15 +132,52 @@ popup.addEventListener('click', function(event) {
                 btn.click();
             }
         });
-        
+
         // Set aria-pressed based on href matching current location
         try {
             const href = new URL(btn.href, location.href).pathname.split('/').pop();
             const current = location.pathname.split('/').pop() || 'index.html';
             btn.setAttribute('aria-pressed', href === current ? 'true' : 'false');
             if (href === current) btn.classList.add('active');
-        } catch (e) { 
+        } catch (e) {
             // Ignore URL errors
         }
     });
 })();
+
+// Debug function for testing Telegram integration
+window.testTelegramFunction = async function() {
+    console.log('🧪 Testing Telegram function...');
+
+    const testData = {
+        name: 'Test User',
+        email: 'test@example.com',
+        phone: '+372 12345678',
+        regNumber: '123 ABC',
+        make: 'Volkswagen',
+        model: 'Golf',
+        city: 'Tallinn',
+        note: 'Test message from debug function'
+    };
+
+    try {
+        const response = await fetch('/.netlify/functions/send-telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(testData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            console.log('✅ Telegram test SUCCESS:', result);
+            alert('✅ Telegram test successful! Check console for details.');
+        } else {
+            console.error('❌ Telegram test FAILED:', result);
+            alert('❌ Telegram test failed: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('❌ Network error:', error);
+        alert('❌ Network error: ' + error.message);
+    }
+};

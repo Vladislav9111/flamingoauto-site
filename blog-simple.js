@@ -128,16 +128,21 @@ async function loadPostsFromGitHub() {
     }
 }
 
-// Синхронизация: загружаем из GitHub, если localStorage пуст
+// Синхронизация: всегда пробуем загрузить из GitHub, fallback на localStorage
 async function syncPosts() {
-    const localPosts = loadPosts();
+    console.log('🔄 Синхронизируем посты...');
 
-    if (localPosts.length === 0) {
-        console.log('📥 localStorage пуст, загружаем из GitHub...');
-        const githubPosts = await loadPostsFromGitHub();
-        return githubPosts.length > 0 ? githubPosts : localPosts;
+    // Сначала пробуем загрузить из GitHub
+    const githubPosts = await loadPostsFromGitHub();
+
+    if (githubPosts.length > 0) {
+        console.log('✅ Используем посты из GitHub:', githubPosts.length);
+        return githubPosts;
     }
 
+    // Если GitHub недоступен, используем localStorage
+    const localPosts = loadPosts();
+    console.log('📱 Используем локальные посты:', localPosts.length);
     return localPosts;
 }
 
@@ -266,15 +271,18 @@ async function getPosts(locale = null) {
 async function renderBlogPosts(containerId = 'posts-container', locale = null) {
     const container = document.getElementById(containerId);
     if (!container) {
-        console.log('Контейнер для постов не найден:', containerId);
+        console.log('❌ Контейнер для постов не найден:', containerId);
         return;
     }
+
+    console.log('🎯 Начинаем рендеринг постов для языка:', locale);
 
     // Показываем индикатор загрузки
     container.innerHTML = '<p style="text-align:center;color:#666;padding:2rem;">🔄 Загружаем статьи...</p>';
 
     const posts = await getPosts(locale);
-    console.log('Отображаем посты:', posts.length, 'для языка:', locale);
+    console.log('📊 Получено постов:', posts.length, 'для языка:', locale);
+    console.log('📝 Посты:', posts.map(p => ({ title: p.title, locale: p.locale })));
 
     if (posts.length === 0) {
         // Локализованные сообщения для разных языков

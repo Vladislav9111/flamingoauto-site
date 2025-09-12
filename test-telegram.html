@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Telegram Form</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 800px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .test-section h3 { margin-top: 0; color: #333; }
+        button { padding: 10px 15px; margin: 5px; background: #007cba; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #005a87; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; white-space: pre-wrap; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; box-sizing: border-box; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Telegram Form Testing</h1>
+    
+    <div class="test-section">
+        <h3>1. Test Environment Variables</h3>
+        <button onclick="testEnvironment()">Test Environment Setup</button>
+        <pre id="env-result">Click button to test...</pre>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Test Netlify Function Directly</h3>
+        <button onclick="testNetlifyFunction()">Test /.netlify/functions/send-telegram</button>
+        <pre id="function-result">Click button to test...</pre>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Test Form Submission</h3>
+        <form id="test-form">
+            <div class="form-group">
+                <label for="test-name">Name:</label>
+                <input type="text" id="test-name" name="name" value="Test User" required>
+            </div>
+            <div class="form-group">
+                <label for="test-email">Email:</label>
+                <input type="email" id="test-email" name="email" value="test@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="test-phone">Phone:</label>
+                <input type="tel" id="test-phone" name="phone" value="+372 12345678" required>
+            </div>
+            <div class="form-group">
+                <label for="test-reg">Registration Number:</label>
+                <input type="text" id="test-reg" name="reg-number" value="123 ABC">
+            </div>
+            <div class="form-group">
+                <label for="test-make">Car Make:</label>
+                <input type="text" id="test-make" name="make" value="Volkswagen">
+            </div>
+            <div class="form-group">
+                <label for="test-model">Car Model:</label>
+                <input type="text" id="test-model" name="model" value="Golf">
+            </div>
+            <div class="form-group">
+                <label for="test-city">City:</label>
+                <input type="text" id="test-city" name="city" value="Tallinn" required>
+            </div>
+            <div class="form-group">
+                <label for="test-note">Note:</label>
+                <textarea id="test-note" name="note" rows="3">Test message from form</textarea>
+            </div>
+            <button type="submit" id="test-submit">Send Test Form</button>
+        </form>
+        <pre id="form-result">Fill form and click submit...</pre>
+    </div>
+    
+    <div class="test-section">
+        <h3>4. Test Original Form Script</h3>
+        <button onclick="testOriginalScript()">Test script.js Integration</button>
+        <pre id="script-result">Click button to test...</pre>
+    </div>
+
+    <script>
+        // Test environment variables (indirect test)
+        async function testEnvironment() {
+            const result = document.getElementById('env-result');
+            result.textContent = 'Testing environment setup...';
+            
+            try {
+                // We can't directly access env vars from client, but we can test if function responds
+                const response = await fetch('/.netlify/functions/send-telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ test: true })
+                });
+                
+                if (response.status === 500) {
+                    const error = await response.json();
+                    if (error.error === 'Server configuration error') {
+                        result.textContent = '❌ Environment variables not set!\nTELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are missing.';
+                        result.className = 'error';
+                    } else {
+                        result.textContent = `✅ Environment OK, but got error: ${error.error}`;
+                        result.className = 'success';
+                    }
+                } else {
+                    result.textContent = `✅ Function responds (status: ${response.status})`;
+                    result.className = 'success';
+                }
+            } catch (error) {
+                result.textContent = `❌ Network error: ${error.message}`;
+                result.className = 'error';
+            }
+        }
+        
+        // Test Netlify Function with sample data
+        async function testNetlifyFunction() {
+            const result = document.getElementById('function-result');
+            result.textContent = 'Testing Netlify Function...';
+            
+            const testData = {
+                name: 'Test User',
+                email: 'test@example.com',
+                phone: '+372 12345678',
+                regNumber: '123 ABC',
+                make: 'Volkswagen',
+                model: 'Golf',
+                city: 'Tallinn',
+                note: 'Test message from debug page'
+            };
+            
+            try {
+                const response = await fetch('/.netlify/functions/send-telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                
+                const responseData = await response.json();
+                
+                if (response.ok) {
+                    result.textContent = `✅ SUCCESS!\nStatus: ${response.status}\nResponse: ${JSON.stringify(responseData, null, 2)}`;
+                    result.className = 'success';
+                } else {
+                    result.textContent = `❌ FAILED!\nStatus: ${response.status}\nError: ${JSON.stringify(responseData, null, 2)}`;
+                    result.className = 'error';
+                }
+            } catch (error) {
+                result.textContent = `❌ Network error: ${error.message}`;
+                result.className = 'error';
+            }
+        }
+        
+        // Test form submission
+        document.getElementById('test-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const result = document.getElementById('form-result');
+            const submitBtn = document.getElementById('test-submit');
+            
+            result.textContent = 'Submitting form...';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            
+            const formData = new FormData(this);
+            const data = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                regNumber: formData.get('reg-number'),
+                make: formData.get('make'),
+                model: formData.get('model'),
+                city: formData.get('city'),
+                note: formData.get('note')
+            };
+            
+            try {
+                const response = await fetch('/.netlify/functions/send-telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const responseData = await response.json();
+                
+                if (response.ok) {
+                    result.textContent = `✅ Form submitted successfully!\nResponse: ${JSON.stringify(responseData, null, 2)}`;
+                    result.className = 'success';
+                } else {
+                    result.textContent = `❌ Form submission failed!\nStatus: ${response.status}\nError: ${JSON.stringify(responseData, null, 2)}`;
+                    result.className = 'error';
+                }
+            } catch (error) {
+                result.textContent = `❌ Network error: ${error.message}`;
+                result.className = 'error';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Test Form';
+            }
+        });
+        
+        // Test original script integration
+        function testOriginalScript() {
+            const result = document.getElementById('script-result');
+            
+            // Check if script.js is loaded and working
+            if (typeof window !== 'undefined') {
+                result.textContent = `Script environment check:
+- Window object: ✅ Available
+- Fetch API: ${typeof fetch !== 'undefined' ? '✅' : '❌'} ${typeof fetch !== 'undefined' ? 'Available' : 'Not available'}
+- JSON support: ${typeof JSON !== 'undefined' ? '✅' : '❌'} ${typeof JSON !== 'undefined' ? 'Available' : 'Not available'}
+- Form elements: ${document.getElementById('test-form') ? '✅' : '❌'} ${document.getElementById('test-form') ? 'Found' : 'Not found'}
+
+To test the original script.js, check the main pages:
+- https://flamingoauto.eu/index.html (Estonian)
+- https://flamingoauto.eu/ru.html (Russian)`;
+                result.className = 'success';
+            } else {
+                result.textContent = '❌ Script environment not available';
+                result.className = 'error';
+            }
+        }
+    </script>
+</body>
+</html>

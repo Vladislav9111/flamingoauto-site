@@ -11,20 +11,38 @@ exports.handler = async (event, context) => {
         const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
         const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
+        console.log('Environment check:', {
+            hasBotToken: !!BOT_TOKEN,
+            hasChatId: !!CHAT_ID,
+            botTokenLength: BOT_TOKEN ? BOT_TOKEN.length : 0,
+            chatIdLength: CHAT_ID ? CHAT_ID.length : 0
+        });
+
         if (!BOT_TOKEN || !CHAT_ID) {
-            console.error('Missing environment variables:', { 
-                hasBotToken: !!BOT_TOKEN, 
-                hasChatId: !!CHAT_ID 
+            console.error('Missing environment variables:', {
+                hasBotToken: !!BOT_TOKEN,
+                hasChatId: !!CHAT_ID,
+                allEnvVars: Object.keys(process.env).filter(key => key.includes('TELEGRAM'))
             });
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: 'Server configuration error' })
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST'
+                },
+                body: JSON.stringify({
+                    error: 'Server configuration error',
+                    details: 'TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not found in environment variables'
+                })
             };
         }
 
         // Parse form data
+        console.log('Received request body:', event.body);
         const formData = JSON.parse(event.body);
-        
+        console.log('Parsed form data:', formData);
+
         // Build message
         let message = '📩 Новая заявка с сайта:\n\n';
         
@@ -54,23 +72,40 @@ exports.handler = async (event, context) => {
         addField('Доп. информация', formData.note);
 
         // Send message to Telegram
+        console.log('Sending message to Telegram:', {
+            chatId: CHAT_ID,
+            messageLength: message.length,
+            message: message.substring(0, 200) + '...'
+        });
+
+        const telegramPayload = {
+            chat_id: CHAT_ID,
+            text: message,
+            parse_mode: 'HTML'
+        };
+
         const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                chat_id: CHAT_ID,
-                text: message,
-                parse_mode: 'HTML'
-            })
+            body: JSON.stringify(telegramPayload)
         });
+
+        console.log('Telegram response status:', telegramResponse.status);
 
         if (!telegramResponse.ok) {
             const errorText = await telegramResponse.text();
-            console.error('Telegram API error:', errorText);
-            throw new Error(`Telegram API error: ${telegramResponse.status}`);
+            console.error('Telegram API error:', {
+                status: telegramResponse.status,
+                statusText: telegramResponse.statusText,
+                error: errorText
+            });
+            throw new Error(`Telegram API error: ${telegramResponse.status} - ${errorText}`);
         }
+
+        const telegramResult = await telegramResponse.json();
+        console.log('Telegram success:', telegramResult);
 
         return {
             statusCode: 200,
