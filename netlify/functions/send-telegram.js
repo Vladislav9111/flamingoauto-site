@@ -1,4 +1,84 @@
-const multipart = require('lambda-multipart-parser');
+// Simple multipart form data builder
+function createFormData(fields, files) {
+    const boundary = `----formdata-${Date.now()}`;
+    const chunks = [];
+
+    // Add text fields
+    for (const [key, value] of Object.entries(fields)) {
+        chunks.push(`--${boundary}\r\n`);
+        chunks.push(`Content-Disposition: form-data; name="${key}"\r\n\r\n`);
+        chunks.push(`${value}\r\n`);
+    }
+
+    // Add files
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const photoKey = `photo${i}`;
+
+        chunks.push(`--${boundary}\r\n`);
+        chunks.push(`Content-Disposition: form-data; name="${photoKey}"; filename="${file.filename || `photo${i}.jpg`}"\r\n`);
+        chunks.push(`Content-Type: ${file.contentType || 'image/jpeg'}\r\n\r\n`);
+        chunks.push(file.content);
+        chunks.push('\r\n');
+    }
+
+    chunks.push(`--${boundary}--\r\n`);
+
+    return {
+        boundary,
+        body: Buffer.concat(chunks.map(chunk =>
+            typeof chunk === 'string' ? Buffer.from(chunk) : chunk
+        ))
+    };
+}
+
+// Simple multipart parser for Netlify Functions
+function parseMultipart(body, boundary) {
+    const parts = body.split(`--${boundary}`);
+    const result = { fields: {}, files: [] };
+
+    for (const part of parts) {
+        if (part.trim() === '' || part.trim() === '--') continue;
+
+        const [headers, ...contentParts] = part.split('\r\n\r\n');
+        if (!headers || contentParts.length === 0) continue;
+
+        const content = contentParts.join('\r\n\r\n').replace(/\r\n$/, '');
+
+        // Parse headers
+        const headerLines = headers.split('\r\n');
+        let name = '';
+        let filename = '';
+        let contentType = '';
+
+        for (const line of headerLines) {
+            if (line.includes('Content-Disposition')) {
+                const nameMatch = line.match(/name="([^"]+)"/);
+                const filenameMatch = line.match(/filename="([^"]+)"/);
+                if (nameMatch) name = nameMatch[1];
+                if (filenameMatch) filename = filenameMatch[1];
+            }
+            if (line.includes('Content-Type')) {
+                contentType = line.split(':')[1].trim();
+            }
+        }
+
+        if (filename) {
+            // It's a file
+            result.files.push({
+                fieldname: name,
+                filename: filename,
+                contentType: contentType,
+                content: Buffer.from(content, 'binary')
+            });
+        } else if (name) {
+            // It's a field
+            result.fields[name] = content;
+        }
+    }
+
+    return result;
+}
 
 exports.handler = async (event, context) => {
     // Only allow POST requests
@@ -40,15 +120,43 @@ exports.handler = async (event, context) => {
             };
         }
 
-        // Parse multipart form data
-        console.log('Parsing multipart data...');
-        const result = await multipart.parse(event);
-        console.log('Parsed form data:', {
-            fields: Object.keys(result),
-            files: result.files ? result.files.length : 0
-        });
+        // Check content type and parse accordingly
+        const contentType = event.headers['content-type'] || event.headers['Content-Type'] || '';
+        console.log('Content-Type:', contentType);
 
-        const formData = result;
+        let formData;
+        let photos = [];
+
+        if (contentType.includes('application/json')) {
+            // JSON data (no photos)
+            console.log('Parsing JSON data...');
+            formData = JSON.parse(event.body);
+        } else if (contentType.includes('multipart/form-data')) {
+            // Parse multipart data
+            console.log('Parsing multipart data...');
+            const boundary = contentType.split('boundary=')[1];
+            if (!boundary) {
+                throw new Error('No boundary found in multipart data');
+            }
+
+            const parsed = parseMultipart(event.body, boundary);
+            formData = parsed.fields;
+
+            // Extract photos
+            for (const file of parsed.files) {
+                if (file.fieldname && file.fieldname.startsWith('photo')) {
+                    photos.push(file);
+                }
+            }
+
+            console.log('Parsed multipart:', {
+                fields: Object.keys(formData),
+                photos: photos.length
+            });
+        } else {
+            console.log('Unknown content type, trying JSON...');
+            formData = JSON.parse(event.body);
+        }
 
         // Build message
         let message = '📩 Новая заявка с сайта:\n\n';
@@ -78,41 +186,16 @@ exports.handler = async (event, context) => {
         addField('Город', formData.city);
         addField('Доп. информация', formData.note);
 
-        // Check if there are photos
-        const photos = [];
-        if (formData.files) {
-            for (const file of formData.files) {
-                if (file.fieldname && file.fieldname.startsWith('photo')) {
-                    photos.push(file);
-                }
-            }
-        }
-
-        console.log('Found photos:', photos.length);
-
         // Send message to Telegram
         if (photos.length > 0) {
-            // Send photos with caption using form-data
-            console.log('Sending photos with message to Telegram...');
+            console.log(`Sending message with ${photos.length} photos to Telegram...`);
 
-            const FormData = require('form-data');
-            const telegramFormData = new FormData();
-            telegramFormData.append('chat_id', CHAT_ID);
-
+            // Prepare media array
             const media = [];
             for (let i = 0; i < photos.length; i++) {
-                const photo = photos[i];
-                const photoKey = `photo${i}`;
-
-                // Append photo buffer
-                telegramFormData.append(photoKey, photo.content, {
-                    filename: photo.filename || `photo${i}.jpg`,
-                    contentType: photo.contentType || 'image/jpeg'
-                });
-
                 const mediaItem = {
                     type: 'photo',
-                    media: `attach://${photoKey}`
+                    media: `attach://photo${i}`
                 };
 
                 // Add caption to first photo
@@ -124,12 +207,20 @@ exports.handler = async (event, context) => {
                 media.push(mediaItem);
             }
 
-            telegramFormData.append('media', JSON.stringify(media));
+            // Create form data
+            const formFields = {
+                chat_id: CHAT_ID,
+                media: JSON.stringify(media)
+            };
+
+            const formData = createFormData(formFields, photos);
 
             const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup`, {
                 method: 'POST',
-                body: telegramFormData,
-                headers: telegramFormData.getHeaders()
+                headers: {
+                    'Content-Type': `multipart/form-data; boundary=${formData.boundary}`
+                },
+                body: formData.body
             });
 
             console.log('Telegram response status:', telegramResponse.status);
@@ -148,7 +239,6 @@ exports.handler = async (event, context) => {
             console.log('Telegram success with photos:', telegramResult);
 
         } else {
-            // Send text message only
             console.log('Sending text message to Telegram...');
 
             const telegramPayload = {

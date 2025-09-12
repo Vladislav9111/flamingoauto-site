@@ -9,7 +9,6 @@
   "dependencies": {
     "gray-matter": "^4.0.3",
     "@octokit/rest": "^19.0.0",
-    "lambda-multipart-parser": "^1.0.1",
     "form-data": "^4.0.0"
   },
   "author": "Flamingo Auto",
