@@ -25,7 +25,7 @@ const POSTS_KEY = 'flamingo_posts';
 /**
  * Render posts into the blog page (if posts-container exists)
  */
-async function renderPosts() {
+window.renderPosts = async function renderPosts() {
     const container = document.getElementById('posts-container');
     const noPosts = document.getElementById('no-posts');
     if (!container) return;
@@ -161,21 +161,26 @@ function sanitizeSimpleHtml(input = '') {
 }
 
 // Test function for debugging
-window.testPostsLoading = async function() {
+window.testPostsLoading = function() {
     console.log('🔍 Manual test started...');
-    await renderPosts();
-    console.log('🔍 Manual test completed');
+    window.renderPosts().then(() => {
+        console.log('🔍 Manual test completed');
+    }).catch(error => {
+        console.error('🔍 Manual test failed:', error);
+    });
 };
 
 // expose renderPosts for pages that load this script
 window.FlamingoBlog = {
-    renderPosts,
+    renderPosts: window.renderPosts,
     POSTS_KEY
 };
 
 // initialize posts render on pages where posts-container exists
 document.addEventListener('DOMContentLoaded', () => {
-    renderPosts();
+    if (window.renderPosts) {
+        window.renderPosts();
+    }
 });
 
 function validatePhotos() {
