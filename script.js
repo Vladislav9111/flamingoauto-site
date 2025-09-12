@@ -160,6 +160,13 @@ function sanitizeSimpleHtml(input = '') {
     return escaped;
 }
 
+// Test function for debugging
+window.testPostsLoading = async function() {
+    console.log('🔍 Manual test started...');
+    await renderPosts();
+    console.log('🔍 Manual test completed');
+};
+
 // expose renderPosts for pages that load this script
 window.FlamingoBlog = {
     renderPosts,
