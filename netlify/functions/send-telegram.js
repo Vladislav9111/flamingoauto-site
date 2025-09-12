@@ -1,5 +1,130 @@
-// Simple multipart form data builder
-function createFormData(fields, files) {
+// Netlify-specific multipart parser
+function parseNetlifyMultipart(event) {
+    console.log('🔍 Starting Netlify multipart parsing...');
+
+    const contentType = event.headers['content-type'] || event.headers['Content-Type'] || '';
+    console.log('Content-Type header:', contentType);
+
+    if (!contentType.includes('multipart/form-data')) {
+        throw new Error('Not multipart/form-data');
+    }
+
+    // Extract boundary
+    const boundaryMatch = contentType.match(/boundary=([^;]+)/);
+    if (!boundaryMatch) {
+        throw new Error('No boundary found in Content-Type');
+    }
+
+    const boundary = boundaryMatch[1].replace(/"/g, ''); // Remove quotes if present
+    console.log('Extracted boundary:', boundary);
+
+    // Get body as buffer
+    let bodyBuffer;
+    if (event.isBase64Encoded) {
+        console.log('Converting base64 body...');
+        bodyBuffer = Buffer.from(event.body, 'base64');
+    } else {
+        console.log('Using raw body...');
+        bodyBuffer = Buffer.from(event.body, 'utf8');
+    }
+
+    console.log('Body buffer length:', bodyBuffer.length);
+
+    // Parse multipart
+    const result = { fields: {}, files: [] };
+    const boundaryBuffer = Buffer.from(`--${boundary}`);
+    const endBoundaryBuffer = Buffer.from(`--${boundary}--`);
+
+    // Split by boundary
+    const parts = [];
+    let start = 0;
+    let pos = bodyBuffer.indexOf(boundaryBuffer, start);
+
+    while (pos !== -1) {
+        if (start > 0) {
+            parts.push(bodyBuffer.slice(start, pos));
+        }
+        start = pos + boundaryBuffer.length;
+        pos = bodyBuffer.indexOf(boundaryBuffer, start);
+    }
+
+    // Add final part if exists
+    const endPos = bodyBuffer.indexOf(endBoundaryBuffer, start);
+    if (endPos !== -1 && start < endPos) {
+        parts.push(bodyBuffer.slice(start, endPos));
+    }
+
+    console.log(`Found ${parts.length} parts`);
+
+    // Process each part
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        if (part.length === 0) continue;
+
+        // Find headers/content separator (\r\n\r\n)
+        const separator = Buffer.from('\r\n\r\n');
+        const sepIndex = part.indexOf(separator);
+
+        if (sepIndex === -1) {
+            console.log(`Part ${i}: No header separator found`);
+            continue;
+        }
+
+        const headers = part.slice(0, sepIndex).toString('utf8');
+        const content = part.slice(sepIndex + 4);
+
+        // Remove trailing \r\n from content
+        let cleanContent = content;
+        if (cleanContent.length >= 2 &&
+            cleanContent[cleanContent.length - 2] === 0x0D &&
+            cleanContent[cleanContent.length - 1] === 0x0A) {
+            cleanContent = cleanContent.slice(0, -2);
+        }
+
+        console.log(`Part ${i}: Headers length: ${headers.length}, Content length: ${cleanContent.length}`);
+
+        // Parse headers
+        let name = '';
+        let filename = '';
+        let contentType = '';
+
+        const headerLines = headers.split('\r\n');
+        for (const line of headerLines) {
+            if (line.toLowerCase().includes('content-disposition')) {
+                const nameMatch = line.match(/name="([^"]+)"/);
+                const filenameMatch = line.match(/filename="([^"]+)"/);
+                if (nameMatch) name = nameMatch[1];
+                if (filenameMatch) filename = filenameMatch[1];
+            }
+            if (line.toLowerCase().includes('content-type')) {
+                contentType = line.split(':')[1]?.trim() || '';
+            }
+        }
+
+        console.log(`Part ${i}: name="${name}", filename="${filename}", contentType="${contentType}"`);
+
+        if (filename && name) {
+            // It's a file
+            result.files.push({
+                fieldname: name,
+                filename: filename,
+                contentType: contentType || 'application/octet-stream',
+                content: cleanContent
+            });
+            console.log(`✅ Added file: ${filename} (${cleanContent.length} bytes)`);
+        } else if (name) {
+            // It's a field
+            result.fields[name] = cleanContent.toString('utf8');
+            console.log(`✅ Added field: ${name} = "${result.fields[name].substring(0, 50)}..."`);
+        }
+    }
+
+    console.log(`✅ Parsing complete: ${Object.keys(result.fields).length} fields, ${result.files.length} files`);
+    return result;
+}
+
+// Simple multipart form data builder for Telegram
+function createTelegramFormData(fields, files) {
     const boundary = `----formdata-${Date.now()}`;
     const chunks = [];
 
@@ -32,81 +157,11 @@ function createFormData(fields, files) {
     };
 }
 
-// Simple multipart parser for Netlify Functions
-function parseMultipart(body, boundary) {
-    console.log('Parsing multipart with boundary:', boundary);
 
-    // Split by boundary
-    const boundaryStr = `--${boundary}`;
-    const parts = body.split(boundaryStr);
-    const result = { fields: {}, files: [] };
-
-    console.log('Found parts:', parts.length);
-
-    for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        if (!part || part.trim() === '' || part.trim() === '--' || part.trim() === '--\r\n') {
-            continue;
-        }
-
-        // Find the double CRLF that separates headers from content
-        const doubleCrlfIndex = part.indexOf('\r\n\r\n');
-        if (doubleCrlfIndex === -1) {
-            console.log(`Part ${i}: No double CRLF found, skipping`);
-            continue;
-        }
-
-        const headers = part.substring(0, doubleCrlfIndex);
-        const content = part.substring(doubleCrlfIndex + 4);
-
-        // Remove trailing CRLF from content
-        const cleanContent = content.replace(/\r\n$/, '');
-
-        // Parse headers
-        const headerLines = headers.split('\r\n');
-        let name = '';
-        let filename = '';
-        let contentType = '';
-
-        for (const line of headerLines) {
-            if (line.includes('Content-Disposition')) {
-                const nameMatch = line.match(/name="([^"]+)"/);
-                const filenameMatch = line.match(/filename="([^"]+)"/);
-                if (nameMatch) name = nameMatch[1];
-                if (filenameMatch) filename = filenameMatch[1];
-            }
-            if (line.includes('Content-Type')) {
-                contentType = line.split(':')[1].trim();
-            }
-        }
-
-        console.log(`Part ${i}: name="${name}", filename="${filename}", contentType="${contentType}"`);
-
-        if (filename && name) {
-            // It's a file
-            result.files.push({
-                fieldname: name,
-                filename: filename,
-                contentType: contentType || 'application/octet-stream',
-                content: Buffer.from(cleanContent, 'binary')
-            });
-            console.log(`Added file: ${filename}, size: ${cleanContent.length}`);
-        } else if (name) {
-            // It's a field
-            result.fields[name] = cleanContent;
-            console.log(`Added field: ${name} = ${cleanContent.substring(0, 50)}...`);
-        }
-    }
-
-    console.log('Parse result:', {
-        fields: Object.keys(result.fields),
-        files: result.files.length
-    });
-
-    return result;
-}
 
 exports.handler = async (event, context) => {
+    console.log('🚀 Function entry point reached');
+
     // CORS headers for all responses
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
@@ -115,25 +170,31 @@ exports.handler = async (event, context) => {
         'Content-Type': 'application/json'
     };
 
+    console.log('HTTP Method:', event.httpMethod);
+
     // Handle preflight requests
     if (event.httpMethod === 'OPTIONS') {
+        console.log('Handling OPTIONS request');
         return {
             statusCode: 200,
             headers: corsHeaders,
-            body: JSON.stringify({ message: 'CORS preflight' })
+            body: JSON.stringify({ message: 'CORS preflight OK' })
         };
     }
 
     // Only allow POST requests
     if (event.httpMethod !== 'POST') {
+        console.log('Method not allowed:', event.httpMethod);
         return {
             statusCode: 405,
             headers: corsHeaders,
-            body: JSON.stringify({ error: 'Method not allowed' })
+            body: JSON.stringify({ error: 'Method not allowed', method: event.httpMethod })
         };
     }
 
     try {
+        console.log('🚀 Telegram function v2.0 started');
+
         const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
         const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
@@ -141,83 +202,76 @@ exports.handler = async (event, context) => {
             hasBotToken: !!BOT_TOKEN,
             hasChatId: !!CHAT_ID,
             botTokenLength: BOT_TOKEN ? BOT_TOKEN.length : 0,
-            chatIdLength: CHAT_ID ? CHAT_ID.length : 0
+            chatIdLength: CHAT_ID ? CHAT_ID.length : 0,
+            httpMethod: event.httpMethod,
+            contentType: event.headers['content-type'] || event.headers['Content-Type'] || 'none'
         });
 
         if (!BOT_TOKEN || !CHAT_ID) {
-            console.error('Missing environment variables:', {
-                hasBotToken: !!BOT_TOKEN,
-                hasChatId: !!CHAT_ID,
-                allEnvVars: Object.keys(process.env).filter(key => key.includes('TELEGRAM'))
-            });
+            console.error('❌ Missing environment variables');
+            const errorResponse = {
+                error: 'Server configuration error',
+                details: 'TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not found in environment variables',
+                debug: {
+                    hasBotToken: !!BOT_TOKEN,
+                    hasChatId: !!CHAT_ID,
+                    allTelegramVars: Object.keys(process.env).filter(key => key.includes('TELEGRAM'))
+                }
+            };
+
             return {
                 statusCode: 500,
                 headers: corsHeaders,
-                body: JSON.stringify({
-                    error: 'Server configuration error',
-                    details: 'TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not found in environment variables'
-                })
+                body: JSON.stringify(errorResponse)
             };
         }
 
-        // Check content type and parse accordingly
+        // Parse request data
         const contentType = event.headers['content-type'] || event.headers['Content-Type'] || '';
-        console.log('Content-Type:', contentType);
-        console.log('Event body type:', typeof event.body);
-        console.log('Event body length:', event.body ? event.body.length : 0);
+        console.log('📥 Content-Type:', contentType);
 
         let formData;
         let photos = [];
 
-        if (contentType.includes('application/json')) {
-            // JSON data (no photos)
-            console.log('Parsing JSON data...');
-            formData = JSON.parse(event.body);
-        } else if (contentType.includes('multipart/form-data')) {
-            // Parse multipart data
-            console.log('Parsing multipart data...');
-            const boundary = contentType.split('boundary=')[1];
-            if (!boundary) {
-                console.error('No boundary found in content-type:', contentType);
-                throw new Error('No boundary found in multipart data');
-            }
+        if (contentType.includes('multipart/form-data')) {
+            console.log('📦 Parsing multipart form data...');
+            try {
+                const parsed = parseNetlifyMultipart(event);
+                formData = parsed.fields;
 
-            console.log('Using boundary:', boundary);
-
-            // Convert base64 body to buffer if needed
-            let bodyBuffer;
-            if (event.isBase64Encoded) {
-                console.log('Converting base64 body to buffer...');
-                bodyBuffer = Buffer.from(event.body, 'base64');
-            } else {
-                console.log('Using body as string...');
-                bodyBuffer = Buffer.from(event.body, 'binary');
-            }
-
-            console.log('Body buffer length:', bodyBuffer.length);
-
-            const parsed = parseMultipart(bodyBuffer.toString('binary'), boundary);
-            formData = parsed.fields;
-
-            // Extract photos
-            for (const file of parsed.files) {
-                if (file.fieldname && file.fieldname.startsWith('photo')) {
-                    photos.push(file);
+                // Extract photos
+                for (const file of parsed.files) {
+                    if (file.fieldname && file.fieldname.startsWith('photo')) {
+                        photos.push(file);
+                    }
                 }
-            }
 
-            console.log('Parsed multipart:', {
-                fields: Object.keys(formData),
-                photos: photos.length,
-                photoSizes: photos.map(p => p.content.length)
-            });
-        } else {
-            console.log('Unknown content type, trying JSON...');
+                console.log('✅ Multipart parsed successfully:', {
+                    fields: Object.keys(formData).length,
+                    photos: photos.length
+                });
+
+            } catch (parseError) {
+                console.error('❌ Multipart parsing failed:', parseError.message);
+                throw new Error(`Failed to parse multipart data: ${parseError.message}`);
+            }
+        } else if (contentType.includes('application/json')) {
+            console.log('📄 Parsing JSON data...');
             try {
                 formData = JSON.parse(event.body);
-            } catch (e) {
-                console.error('Failed to parse as JSON:', e.message);
-                throw new Error('Invalid request format');
+                console.log('✅ JSON parsed successfully');
+            } catch (jsonError) {
+                console.error('❌ JSON parsing failed:', jsonError.message);
+                throw new Error(`Failed to parse JSON: ${jsonError.message}`);
+            }
+        } else {
+            console.log('🔄 Unknown content type, attempting JSON fallback...');
+            try {
+                formData = JSON.parse(event.body);
+                console.log('✅ JSON fallback successful');
+            } catch (fallbackError) {
+                console.error('❌ All parsing methods failed');
+                throw new Error('Invalid request format - unable to parse body');
             }
         }
 
@@ -276,14 +330,14 @@ exports.handler = async (event, context) => {
                 media: JSON.stringify(media)
             };
 
-            const formData = createFormData(formFields, photos);
+            const telegramFormData = createTelegramFormData(formFields, photos);
 
             const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': `multipart/form-data; boundary=${formData.boundary}`
+                    'Content-Type': `multipart/form-data; boundary=${telegramFormData.boundary}`
                 },
-                body: formData.body
+                body: telegramFormData.body
             });
 
             console.log('Telegram response status:', telegramResponse.status);
