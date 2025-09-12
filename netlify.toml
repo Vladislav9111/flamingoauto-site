@@ -6,6 +6,22 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# Netlify Identity redirects
+[[redirects]]
+  from = "/.netlify/identity/signup"
+  to = "/admin.html"
+  status = 302
+
+[[redirects]]
+  from = "/.netlify/identity/recovery"
+  to = "/admin.html"
+  status = 302
+
+[[redirects]]
+  from = "/.netlify/identity/email-change"
+  to = "/admin.html"
+  status = 302
+
 # Admin panel redirect with role-based access
 [[redirects]]
   from = "/admin"
@@ -73,6 +89,6 @@
 [[headers]]
   for = "*.html"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.telegram.org https://*.telegram.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*; object-src 'none'; base-uri 'self'; form-action 'self';"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.telegram.org https://*.telegram.com https://identity.netlify.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*; object-src 'none'; base-uri 'self'; form-action 'self' https://identity.netlify.com; connect-src 'self' https://identity.netlify.com https://*.netlify.com;"
 
 # Netlify handles gzip compression automatically
