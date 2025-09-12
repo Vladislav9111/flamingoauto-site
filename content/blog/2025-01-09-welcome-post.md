@@ -2,7 +2,7 @@
 title: "Добро пожаловать в блог Flamingo Auto"
 date: 2025-01-09T12:00:00Z
 excerpt: "Первая статья в нашем блоге о продаже автомобилей в Эстонии"
-author: "Администратор"
+author: "Flamingo Auto"
 locale: "all"
 published: true
 ---

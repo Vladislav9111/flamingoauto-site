@@ -50,7 +50,7 @@ exports.handler = async (event, context) => {
         title: data.title || 'Без названия',
         excerpt: data.excerpt || '',
         content: content || '',
-        author: data.author || 'Администратор',
+        author: data.author || 'Flamingo Auto',
         date: data.date || new Date().toISOString(),
         locale: data.locale || 'all',
         published: data.published !== false,
