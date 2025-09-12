@@ -40,32 +40,37 @@ form.addEventListener('submit', async function(event) {
         submitButton.textContent = isRussian ? 'Отправка...' : 'Saatmine...';
 
         const formElements = form.elements;
-        
-        // Prepare form data for Netlify Function
-        const formData = {
-            regNumber: formElements['reg-number'].value,
-            make: formElements['make'].value,
-            model: formElements['model'].value,
-            year: formElements['year'].value,
-            mileage: formElements['mileage'].value,
-            transmission: formElements['transmission'].value,
-            engine: formElements['engine'].value,
-            price: formElements['price'].value,
-            name: formElements['name'].value,
-            email: formElements['email'].value,
-            phone: formElements['phone'].value,
-            city: formElements['city'].value,
-            note: formElements['note'].value
-        };
+
+        // Prepare form data with photos
+        const formData = new FormData();
+
+        // Add text fields
+        formData.append('regNumber', formElements['reg-number'].value);
+        formData.append('make', formElements['make'].value);
+        formData.append('model', formElements['model'].value);
+        formData.append('year', formElements['year'].value);
+        formData.append('mileage', formElements['mileage'].value);
+        formData.append('transmission', formElements['transmission'].value);
+        formData.append('engine', formElements['engine'].value);
+        formData.append('price', formElements['price'].value);
+        formData.append('name', formElements['name'].value);
+        formData.append('email', formElements['email'].value);
+        formData.append('phone', formElements['phone'].value);
+        formData.append('city', formElements['city'].value);
+        formData.append('note', formElements['note'].value);
+
+        // Add photos
+        const files = photoInput.files;
+        for (let i = 0; i < files.length && i < 6; i++) {
+            formData.append(`photo${i}`, files[i]);
+        }
+        formData.append('photoCount', files.length.toString());
 
         try {
-            // Send to Netlify Function
+            // Send to Netlify Function (with photos)
             const response = await fetch('/.netlify/functions/send-telegram', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
+                body: formData // No Content-Type header for FormData
             });
 
             const result = await response.json();

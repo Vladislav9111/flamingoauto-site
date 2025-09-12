@@ -1,3 +1,5 @@
+const multipart = require('lambda-multipart-parser');
+
 exports.handler = async (event, context) => {
     // Only allow POST requests
     if (event.httpMethod !== 'POST') {
@@ -38,10 +40,15 @@ exports.handler = async (event, context) => {
             };
         }
 
-        // Parse form data
-        console.log('Received request body:', event.body);
-        const formData = JSON.parse(event.body);
-        console.log('Parsed form data:', formData);
+        // Parse multipart form data
+        console.log('Parsing multipart data...');
+        const result = await multipart.parse(event);
+        console.log('Parsed form data:', {
+            fields: Object.keys(result),
+            files: result.files ? result.files.length : 0
+        });
+
+        const formData = result;
 
         // Build message
         let message = '📩 Новая заявка с сайта:\n\n';
@@ -71,41 +78,108 @@ exports.handler = async (event, context) => {
         addField('Город', formData.city);
         addField('Доп. информация', formData.note);
 
-        // Send message to Telegram
-        console.log('Sending message to Telegram:', {
-            chatId: CHAT_ID,
-            messageLength: message.length,
-            message: message.substring(0, 200) + '...'
-        });
-
-        const telegramPayload = {
-            chat_id: CHAT_ID,
-            text: message,
-            parse_mode: 'HTML'
-        };
-
-        const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(telegramPayload)
-        });
-
-        console.log('Telegram response status:', telegramResponse.status);
-
-        if (!telegramResponse.ok) {
-            const errorText = await telegramResponse.text();
-            console.error('Telegram API error:', {
-                status: telegramResponse.status,
-                statusText: telegramResponse.statusText,
-                error: errorText
-            });
-            throw new Error(`Telegram API error: ${telegramResponse.status} - ${errorText}`);
+        // Check if there are photos
+        const photos = [];
+        if (formData.files) {
+            for (const file of formData.files) {
+                if (file.fieldname && file.fieldname.startsWith('photo')) {
+                    photos.push(file);
+                }
+            }
         }
 
-        const telegramResult = await telegramResponse.json();
-        console.log('Telegram success:', telegramResult);
+        console.log('Found photos:', photos.length);
+
+        // Send message to Telegram
+        if (photos.length > 0) {
+            // Send photos with caption using form-data
+            console.log('Sending photos with message to Telegram...');
+
+            const FormData = require('form-data');
+            const telegramFormData = new FormData();
+            telegramFormData.append('chat_id', CHAT_ID);
+
+            const media = [];
+            for (let i = 0; i < photos.length; i++) {
+                const photo = photos[i];
+                const photoKey = `photo${i}`;
+
+                // Append photo buffer
+                telegramFormData.append(photoKey, photo.content, {
+                    filename: photo.filename || `photo${i}.jpg`,
+                    contentType: photo.contentType || 'image/jpeg'
+                });
+
+                const mediaItem = {
+                    type: 'photo',
+                    media: `attach://${photoKey}`
+                };
+
+                // Add caption to first photo
+                if (i === 0) {
+                    mediaItem.caption = message;
+                    mediaItem.parse_mode = 'HTML';
+                }
+
+                media.push(mediaItem);
+            }
+
+            telegramFormData.append('media', JSON.stringify(media));
+
+            const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup`, {
+                method: 'POST',
+                body: telegramFormData,
+                headers: telegramFormData.getHeaders()
+            });
+
+            console.log('Telegram response status:', telegramResponse.status);
+
+            if (!telegramResponse.ok) {
+                const errorText = await telegramResponse.text();
+                console.error('Telegram API error:', {
+                    status: telegramResponse.status,
+                    statusText: telegramResponse.statusText,
+                    error: errorText
+                });
+                throw new Error(`Telegram API error: ${telegramResponse.status} - ${errorText}`);
+            }
+
+            const telegramResult = await telegramResponse.json();
+            console.log('Telegram success with photos:', telegramResult);
+
+        } else {
+            // Send text message only
+            console.log('Sending text message to Telegram...');
+
+            const telegramPayload = {
+                chat_id: CHAT_ID,
+                text: message,
+                parse_mode: 'HTML'
+            };
+
+            const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(telegramPayload)
+            });
+
+            console.log('Telegram response status:', telegramResponse.status);
+
+            if (!telegramResponse.ok) {
+                const errorText = await telegramResponse.text();
+                console.error('Telegram API error:', {
+                    status: telegramResponse.status,
+                    statusText: telegramResponse.statusText,
+                    error: errorText
+                });
+                throw new Error(`Telegram API error: ${telegramResponse.status} - ${errorText}`);
+            }
+
+            const telegramResult = await telegramResponse.json();
+            console.log('Telegram success:', telegramResult);
+        }
 
         return {
             statusCode: 200,
