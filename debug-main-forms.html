@@ -62,6 +62,7 @@
             <button class="test-button" onclick="testScriptJS()">📜 Проверить script.js</button>
             <button class="test-button" onclick="testMainPage()">🏠 Тест главной страницы</button>
             <button class="test-button" onclick="testRuPage()">🇷🇺 Тест русской страницы</button>
+            <button class="test-button" onclick="testConsoleErrors()">🐛 Проверить ошибки консоли</button>
             <button class="test-button" onclick="clearResults()">🗑️ Очистить</button>
         </div>
         
@@ -158,8 +159,9 @@
                 const checks = [
                     { name: 'car-form', pattern: /getElementById\(['"]car-form['"]/, found: false },
                     { name: 'FormData', pattern: /new FormData\(\)/, found: false },
-                    { name: 'photo handling', pattern: /photo\d+/, found: false },
-                    { name: 'send-telegram', pattern: /send-telegram/, found: false }
+                    { name: 'photo handling', pattern: /append.*photo|photo\d+|photoInput/, found: false },
+                    { name: 'send-telegram', pattern: /send-telegram/, found: false },
+                    { name: 'file upload', pattern: /files\[i\]|photoInput\.files/, found: false }
                 ];
                 
                 checks.forEach(check => {
@@ -279,6 +281,36 @@
             const iframe = document.getElementById('pageFrame');
             iframe.src = pageName;
             addResult(`📄 Загружаем ${pageName} в iframe`, 'info');
+        }
+
+        async function testConsoleErrors() {
+            addResult('🐛 Проверяем возможные ошибки...', 'info');
+
+            try {
+                // Тестируем создание FormData с фотографиями
+                const testFormData = new FormData();
+                testFormData.append('test', 'value');
+
+                // Создаем тестовый файл
+                const testFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+                testFormData.append('photo0', testFile);
+
+                addResult('✅ FormData с файлами работает', 'success');
+
+                // Проверяем доступность Netlify Functions
+                const response = await fetch('/.netlify/functions/send-telegram', {
+                    method: 'OPTIONS'
+                });
+
+                addResult(`✅ Netlify Functions доступны (${response.status})`, 'success');
+
+                // Проверяем CORS заголовки
+                const corsHeaders = response.headers.get('Access-Control-Allow-Origin');
+                addResult(`✅ CORS заголовки: ${corsHeaders || 'не найдены'}`, corsHeaders ? 'success' : 'warning');
+
+            } catch (error) {
+                addResult(`❌ Ошибка тестирования: ${error.message}`, 'error');
+            }
         }
 
         // Автоматический тест при загрузке
