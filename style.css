@@ -601,29 +601,39 @@ a {
 .post-text h2 { margin-top: 0; }
 .post-gallery {
     display: grid;
-    gap: 0.5rem;
+    gap: 0.75rem;
 }
 /* When gallery has multiple images, present them as a compact grid with smaller thumbnails */
 .post-gallery.multiple {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     align-items: start;
 }
 .post-gallery.multiple img {
     width: 100%;
-    height: 100px;
+    aspect-ratio: 4/3;
     object-fit: cover;
-    border-radius: 6px;
+    border-radius: 8px;
     border: 1px solid #eee;
     display: block;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.post-gallery.multiple img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 /* keep single-image galleries large and prominent */
 .post-gallery:not(.multiple) img {
     width: 100%;
-    height: auto;
+    aspect-ratio: 16/9;
     object-fit: cover;
-    border-radius: 6px;
+    border-radius: 8px;
     border: 1px solid #eee;
     display: block;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.post-gallery:not(.multiple) img:hover {
+    transform: scale(1.01);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
 }
 
 /* single-column on small screens */
@@ -633,4 +643,23 @@ a {
     }
     /* make gallery images appear before text on small screens if desired */
     .post-gallery { order: -1; }
+
+    /* Adjust gallery for mobile */
+    .post-gallery.multiple {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.5rem;
+    }
+    .post-gallery.multiple img {
+        aspect-ratio: 1/1;
+    }
+    .post-gallery:not(.multiple) img {
+        aspect-ratio: 4/3;
+    }
+}
+
+@media (max-width: 480px) {
+    .post-gallery.multiple {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
 }

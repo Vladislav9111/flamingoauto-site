@@ -297,10 +297,12 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
                 ${post.updatedAt ? ` • <em>обновлено ${new Date(post.updatedAt).toLocaleDateString('ru-RU')}</em>` : ''}
             </div>
             ${post.photos && post.photos.length > 0 ? `
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.5rem;margin-bottom:1rem;">
+                <div style="display:grid;grid-template-columns:${post.photos.length === 1 ? '1fr' : 'repeat(auto-fit,minmax(200px,1fr))'};gap:0.75rem;margin-bottom:1rem;">
                     ${post.photos.slice(0, 6).map(photo => `
                         <img src="${photo.dataUrl}" alt="${escapeHtml(photo.name)}"
-                             style="width:100%;height:120px;object-fit:cover;border-radius:6px;cursor:pointer;"
+                             style="width:100%;aspect-ratio:${post.photos.length === 1 ? '16/9' : '4/3'};object-fit:cover;border-radius:8px;cursor:pointer;transition:transform 0.2s ease,box-shadow 0.2s ease;"
+                             onmouseover="this.style.transform='scale(1.02)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                             onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'"
                              onclick="window.open('${photo.dataUrl}', '_blank')">
                     `).join('')}
                 </div>
