@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .debug-section h3 { margin-top: 0; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 15px; margin: 5px; background: #007cba; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #005a87; }
+    </style>
+</head>
+<body>
+    <h1>Blog System Debug</h1>
+    
+    <div class="debug-section">
+        <h3>1. Test Netlify Function</h3>
+        <button onclick="testNetlifyFunction()">Test /.netlify/functions/get-posts</button>
+        <pre id="netlify-result">Click button to test...</pre>
+    </div>
+    
+    <div class="debug-section">
+        <h3>2. Test localStorage</h3>
+        <button onclick="testLocalStorage()">Check localStorage</button>
+        <button onclick="clearLocalStorage()">Clear localStorage</button>
+        <pre id="localstorage-result">Click button to test...</pre>
+    </div>
+    
+    <div class="debug-section">
+        <h3>3. Test Blog Functions</h3>
+        <button onclick="testBlogFunctions()">Test Blog Functions</button>
+        <pre id="blog-functions-result">Click button to test...</pre>
+    </div>
+    
+    <div class="debug-section">
+        <h3>4. Test Language Detection</h3>
+        <button onclick="testLanguageDetection()">Test Language Detection</button>
+        <pre id="language-result">Click button to test...</pre>
+    </div>
+    
+    <div class="debug-section">
+        <h3>5. Test Posts Rendering</h3>
+        <button onclick="testPostsRendering()">Test Posts Rendering</button>
+        <div id="posts-container" style="margin-top: 10px; border: 1px dashed #ccc; padding: 10px; min-height: 100px;">
+            Posts will appear here...
+        </div>
+    </div>
+
+    <script src="blog-simple.js"></script>
+    <script>
+        async function testNetlifyFunction() {
+            const result = document.getElementById('netlify-result');
+            result.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch('/.netlify/functions/get-posts');
+                const data = await response.json();
+                result.textContent = `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        function testLocalStorage() {
+            const result = document.getElementById('localstorage-result');
+            const posts = localStorage.getItem('flamingo_blog_posts');
+            result.textContent = posts ? `Found ${JSON.parse(posts).length} posts:\n${JSON.stringify(JSON.parse(posts), null, 2)}` : 'No posts in localStorage';
+        }
+        
+        function clearLocalStorage() {
+            localStorage.removeItem('flamingo_blog_posts');
+            testLocalStorage();
+        }
+        
+        async function testBlogFunctions() {
+            const result = document.getElementById('blog-functions-result');
+            result.textContent = 'Testing...';
+            
+            try {
+                if (window.FlamingoBlogSimple) {
+                    const posts = await window.FlamingoBlogSimple.getPosts();
+                    result.textContent = `Found ${posts.length} posts:\n${JSON.stringify(posts, null, 2)}`;
+                } else {
+                    result.textContent = 'FlamingoBlogSimple not available';
+                }
+            } catch (error) {
+                result.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        function testLanguageDetection() {
+            const result = document.getElementById('language-result');
+            if (window.FlamingoBlogSimple) {
+                const locale = window.FlamingoBlogSimple.getCurrentLocale();
+                result.textContent = `Current locale: ${locale}\nPath: ${window.location.pathname}`;
+            } else {
+                result.textContent = 'FlamingoBlogSimple not available';
+            }
+        }
+        
+        async function testPostsRendering() {
+            try {
+                if (window.FlamingoBlogSimple) {
+                    await window.FlamingoBlogSimple.renderBlogPosts('posts-container', 'et');
+                } else {
+                    document.getElementById('posts-container').innerHTML = 'FlamingoBlogSimple not available';
+                }
+            } catch (error) {
+                document.getElementById('posts-container').innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
