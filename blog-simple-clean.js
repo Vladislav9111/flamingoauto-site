@@ -88,13 +88,15 @@ ${post.content}`;
             return String.fromCharCode(parseInt(p1, 16));
         }));
 
-        // Отправляем через Git Gateway
+        // Отправляем через Git Gateway (правильный формат для Netlify)
+        console.log('🔗 Отправляем запрос к Git Gateway...');
         const response = await fetch(`/.netlify/git/github/contents/content/blog/${filename}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
-                'Accept': 'application/vnd.github.v3+json'
+                'Accept': 'application/vnd.github.v3+json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
                 message: `Новая статья: ${post.title}`,
@@ -394,8 +396,9 @@ async function diagnoseSystem() {
         const testResponse = await fetch('/.netlify/git/github', {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'Netlify-Git-Gateway'
             }
         });
         

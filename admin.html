@@ -191,7 +191,21 @@
         </div>
 
         <h1>📝 Административная панель</h1>
-        <p style="color: #666; margin-bottom: 2rem;">Создавайте и публикуйте статьи с изображениями</p>
+        <p style="color: #666; margin-bottom: 2rem;">Выберите способ управления контентом</p>
+        
+        <div style="background: #e3f2fd; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; text-align: center;">
+            <h2 style="margin: 0 0 1rem 0; color: #1976d2;">🚀 Рекомендуется: Netlify CMS</h2>
+            <p style="margin: 0 0 1.5rem 0; color: #1976d2;">Официальная система управления контентом от Netlify. Надёжно и просто!</p>
+            <a href="/admin/" style="background: #1976d2; color: white; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+                ✨ Открыть Netlify CMS
+            </a>
+        </div>
+        
+        <details style="margin-bottom: 2rem;">
+            <summary style="cursor: pointer; font-weight: 600; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                🔧 Альтернативный способ (экспериментальный)
+            </summary>
+            <div style="padding: 1rem; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 8px 8px;">
 
         <!-- Секция авторизации -->
         <div id="auth-section">
@@ -263,12 +277,14 @@
             </div>
         </form>
 
-        <div class="posts-preview">
-            <h2>📚 Опубликованные статьи</h2>
-            <div id="posts-list">
-                <!-- Список статей будет загружен здесь -->
+            <div class="posts-preview">
+                <h2>📚 Опубликованные статьи</h2>
+                <div id="posts-list">
+                    <!-- Список статей будет загружен здесь -->
+                </div>
             </div>
-        </div>
+            </div>
+        </details>
     </main>
 
     <script src="blog-simple-clean.js"></script>
