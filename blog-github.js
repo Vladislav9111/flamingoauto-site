@@ -134,50 +134,7 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
     console.log('📊 Получено постов:', filteredPosts.length, 'для языка:', locale);
 
     if (filteredPosts.length === 0) {
-        // Если нет статей, показываем заглушки для демонстрации
-        const fallbackPosts = [
-            {
-                id: 'demo-ru',
-                title: 'Продажа автомобилей в Таллине — быстро и выгодно',
-                content: 'Flamingo Auto предлагает профессиональные услуги по выкупу автомобилей в Таллине. Мы покупаем машины любых марок и в любом состоянии. Быстрая оценка, честная цена, оформление документов и мгновенная оплата — всё это делает процесс продажи максимально удобным для вас.',
-                author: 'Flamingo Auto',
-                date: new Date().toISOString(),
-                locale: 'ru'
-            },
-            {
-                id: 'demo-et',
-                title: 'Autode müük Tallinnas — kiiresti ja kasulikult',
-                content: 'Flamingo Auto pakub professionaalseid autode kokkuostu teenuseid Tallinnas. Ostame autosid kõikidest markidest ja igas seisukorras. Kiire hindamine, aus hind, dokumentide vormistamine ja kohene makse — kõik see muudab müügiprotsessi teie jaoks võimalikult mugavaks.',
-                author: 'Flamingo Auto',
-                date: new Date().toISOString(),
-                locale: 'et'
-            }
-        ];
-
-        // Фильтруем заглушки по языку
-        const demoFiltered = locale ? fallbackPosts.filter(post =>
-            post.locale === locale || post.locale === 'all'
-        ) : fallbackPosts;
-
-        if (demoFiltered.length > 0) {
-            console.log('📝 Показываем демо-статьи');
-            const postsHTML = demoFiltered.map(post => `
-                <article style="background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:1rem;">
-                    <h2 style="margin:0 0 0.5rem 0;color:#333;">${escapeHtml(post.title)}</h2>
-                    <div style="color:#666;font-size:0.9rem;margin-bottom:1rem;">
-                        ${new Date(post.date).toLocaleDateString('ru-RU')} • ${escapeHtml(post.author)}
-                    </div>
-                    <div style="line-height:1.6;color:#444;">
-                        ${sanitizeHtml(post.content)}
-                    </div>
-                    <div style="margin-top:1rem;padding:0.75rem;background:#e3f2fd;border-radius:6px;font-size:0.9rem;color:#1976d2;">
-                        ℹ️ Это демонстрационная статья. Реальные статьи будут загружены после настройки.
-                    </div>
-                </article>
-            `).join('');
-            container.innerHTML = postsHTML;
-            return;
-        }
+        // Если нет статей, показываем сообщение
 
         const noPostsMessages = {
             'et': 'Artikleid pole veel avaldatud.',
