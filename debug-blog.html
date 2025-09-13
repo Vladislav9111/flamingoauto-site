@@ -1,117 +1,178 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog Debug</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Debug Blog — Flamingo Auto</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
-        .debug-section h3 { margin-top: 0; }
-        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
-        button { padding: 10px 15px; margin: 5px; background: #007cba; color: white; border: none; border-radius: 3px; cursor: pointer; }
-        button:hover { background: #005a87; }
+        .debug-info {
+            background: #f8f9fa;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .debug-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: #007bff;
+        }
+        .debug-info pre {
+            background: #fff;
+            padding: 0.5rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
-    <h1>Blog System Debug</h1>
-    
-    <div class="debug-section">
-        <h3>1. Test Netlify Function</h3>
-        <button onclick="testNetlifyFunction()">Test /.netlify/functions/get-posts</button>
-        <pre id="netlify-result">Click button to test...</pre>
-    </div>
-    
-    <div class="debug-section">
-        <h3>2. Test localStorage</h3>
-        <button onclick="testLocalStorage()">Check localStorage</button>
-        <button onclick="clearLocalStorage()">Clear localStorage</button>
-        <pre id="localstorage-result">Click button to test...</pre>
-    </div>
-    
-    <div class="debug-section">
-        <h3>3. Test Blog Functions</h3>
-        <button onclick="testBlogFunctions()">Test Blog Functions</button>
-        <pre id="blog-functions-result">Click button to test...</pre>
-    </div>
-    
-    <div class="debug-section">
-        <h3>4. Test Language Detection</h3>
-        <button onclick="testLanguageDetection()">Test Language Detection</button>
-        <pre id="language-result">Click button to test...</pre>
-    </div>
-    
-    <div class="debug-section">
-        <h3>5. Test Posts Rendering</h3>
-        <button onclick="testPostsRendering()">Test Posts Rendering</button>
-        <div id="posts-container" style="margin-top: 10px; border: 1px dashed #ccc; padding: 10px; min-height: 100px;">
-            Posts will appear here...
+    <header class="site-header">
+        <div class="container">
+            <div class="hero-header">
+                <a class="logo" href="index.html">FLAMINGO AUTO</a>
+                <div class="lang-switch">
+                    <a class="lang-btn" href="index.html">ET</a>
+                    <a class="lang-btn" href="ru.html">RU</a>
+                </div>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <script src="blog-simple.js"></script>
+    <main class="container" style="max-width:900px; padding-top:2rem;">
+        <h1>🔧 Debug Blog</h1>
+        <p>Отладочная страница для проверки загрузки статей</p>
+
+        <div class="debug-info">
+            <h3>📊 Информация о загрузке</h3>
+            <div id="debug-info">Загружаем...</div>
+        </div>
+
+        <div class="debug-info">
+            <h3>🌐 Тест языков</h3>
+            <button onclick="testLanguage('ru')" style="margin: 0.25rem; padding: 0.5rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Русский</button>
+            <button onclick="testLanguage('et')" style="margin: 0.25rem; padding: 0.5rem 1rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Эстонский</button>
+            <button onclick="testLanguage(null)" style="margin: 0.25rem; padding: 0.5rem 1rem; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Все языки</button>
+        </div>
+
+        <div id="posts-container" style="margin-top:1rem;"></div>
+    </main>
+
+    <script src="blog-github.js"></script>
     <script>
-        async function testNetlifyFunction() {
-            const result = document.getElementById('netlify-result');
-            result.textContent = 'Testing...';
-            
+        let allPosts = [];
+
+        async function debugLoadPosts() {
+            const debugDiv = document.getElementById('debug-info');
+            debugDiv.innerHTML = '🔄 Загружаем статьи...';
+
             try {
-                const response = await fetch('/.netlify/functions/get-posts');
-                const data = await response.json();
-                result.textContent = `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`;
-            } catch (error) {
-                result.textContent = `Error: ${error.message}`;
-            }
-        }
-        
-        function testLocalStorage() {
-            const result = document.getElementById('localstorage-result');
-            const posts = localStorage.getItem('flamingo_blog_posts');
-            result.textContent = posts ? `Found ${JSON.parse(posts).length} posts:\n${JSON.stringify(JSON.parse(posts), null, 2)}` : 'No posts in localStorage';
-        }
-        
-        function clearLocalStorage() {
-            localStorage.removeItem('flamingo_blog_posts');
-            testLocalStorage();
-        }
-        
-        async function testBlogFunctions() {
-            const result = document.getElementById('blog-functions-result');
-            result.textContent = 'Testing...';
-            
-            try {
-                if (window.FlamingoBlogSimple) {
-                    const posts = await window.FlamingoBlogSimple.getPosts();
-                    result.textContent = `Found ${posts.length} posts:\n${JSON.stringify(posts, null, 2)}`;
-                } else {
-                    result.textContent = 'FlamingoBlogSimple not available';
+                // Сначала тестируем простую функцию
+                try {
+                    const testResponse = await fetch('/.netlify/functions/test-posts');
+                    if (testResponse.ok) {
+                        const testData = await testResponse.json();
+                        debugDiv.innerHTML += `<br>✅ Test Function работает: ${testData.posts.length} тестовых статей`;
+                    } else {
+                        debugDiv.innerHTML += `<br>❌ Test Function: ${testResponse.status}`;
+                    }
+                } catch (error) {
+                    debugDiv.innerHTML += `<br>❌ Test Function: ${error.message}`;
                 }
-            } catch (error) {
-                result.textContent = `Error: ${error.message}`;
-            }
-        }
-        
-        function testLanguageDetection() {
-            const result = document.getElementById('language-result');
-            if (window.FlamingoBlogSimple) {
-                const locale = window.FlamingoBlogSimple.getCurrentLocale();
-                result.textContent = `Current locale: ${locale}\nPath: ${window.location.pathname}`;
-            } else {
-                result.textContent = 'FlamingoBlogSimple not available';
-            }
-        }
-        
-        async function testPostsRendering() {
-            try {
-                if (window.FlamingoBlogSimple) {
-                    await window.FlamingoBlogSimple.renderBlogPosts('posts-container', 'et');
-                } else {
-                    document.getElementById('posts-container').innerHTML = 'FlamingoBlogSimple not available';
+
+                // Тестируем основную Netlify Function
+                let netlifySuccess = false;
+                try {
+                    const netlifyResponse = await fetch('/.netlify/functions/get-posts');
+                    if (netlifyResponse.ok) {
+                        const netlifyPosts = await netlifyResponse.json();
+                        netlifySuccess = true;
+                        debugDiv.innerHTML += `<br>✅ Get-Posts Function: ${netlifyPosts.length} статей`;
+                        allPosts = netlifyPosts;
+                    } else {
+                        const errorText = await netlifyResponse.text();
+                        debugDiv.innerHTML += `<br>❌ Get-Posts Function: ${netlifyResponse.status} - ${errorText}`;
+                    }
+                } catch (error) {
+                    debugDiv.innerHTML += `<br>❌ Get-Posts Function: ${error.message}`;
                 }
+
+                // Если Netlify не работает, пробуем GitHub API
+                if (!netlifySuccess) {
+                    try {
+                        const posts = await window.BlogGitHub.loadPostsFromGitHub();
+                        allPosts = posts;
+                        debugDiv.innerHTML += `<br>✅ GitHub API: ${posts.length} статей`;
+                    } catch (error) {
+                        debugDiv.innerHTML += `<br>❌ GitHub API: ${error.message}`;
+                    }
+                }
+
+                // Если ничего не работает, показываем заглушку
+                if (allPosts.length === 0) {
+                    debugDiv.innerHTML += '<br><br>⚠️ Не удалось загрузить статьи ни одним способом';
+                    allPosts = [
+                        {
+                            id: 'fallback-ru',
+                            title: 'Скупка автомобилей в Таллине',
+                            content: 'Мы покупаем автомобили любых марок и в любом состоянии. Быстрая оценка, честная цена, мгновенная оплата.',
+                            author: 'Flamingo Auto',
+                            date: new Date().toISOString(),
+                            locale: 'ru',
+                            published: true
+                        },
+                        {
+                            id: 'fallback-et',
+                            title: 'Autode kokkuost Tallinnas',
+                            content: 'Ostame autosid kõikidest markidest ja igas seisukorras. Kiire hindamine, aus hind, kohene makse.',
+                            author: 'Flamingo Auto',
+                            date: new Date().toISOString(),
+                            locale: 'et',
+                            published: true
+                        }
+                    ];
+                    debugDiv.innerHTML += '<br>📝 Используем заглушки для демонстрации';
+                }
+
+                // Показываем статистику по языкам
+                const langStats = {};
+                allPosts.forEach(post => {
+                    const locale = post.locale || 'all';
+                    langStats[locale] = (langStats[locale] || 0) + 1;
+                });
+
+                debugDiv.innerHTML += '<br><br><strong>📈 Статистика по языкам:</strong>';
+                Object.entries(langStats).forEach(([lang, count]) => {
+                    debugDiv.innerHTML += `<br>${lang}: ${count} статей`;
+                });
+
+                // Показываем первые несколько статей
+                debugDiv.innerHTML += '<br><br><strong>📝 Первые статьи:</strong>';
+                allPosts.slice(0, 3).forEach(post => {
+                    debugDiv.innerHTML += `<br>• "${post.title}" (${post.locale})`;
+                });
+
             } catch (error) {
-                document.getElementById('posts-container').innerHTML = `Error: ${error.message}`;
+                debugDiv.innerHTML += `<br>❌ Общая ошибка: ${error.message}`;
             }
         }
+
+        async function testLanguage(locale) {
+            const container = document.getElementById('posts-container');
+            container.innerHTML = `<p>🔄 Тестируем язык: ${locale || 'все'}</p>`;
+
+            try {
+                await window.BlogGitHub.renderBlogPosts('posts-container', locale);
+            } catch (error) {
+                container.innerHTML = `<p style="color: red;">❌ Ошибка: ${error.message}</p>`;
+            }
+        }
+
+        // Автозагрузка при открытии страницы
+        document.addEventListener('DOMContentLoaded', async function() {
+            await debugLoadPosts();
+            await testLanguage('ru'); // По умолчанию показываем русские статьи
+        });
     </script>
 </body>
 </html>

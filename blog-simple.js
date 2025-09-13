@@ -26,7 +26,7 @@ function savePosts(posts) {
     }
 }
 
-// Сохранение поста в GitHub через Netlify Git Gateway
+// Сохранение поста через Netlify Function или Git Gateway
 async function saveToGitHub(post) {
     try {
         // Проверяем, есть ли токен Netlify Identity
@@ -37,6 +37,39 @@ async function saveToGitHub(post) {
 
         const token = await window.netlifyIdentity.currentUser().jwt();
 
+        // Сначала пробуем через нашу Netlify Function
+        try {
+            console.log('🔄 Пробуем сохранить через Netlify Function...');
+            const response = await fetch('/.netlify/functions/create-post', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: post.title,
+                    content: post.content,
+                    author: post.author,
+                    locale: post.locale,
+                    photos: post.photos
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Статья успешно сохранена через Netlify Function:', result.filename);
+                return true;
+            } else {
+                const errorText = await response.text();
+                console.warn('⚠️ Netlify Function не сработала:', response.status, errorText);
+            }
+        } catch (functionError) {
+            console.warn('⚠️ Ошибка Netlify Function:', functionError.message);
+        }
+
+        // Fallback на Git Gateway
+        console.log('🔄 Пробуем сохранить через Git Gateway...');
+        
         // Создаем имя файла
         const date = new Date(post.date);
         const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
@@ -80,15 +113,15 @@ ${post.content}`;
         });
 
         if (response.ok) {
-            console.log('✅ Статья успешно сохранена в GitHub');
+            console.log('✅ Статья успешно сохранена через Git Gateway');
             return true;
         } else {
             const errorText = await response.text();
-            console.error('❌ Ошибка сохранения в GitHub:', response.status, errorText);
+            console.error('❌ Ошибка сохранения через Git Gateway:', response.status, errorText);
             return false;
         }
     } catch (error) {
-        console.error('❌ Ошибка при сохранении в GitHub:', error);
+        console.error('❌ Общая ошибка при сохранении:', error);
         return false;
     }
 }

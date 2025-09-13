@@ -3,22 +3,35 @@ const GITHUB_REPO = 'Vladislav9111/flamingoauto-site';
 const GITHUB_BRANCH = 'main';
 const BLOG_PATH = 'content/blog';
 
-// Загрузка статей из GitHub API
+// Загрузка статей через Netlify Function (приоритет) или GitHub API (fallback)
 async function loadPostsFromGitHub() {
     try {
-        console.log('🔄 Загружаем статьи из GitHub...');
-        
+        console.log('🔄 Загружаем статьи...');
+
+        // Сначала пробуем Netlify Function
+        try {
+            const response = await fetch('/.netlify/functions/get-posts');
+            if (response.ok) {
+                const posts = await response.json();
+                console.log(`✅ Загружено через Netlify Function: ${posts.length} статей`);
+                return posts;
+            }
+        } catch (netlifyError) {
+            console.log('⚠️ Netlify Function недоступна, пробуем GitHub API');
+        }
+
+        // Fallback на GitHub API
         const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${BLOG_PATH}`);
-        
+
         if (!response.ok) {
             throw new Error(`GitHub API error: ${response.status}`);
         }
-        
+
         const files = await response.json();
         const markdownFiles = files.filter(file => file.name.endsWith('.md'));
-        
-        console.log(`📁 Найдено ${markdownFiles.length} markdown файлов`);
-        
+
+        console.log(`📁 Найдено ${markdownFiles.length} markdown файлов через GitHub API`);
+
         const posts = await Promise.all(
             markdownFiles.map(async (file) => {
                 try {
@@ -31,18 +44,18 @@ async function loadPostsFromGitHub() {
                 }
             })
         );
-        
+
         // Фильтруем null значения и только опубликованные посты
         const validPosts = posts.filter(post => post && post.published);
-        
+
         // Сортируем по дате (новые сначала)
         validPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        console.log(`✅ Загружено ${validPosts.length} статей`);
+
+        console.log(`✅ Загружено через GitHub API: ${validPosts.length} статей`);
         return validPosts;
-        
+
     } catch (error) {
-        console.error('❌ Ошибка загрузки из GitHub:', error);
+        console.error('❌ Ошибка загрузки статей:', error);
         return [];
     }
 }
@@ -52,7 +65,7 @@ function parseMarkdownPost(content, filename) {
     const lines = content.split('\n');
     const frontmatter = {};
     let contentStart = 0;
-    
+
     // Парсим frontmatter (метаданные между ---)
     if (lines[0] === '---') {
         for (let i = 1; i < lines.length; i++) {
@@ -73,14 +86,14 @@ function parseMarkdownPost(content, filename) {
             }
         }
     }
-    
+
     // Получаем slug из имени файла
     const slug = filename.replace('.md', '');
-    
+
     // Получаем первые несколько строк как описание
     const bodyLines = lines.slice(contentStart);
     const description = bodyLines.slice(0, 3).join(' ').substring(0, 150) + '...';
-    
+
     return {
         id: slug,
         title: frontmatter.title || 'Статья без названия',
@@ -108,15 +121,64 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
     container.innerHTML = '<p style="text-align:center;color:#666;padding:2rem;">🔄 Загружаем статьи...</p>';
 
     const posts = await loadPostsFromGitHub();
-    
+
     // Фильтруем по языку если указан
-    const filteredPosts = locale ? posts.filter(post => 
-        post.locale === 'all' || post.locale === locale
-    ) : posts;
-    
+    const filteredPosts = locale ? posts.filter(post => {
+        const postLocale = (post.locale || 'all').toLowerCase();
+        const targetLocale = locale.toLowerCase();
+        const matches = postLocale === 'all' || postLocale === targetLocale;
+        console.log(`📝 Пост "${post.title}" (${postLocale}) ${matches ? '✅ подходит' : '❌ не подходит'} для языка ${targetLocale}`);
+        return matches;
+    }) : posts;
+
     console.log('📊 Получено постов:', filteredPosts.length, 'для языка:', locale);
 
     if (filteredPosts.length === 0) {
+        // Если нет статей, показываем заглушки для демонстрации
+        const fallbackPosts = [
+            {
+                id: 'demo-ru',
+                title: 'Продажа автомобилей в Таллине — быстро и выгодно',
+                content: 'Flamingo Auto предлагает профессиональные услуги по выкупу автомобилей в Таллине. Мы покупаем машины любых марок и в любом состоянии. Быстрая оценка, честная цена, оформление документов и мгновенная оплата — всё это делает процесс продажи максимально удобным для вас.',
+                author: 'Flamingo Auto',
+                date: new Date().toISOString(),
+                locale: 'ru'
+            },
+            {
+                id: 'demo-et',
+                title: 'Autode müük Tallinnas — kiiresti ja kasulikult',
+                content: 'Flamingo Auto pakub professionaalseid autode kokkuostu teenuseid Tallinnas. Ostame autosid kõikidest markidest ja igas seisukorras. Kiire hindamine, aus hind, dokumentide vormistamine ja kohene makse — kõik see muudab müügiprotsessi teie jaoks võimalikult mugavaks.',
+                author: 'Flamingo Auto',
+                date: new Date().toISOString(),
+                locale: 'et'
+            }
+        ];
+
+        // Фильтруем заглушки по языку
+        const demoFiltered = locale ? fallbackPosts.filter(post =>
+            post.locale === locale || post.locale === 'all'
+        ) : fallbackPosts;
+
+        if (demoFiltered.length > 0) {
+            console.log('📝 Показываем демо-статьи');
+            const postsHTML = demoFiltered.map(post => `
+                <article style="background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:1rem;">
+                    <h2 style="margin:0 0 0.5rem 0;color:#333;">${escapeHtml(post.title)}</h2>
+                    <div style="color:#666;font-size:0.9rem;margin-bottom:1rem;">
+                        ${new Date(post.date).toLocaleDateString('ru-RU')} • ${escapeHtml(post.author)}
+                    </div>
+                    <div style="line-height:1.6;color:#444;">
+                        ${sanitizeHtml(post.content)}
+                    </div>
+                    <div style="margin-top:1rem;padding:0.75rem;background:#e3f2fd;border-radius:6px;font-size:0.9rem;color:#1976d2;">
+                        ℹ️ Это демонстрационная статья. Реальные статьи будут загружены после настройки.
+                    </div>
+                </article>
+            `).join('');
+            container.innerHTML = postsHTML;
+            return;
+        }
+
         const noPostsMessages = {
             'et': 'Artikleid pole veel avaldatud.',
             'ru': 'Пока нет опубликованных статей.',
@@ -135,7 +197,7 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
                 ${new Date(post.date).toLocaleDateString('ru-RU')} • ${escapeHtml(post.author)}
             </div>
             <div style="line-height:1.6;color:#444;">
-                ${sanitizeHtml(post.excerpt || post.content.substring(0, 200) + '...')}
+                ${sanitizeHtml(post.content.substring(0, 300) + (post.content.length > 300 ? '...' : ''))}
             </div>
         </article>
     `).join('');
@@ -179,16 +241,25 @@ function sanitizeHtml(html) {
 // Определение текущего языка страницы
 function getCurrentLocale() {
     const path = window.location.pathname.toLowerCase();
-    if (path.includes('blog-et') || path.includes('index.html') || path.endsWith('/')) {
+    console.log('🌐 Определяем язык для пути:', path);
+
+    if (path.includes('blog-et')) {
+        console.log('📍 Язык: эстонский (ET)');
         return 'et';
-    } else if (path.includes('blog-ru') || path.includes('ru.html')) {
+    } else if (path.includes('blog-ru')) {
+        console.log('📍 Язык: русский (RU)');
         return 'ru';
+    } else if (path.includes('blog.html')) {
+        console.log('📍 Язык: все языки');
+        return null; // Показать все
     }
+
+    console.log('📍 Язык по умолчанию: все');
     return null; // Показать все
 }
 
 // Автоматическая инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     const container = document.getElementById('posts-container');
     if (container) {
         const locale = getCurrentLocale();

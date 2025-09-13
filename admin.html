@@ -390,6 +390,13 @@
                     const storage = user ? 'и сохранена в GitHub' : 'локально';
                     const message = `✅ Статья ${action} ${storage}!`;
                     showMessage('success', message);
+                    
+                    console.log('✅ Публикация успешна:', {
+                        title: title,
+                        locale: locale,
+                        hasUser: !!user,
+                        userEmail: user?.email
+                    });
 
                     // Сбрасываем форму
                     document.getElementById('post-form').reset();
@@ -407,6 +414,11 @@
                     await loadPostsList();
                 } else {
                     showMessage('error', '❌ Ошибка при публикации статьи!');
+                    console.error('❌ Публикация не удалась:', {
+                        title: title,
+                        locale: locale,
+                        hasUser: !!window.netlifyIdentity?.currentUser()
+                    });
                 }
             } catch (error) {
                 showMessage('error', '❌ Ошибка: ' + error.message);
