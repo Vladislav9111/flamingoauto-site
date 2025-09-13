@@ -166,27 +166,206 @@ async function loadPostsFromGitHub() {
 
 // Получение постов
 async function getPosts(locale = null) {
+    console.log('🔄 Получаем посты...');
+    
     // Сначала пробуем GitHub, потом localStorage
     let posts = await loadPostsFromGitHub();
+    console.log('📊 Из GitHub:', posts.length, 'постов');
+    
     if (posts.length === 0) {
         posts = loadPosts();
+        console.log('📱 Из localStorage:', posts.length, 'постов');
     }
 
     // Фильтруем по языку
     if (locale) {
-        return posts.filter(post => {
+        const filtered = posts.filter(post => {
             const postLocale = (post.locale || 'all').toLowerCase();
             return postLocale === 'all' || postLocale === locale.toLowerCase();
         });
+        console.log('🌐 После фильтрации по языку', locale + ':', filtered.length, 'постов');
+        return filtered;
     }
     
+    console.log('📝 Всего постов:', posts.length);
     return posts;
 }
 
-// Экспорт
+// Удаление поста
+async function deletePost(postId) {
+    try {
+        const posts = loadPosts();
+        const postIndex = posts.findIndex(p => p.id === postId);
+
+        if (postIndex === -1) {
+            alert('Пост не найден!');
+            return false;
+        }
+
+        posts.splice(postIndex, 1);
+        savePosts(posts);
+        console.log('Пост удален из localStorage');
+        return true;
+    } catch (error) {
+        console.error('Ошибка при удалении:', error);
+        return false;
+    }
+}
+
+// Обновление поста
+async function updatePost(postId, title, content, author, locale = 'all', photos = []) {
+    if (!title || !content) {
+        alert('Заполните заголовок и содержание!');
+        return false;
+    }
+
+    try {
+        const posts = loadPosts();
+        const postIndex = posts.findIndex(p => p.id === postId);
+
+        if (postIndex === -1) {
+            alert('Пост не найден!');
+            return false;
+        }
+
+        const originalPost = posts[postIndex];
+        const updatedPost = {
+            ...originalPost,
+            title: title.trim(),
+            content: content.trim(),
+            author: author.trim(),
+            locale: locale,
+            photos: photos || [],
+            updatedAt: new Date().toISOString()
+        };
+
+        posts[postIndex] = updatedPost;
+        savePosts(posts);
+
+        // Пробуем сохранить в GitHub
+        const success = await saveToGitHub(updatedPost);
+        
+        if (success) {
+            console.log('✅ Статья обновлена');
+            return true;
+        } else {
+            console.warn('⚠️ Статья обновлена только локально');
+            return true;
+        }
+    } catch (error) {
+        console.error('Ошибка при обновлении:', error);
+        alert('Ошибка: ' + error.message);
+        return false;
+    }
+}
+
+// Отображение постов на странице блога
+async function renderBlogPosts(containerId = 'posts-container', locale = null) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.log('❌ Контейнер не найден:', containerId);
+        return;
+    }
+
+    console.log('🎯 Рендерим посты для языка:', locale);
+    container.innerHTML = '<p style="text-align:center;color:#666;padding:2rem;">🔄 Загружаем статьи...</p>';
+
+    const posts = await getPosts(locale);
+    console.log('📊 Получено постов:', posts.length);
+
+    if (posts.length === 0) {
+        const noPostsMessages = {
+            'et': 'Artikleid pole veel avaldatud.',
+            'ru': 'Пока нет опубликованных статей.',
+            'all': 'Пока нет опубликованных статей.'
+        };
+
+        const message = noPostsMessages[locale] || noPostsMessages['all'];
+        container.innerHTML = `<p style="text-align:center;color:#666;padding:2rem;">${message}</p>`;
+        return;
+    }
+
+    const postsHTML = posts.map(post => `
+        <article style="background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:1rem;">
+            <h2 style="margin:0 0 0.5rem 0;color:#333;">${escapeHtml(post.title)}</h2>
+            <div style="color:#666;font-size:0.9rem;margin-bottom:1rem;">
+                ${new Date(post.date).toLocaleDateString('ru-RU')} • ${escapeHtml(post.author)}
+                ${post.updatedAt ? ` • <em>обновлено ${new Date(post.updatedAt).toLocaleDateString('ru-RU')}</em>` : ''}
+            </div>
+            <div style="line-height:1.6;color:#444;">
+                ${sanitizeHtml(post.content.substring(0, 300) + (post.content.length > 300 ? '...' : ''))}
+            </div>
+        </article>
+    `).join('');
+
+    container.innerHTML = postsHTML;
+}
+
+// Определение языка страницы
+function getCurrentLocale() {
+    const path = window.location.pathname.toLowerCase();
+    if (path.includes('blog-et')) {
+        return 'et';
+    } else if (path.includes('blog-ru')) {
+        return 'ru';
+    }
+    return null;
+}
+
+// Безопасное экранирование HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Безопасная обработка HTML
+function sanitizeHtml(html) {
+    const allowedTags = ['b', 'i', 'strong', 'em', 'p', 'br'];
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+
+    function cleanNode(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            return node.textContent;
+        }
+
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            const tagName = node.tagName.toLowerCase();
+            if (allowedTags.includes(tagName)) {
+                const children = Array.from(node.childNodes).map(cleanNode).join('');
+                return `<${tagName}>${children}</${tagName}>`;
+            } else {
+                return Array.from(node.childNodes).map(cleanNode).join('');
+            }
+        }
+        return '';
+    }
+
+    return Array.from(temp.childNodes).map(cleanNode).join('').replace(/\n/g, '<br>');
+}
+
+// Автоматическая инициализация
+document.addEventListener('DOMContentLoaded', async function() {
+    const container = document.getElementById('posts-container');
+    if (container) {
+        const locale = getCurrentLocale();
+        console.log('Автозагрузка постов для языка:', locale);
+        await renderBlogPosts('posts-container', locale);
+    }
+});
+
+// Экспорт всех функций
 window.FlamingoBlogSimple = {
     addPost,
+    updatePost,
+    deletePost,
     getPosts,
+    renderBlogPosts,
+    getCurrentLocale,
     loadPosts,
-    savePosts
+    savePosts,
+    loadPostsFromGitHub,
+    sanitizeHtml,
+    escapeHtml
 };

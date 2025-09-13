@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Test Simple — Flamingo Auto</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Netlify Identity Widget -->
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    
+    <style>
+        .test-panel { 
+            max-width: 800px; 
+            margin: 2rem auto; 
+            padding: 2rem; 
+            background: #fff; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0.5rem;
+            font-size: 1rem;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn:disabled { background: #6c757d; cursor: not-allowed; }
+        .result {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="hero-header">
+                <a class="logo" href="index.html">FLAMINGO AUTO</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container test-panel">
+        <h1>🧪 Тест простой системы</h1>
+        
+        <!-- Авторизация -->
+        <div id="auth-section">
+            <div id="netlify-login">
+                <p>Войдите для тестирования:</p>
+                <button id="login-btn" class="btn">🔑 Войти</button>
+            </div>
+            <div id="user-info" style="display: none;">
+                <p>✅ Авторизован как: <span id="user-email"></span></p>
+                <button id="logout-btn" class="btn" style="background: #dc3545;">🚪 Выйти</button>
+            </div>
+        </div>
+
+        <!-- Тесты -->
+        <div id="tests-section">
+            <h2>Тесты:</h2>
+            
+            <button id="test-load-posts" class="btn">📚 Загрузить посты</button>
+            <button id="test-create-post" class="btn">📝 Создать тестовый пост</button>
+            <button id="test-admin-functions" class="btn">⚙️ Проверить функции админки</button>
+            
+            <div id="results"></div>
+        </div>
+    </main>
+
+    <script src="blog-simple-clean.js"></script>
+    <script>
+        function addResult(message) {
+            const container = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'result';
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Инициализация Netlify Identity
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.on("init", user => {
+                updateAuthUI(user);
+            });
+
+            window.netlifyIdentity.on("login", user => {
+                updateAuthUI(user);
+                addResult('✅ Авторизация успешна!');
+            });
+
+            window.netlifyIdentity.on("logout", () => {
+                updateAuthUI(null);
+                addResult('ℹ️ Вы вышли из системы');
+            });
+        }
+
+        function updateAuthUI(user) {
+            const loginSection = document.getElementById('netlify-login');
+            const userInfo = document.getElementById('user-info');
+            const userEmail = document.getElementById('user-email');
+
+            if (user) {
+                loginSection.style.display = 'none';
+                userInfo.style.display = 'block';
+                userEmail.textContent = user.email;
+            } else {
+                loginSection.style.display = 'block';
+                userInfo.style.display = 'none';
+            }
+        }
+
+        // Тест загрузки постов
+        document.getElementById('test-load-posts').addEventListener('click', async function() {
+            addResult('🔄 Тестируем загрузку постов...');
+            
+            try {
+                const posts = await window.FlamingoBlogSimple.getPosts();
+                addResult(`✅ Загружено ${posts.length} постов`);
+                
+                if (posts.length > 0) {
+                    posts.forEach((post, index) => {
+                        addResult(`📝 ${index + 1}. "${post.title}" (${post.locale}) - ${new Date(post.date).toLocaleDateString()}`);
+                    });
+                }
+            } catch (error) {
+                addResult(`❌ Ошибка загрузки: ${error.message}`);
+            }
+        });
+
+        // Тест создания поста
+        document.getElementById('test-create-post').addEventListener('click', async function() {
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = '🔄 Создаем...';
+
+            try {
+                addResult('🔄 Создаем тестовый пост...');
+                
+                const testTitle = 'Тест ' + Date.now();
+                const testContent = 'Это тестовая статья для проверки простой системы публикации.';
+                
+                const success = await window.FlamingoBlogSimple.addPost(
+                    testTitle,
+                    testContent,
+                    'Test Author',
+                    'ru',
+                    []
+                );
+
+                if (success) {
+                    addResult('✅ Тестовый пост создан успешно!');
+                } else {
+                    addResult('❌ Не удалось создать тестовый пост');
+                }
+            } catch (error) {
+                addResult(`❌ Ошибка создания: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📝 Создать тестовый пост';
+            }
+        });
+
+        // Тест функций админки
+        document.getElementById('test-admin-functions').addEventListener('click', function() {
+            addResult('🔄 Проверяем функции админки...');
+            
+            if (window.FlamingoBlogSimple) {
+                addResult('✅ FlamingoBlogSimple загружен');
+                
+                const functions = ['addPost', 'getPosts', 'loadPosts', 'savePosts'];
+                functions.forEach(funcName => {
+                    if (typeof window.FlamingoBlogSimple[funcName] === 'function') {
+                        addResult(`✅ Функция ${funcName} доступна`);
+                    } else {
+                        addResult(`❌ Функция ${funcName} НЕ доступна`);
+                    }
+                });
+            } else {
+                addResult('❌ FlamingoBlogSimple НЕ загружен');
+            }
+        });
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.init();
+                updateAuthUI(window.netlifyIdentity.currentUser());
+            }
+
+            document.getElementById('login-btn').addEventListener('click', function() {
+                if (window.netlifyIdentity) {
+                    window.netlifyIdentity.open();
+                }
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                if (window.netlifyIdentity) {
+                    window.netlifyIdentity.logout();
+                }
+            });
+            
+            // Автоматически проверяем функции
+            setTimeout(() => {
+                document.getElementById('test-admin-functions').click();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -459,9 +459,13 @@
             container.innerHTML = '<p style="color: #666; text-align: center; padding: 2rem;">🔄 Загружаем статьи...</p>';
 
             try {
+                console.log('🔄 Загружаем список постов...');
                 const posts = await window.FlamingoBlogSimple.getPosts();
+                console.log('📊 Получено постов:', posts.length);
+                console.log('📝 Посты:', posts);
 
                 if (posts.length === 0) {
+                    console.log('❌ Нет постов для отображения');
                     container.innerHTML = '<p style="color: #666; text-align: center; padding: 2rem;">Пока нет опубликованных статей</p>';
                     return;
                 }
