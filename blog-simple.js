@@ -59,6 +59,11 @@ async function saveToGitHub(post) {
                 const result = await response.json();
                 console.log('✅ Статья успешно сохранена через Netlify Function:', result.filename);
                 return true;
+            } else if (response.status === 202) {
+                // Netlify Function не может создать файл, но предоставляет данные для Git Gateway
+                const result = await response.json();
+                console.log('⚠️ Netlify Function fallback:', result.error);
+                // Продолжаем с Git Gateway
             } else {
                 const errorText = await response.text();
                 console.warn('⚠️ Netlify Function не сработала:', response.status, errorText);

@@ -69,30 +69,51 @@ ${content}`;
       path.join(process.cwd(), 'content', 'blog'),
       path.join(__dirname, '..', '..', 'content', 'blog'),
       path.join('/opt/build/repo', 'content', 'blog'),
-      path.join('/var/task', 'content', 'blog')
+      path.join('/var/task', 'content', 'blog'),
+      path.join('/opt/buildhome/repo', 'content', 'blog'),
+      path.join(process.env.LAMBDA_TASK_ROOT || '', '..', '..', 'content', 'blog')
     ];
 
     let blogDirectory = null;
+    
+    // Логируем для отладки
+    console.log('🔍 Ищем папку блога...');
+    console.log('process.cwd():', process.cwd());
+    console.log('__dirname:', __dirname);
+    console.log('LAMBDA_TASK_ROOT:', process.env.LAMBDA_TASK_ROOT);
+    
     for (const testPath of possiblePaths) {
+      console.log('Проверяем путь:', testPath);
+      console.log('Родительская папка существует:', fs.existsSync(path.dirname(testPath)));
+      
       if (fs.existsSync(path.dirname(testPath))) {
         blogDirectory = testPath;
         // Создаем папку если её нет
         if (!fs.existsSync(blogDirectory)) {
+          console.log('Создаем папку:', blogDirectory);
           fs.mkdirSync(blogDirectory, { recursive: true });
         }
+        console.log('✅ Используем папку:', blogDirectory);
         break;
       }
     }
 
     if (!blogDirectory) {
       console.error('Blog directory not found. Tried paths:', possiblePaths);
+      
+      // Возвращаем данные для Git Gateway fallback
       return {
-        statusCode: 500,
+        statusCode: 202, // Accepted, но не выполнено
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify({ error: 'Blog directory not found' }),
+        body: JSON.stringify({ 
+          error: 'Blog directory not found',
+          fallback: 'use_git_gateway',
+          markdownContent: markdownContent,
+          filename: filename
+        }),
       };
     }
 
