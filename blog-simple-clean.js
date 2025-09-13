@@ -166,15 +166,23 @@ async function addPost(title, content, author, locale = 'all', photos = []) {
 // Загрузка постов из GitHub
 async function loadPostsFromGitHub() {
     try {
-        const response = await fetch('/.netlify/functions/get-posts');
+        console.log('🔄 Запрашиваем /.netlify/functions/get-posts-simple');
+        const response = await fetch('/.netlify/functions/get-posts-simple');
+        
+        console.log('📡 Ответ сервера:', response.status, response.statusText);
+        
         if (response.ok) {
             const posts = await response.json();
+            console.log('✅ Получены посты из Netlify Function:', posts.length);
             savePosts(posts); // Кешируем локально
             return posts;
+        } else {
+            const errorText = await response.text();
+            console.error('❌ Ошибка Netlify Function:', response.status, errorText);
+            return [];
         }
-        return [];
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
+        console.error('❌ Сетевая ошибка при загрузке постов:', error);
         return [];
     }
 }
