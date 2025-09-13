@@ -197,17 +197,27 @@
             <h2 style="margin: 0 0 1rem 0; color: #1976d2;">🚀 Рекомендуется: Netlify CMS</h2>
             <p style="margin: 0 0 1.5rem 0; color: #1976d2;">Официальная система управления контентом от Netlify. Надёжно и просто!</p>
             
-            <button onclick="openNetlifyCMS()" style="background: #1976d2; color: white; padding: 1rem 2rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 1rem; margin-bottom: 1rem;">
+            <button type="button" onclick="openNetlifyCMS(); return false;" style="background: #1976d2; color: white; padding: 1rem 2rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 1rem; margin-bottom: 1rem;">
                 ✨ Открыть Netlify CMS
             </button>
             
             <br>
             
+            <div style="margin-top: 1rem;">
+                <button type="button" onclick="alert('JavaScript работает!')" style="background: #28a745; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; margin-right: 1rem;">
+                    🧪 Тест JavaScript
+                </button>
+                <button type="button" onclick="window.open('/admin/', '_blank')" style="background: #ffc107; color: black; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                    🔗 Прямая ссылка
+                </button>
+            </div>
+            
             <div style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
                 <p><strong>Если кнопка не работает:</strong></p>
-                <p>1. <a href="/admin/" target="_blank" style="color: #1976d2;">Откройте /admin/ в новой вкладке</a></p>
-                <p>2. Или введите в адресной строке: <code style="background: #f5f5f5; padding: 0.2rem 0.4rem; border-radius: 4px;">ваш-сайт.netlify.app/admin/</code></p>
-                <p>3. Убедитесь что включены Identity и Git Gateway в Netlify Dashboard</p>
+                <p>1. Нажмите "🧪 Тест JavaScript" - должно показать alert</p>
+                <p>2. Нажмите "🔗 Прямая ссылка" - откроет CMS в новой вкладке</p>
+                <p>3. Или <a href="/admin/" target="_blank" style="color: #1976d2;">откройте /admin/ вручную</a></p>
+                <p>4. Проверьте консоль браузера (F12) на ошибки</p>
             </div>
         </div>
         
@@ -665,12 +675,25 @@
 
         // Функция открытия Netlify CMS
         function openNetlifyCMS() {
-            // Пробуем открыть в том же окне
+            console.log('🔄 Открываем Netlify CMS...');
+            
             try {
+                // Показываем что функция вызвана
+                alert('Открываем Netlify CMS...');
+                
+                // Пробуем открыть в том же окне
                 window.location.href = '/admin/';
+                
             } catch (error) {
+                console.error('❌ Ошибка открытия CMS:', error);
+                
                 // Если не получается, открываем в новой вкладке
-                window.open('/admin/', '_blank');
+                try {
+                    window.open('/admin/', '_blank');
+                } catch (error2) {
+                    console.error('❌ Ошибка открытия в новой вкладке:', error2);
+                    alert('Ошибка открытия CMS. Откройте /admin/ вручную.');
+                }
             }
         }
     </script>
