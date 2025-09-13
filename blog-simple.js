@@ -29,13 +29,25 @@ function savePosts(posts) {
 // Сохранение поста через Netlify Function или Git Gateway
 async function saveToGitHub(post) {
     try {
+        console.log('🔄 Начинаем сохранение в GitHub...');
+        
         // Проверяем, есть ли токен Netlify Identity
-        if (!window.netlifyIdentity || !window.netlifyIdentity.currentUser()) {
-            console.log('Пользователь не авторизован в Netlify Identity');
+        if (!window.netlifyIdentity) {
+            console.error('❌ Netlify Identity не загружен');
+            alert('Ошибка: Netlify Identity не загружен. Статья сохранена только локально.');
             return false;
         }
-
-        const token = await window.netlifyIdentity.currentUser().jwt();
+        
+        const currentUser = window.netlifyIdentity.currentUser();
+        if (!currentUser) {
+            console.error('❌ Пользователь не авторизован в Netlify Identity');
+            alert('Ошибка: Вы не авторизованы. Войдите через Netlify Identity для сохранения в GitHub.');
+            return false;
+        }
+        
+        console.log('✅ Пользователь авторизован:', currentUser.email);
+        const token = await currentUser.jwt();
+        console.log('✅ Токен получен, длина:', token.length);
 
         // Сначала пробуем через нашу Netlify Function
         try {
@@ -58,6 +70,7 @@ async function saveToGitHub(post) {
             if (response.ok) {
                 const result = await response.json();
                 console.log('✅ Статья успешно сохранена через Netlify Function:', result.filename);
+                alert('✅ Статья успешно опубликована и сохранена в GitHub!');
                 return true;
             } else if (response.status === 202) {
                 // Netlify Function не может создать файл, но предоставляет данные для Git Gateway
@@ -66,10 +79,42 @@ async function saveToGitHub(post) {
                 // Продолжаем с Git Gateway
             } else {
                 const errorText = await response.text();
-                console.warn('⚠️ Netlify Function не сработала:', response.status, errorText);
+                console.error('❌ Netlify Function ошибка:', response.status, errorText);
+                console.log('🔄 Пробуем Git Gateway...');
             }
         } catch (functionError) {
             console.warn('⚠️ Ошибка Netlify Function:', functionError.message);
+        }
+
+        // Пробуем альтернативную Netlify Function через GitHub API
+        try {
+            console.log('🔄 Пробуем альтернативную функцию через GitHub API...');
+            const response = await fetch('/.netlify/functions/create-post-github', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: post.title,
+                    content: post.content,
+                    author: post.author,
+                    locale: post.locale,
+                    photos: post.photos
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Статья успешно сохранена через GitHub API Function:', result.filename);
+                alert('✅ Статья успешно опубликована через GitHub API!');
+                return true;
+            } else {
+                const errorText = await response.text();
+                console.error('❌ GitHub API Function ошибка:', response.status, errorText);
+            }
+        } catch (githubError) {
+            console.warn('⚠️ Ошибка GitHub API Function:', githubError.message);
         }
 
         // Fallback на Git Gateway
@@ -121,10 +166,20 @@ ${post.content}`;
 
         if (response.ok) {
             console.log('✅ Статья успешно сохранена через Git Gateway');
+            alert('✅ Статья успешно опубликована через Git Gateway!');
             return true;
         } else {
             const errorText = await response.text();
             console.error('❌ Ошибка сохранения через Git Gateway:', response.status, errorText);
+            
+            // Показываем подробную ошибку пользователю
+            if (response.status === 401) {
+                alert('❌ Ошибка авторизации. Проверьте настройки Netlify Identity и Git Gateway.');
+            } else if (response.status === 404) {
+                alert('❌ Git Gateway не найден. Убедитесь что он включен в настройках Netlify.');
+            } else {
+                alert(`❌ Ошибка сохранения: ${response.status}. Статья сохранена только локально.`);
+            }
             return false;
         }
     } catch (error) {
@@ -206,11 +261,13 @@ async function addPost(title, content, author, locale = 'all', photos = []) {
         const success = await saveToGitHub(newPost);
 
         if (success) {
+            console.log('✅ Статья успешно опубликована в GitHub');
             return true;
         } else {
             // Если GitHub не сработал, оставляем в localStorage
-            console.warn('GitHub сохранение не удалось, статья сохранена локально');
-            return true;
+            console.warn('⚠️ GitHub сохранение не удалось, статья сохранена только локально');
+            alert('⚠️ Статья сохранена локально, но не опубликована в GitHub. Проверьте настройки Netlify Identity и Git Gateway.');
+            return true; // Возвращаем true чтобы не показывать ошибку в админке
         }
     } catch (error) {
         console.error('Ошибка при добавлении поста:', error);
