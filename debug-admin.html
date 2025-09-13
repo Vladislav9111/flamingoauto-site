@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Debug Admin — Flamingo Auto</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Netlify Identity Widget -->
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    
+    <style>
+        .debug-panel { 
+            max-width: 800px; 
+            margin: 2rem auto; 
+            padding: 2rem; 
+            background: #fff; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .debug-result {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0.5rem;
+            font-size: 1rem;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn:disabled { background: #6c757d; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="hero-header">
+                <a class="logo" href="index.html">FLAMINGO AUTO</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container debug-panel">
+        <h1>🔧 Debug Admin</h1>
+        <p>Диагностика проблем с публикацией статей в админке</p>
+        
+        <!-- Авторизация -->
+        <div id="auth-section">
+            <div id="netlify-login">
+                <p>Войдите для тестирования:</p>
+                <button id="login-btn" class="btn">🔑 Войти</button>
+            </div>
+            <div id="user-info" style="display: none;">
+                <p>✅ Авторизован как: <span id="user-email"></span></p>
+                <button id="logout-btn" class="btn" style="background: #dc3545;">🚪 Выйти</button>
+            </div>
+        </div>
+
+        <!-- Тесты -->
+        <div id="tests-section">
+            <h2>Диагностика:</h2>
+            
+            <button id="test-script-load" class="btn">📜 Проверить загрузку скриптов</button>
+            <button id="test-functions" class="btn">⚙️ Проверить функции</button>
+            <button id="test-simple-publish" class="btn">📝 Тест простой публикации</button>
+            
+            <div id="test-results"></div>
+        </div>
+    </main>
+
+    <script src="blog-simple.js"></script>
+    <script>
+        function addResult(type, message) {
+            const container = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `debug-result ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Инициализация Netlify Identity
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.on("init", user => {
+                updateAuthUI(user);
+            });
+
+            window.netlifyIdentity.on("login", user => {
+                updateAuthUI(user);
+                addResult('success', '✅ Авторизация успешна!');
+            });
+
+            window.netlifyIdentity.on("logout", () => {
+                updateAuthUI(null);
+                addResult('info', 'ℹ️ Вы вышли из системы');
+            });
+        }
+
+        function updateAuthUI(user) {
+            const loginSection = document.getElementById('netlify-login');
+            const userInfo = document.getElementById('user-info');
+            const userEmail = document.getElementById('user-email');
+
+            if (user) {
+                loginSection.style.display = 'none';
+                userInfo.style.display = 'block';
+                userEmail.textContent = user.email;
+            } else {
+                loginSection.style.display = 'block';
+                userInfo.style.display = 'none';
+            }
+        }
+
+        // Тест загрузки скриптов
+        document.getElementById('test-script-load').addEventListener('click', function() {
+            addResult('info', '🔄 Проверяем загрузку скриптов...');
+            
+            // Проверяем Netlify Identity
+            if (window.netlifyIdentity) {
+                addResult('success', '✅ Netlify Identity загружен');
+            } else {
+                addResult('error', '❌ Netlify Identity НЕ загружен');
+            }
+            
+            // Проверяем blog-simple.js
+            if (window.FlamingoBlogSimple) {
+                addResult('success', '✅ FlamingoBlogSimple загружен');
+                
+                // Проверяем функции
+                const functions = ['addPost', 'updatePost', 'deletePost', 'getPosts'];
+                functions.forEach(funcName => {
+                    if (typeof window.FlamingoBlogSimple[funcName] === 'function') {
+                        addResult('success', `✅ Функция ${funcName} доступна`);
+                    } else {
+                        addResult('error', `❌ Функция ${funcName} НЕ доступна`);
+                    }
+                });
+            } else {
+                addResult('error', '❌ FlamingoBlogSimple НЕ загружен');
+            }
+        });
+
+        // Тест функций
+        document.getElementById('test-functions').addEventListener('click', async function() {
+            addResult('info', '🔄 Тестируем функции...');
+            
+            if (!window.FlamingoBlogSimple) {
+                addResult('error', '❌ FlamingoBlogSimple не загружен');
+                return;
+            }
+            
+            try {
+                // Тест getPosts
+                const posts = await window.FlamingoBlogSimple.getPosts();
+                addResult('success', `✅ getPosts работает: ${posts.length} постов`);
+                
+                // Тест loadPosts
+                const localPosts = window.FlamingoBlogSimple.loadPosts();
+                addResult('success', `✅ loadPosts работает: ${localPosts.length} локальных постов`);
+                
+            } catch (error) {
+                addResult('error', `❌ Ошибка функций: ${error.message}`);
+            }
+        });
+
+        // Тест простой публикации
+        document.getElementById('test-simple-publish').addEventListener('click', async function() {
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = '🔄 Публикуем...';
+
+            try {
+                addResult('info', '🔄 Тестируем простую публикацию...');
+                
+                if (!window.FlamingoBlogSimple) {
+                    addResult('error', '❌ FlamingoBlogSimple не загружен');
+                    return;
+                }
+                
+                const testTitle = 'Debug Test ' + Date.now();
+                const testContent = 'Это тестовая статья для отладки админки';
+                const testAuthor = 'Debug Author';
+                const testLocale = 'ru';
+                
+                addResult('info', `📝 Создаем пост: "${testTitle}"`);
+                
+                const success = await window.FlamingoBlogSimple.addPost(
+                    testTitle,
+                    testContent,
+                    testAuthor,
+                    testLocale,
+                    []
+                );
+
+                if (success) {
+                    addResult('success', '✅ Простая публикация работает!');
+                } else {
+                    addResult('error', '❌ Простая публикация НЕ работает');
+                }
+            } catch (error) {
+                addResult('error', `❌ Ошибка публикации: ${error.message}`);
+                console.error('Полная ошибка:', error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📝 Тест простой публикации';
+            }
+        });
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.init();
+                updateAuthUI(window.netlifyIdentity.currentUser());
+            }
+
+            document.getElementById('login-btn').addEventListener('click', function() {
+                if (window.netlifyIdentity) {
+                    window.netlifyIdentity.open();
+                }
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                if (window.netlifyIdentity) {
+                    window.netlifyIdentity.logout();
+                }
+            });
+            
+            // Автоматически проверяем загрузку скриптов
+            setTimeout(() => {
+                document.getElementById('test-script-load').click();
+            }, 1000);
+        });
+
+        // Перехватываем все ошибки JavaScript
+        window.addEventListener('error', function(e) {
+            addResult('error', `❌ JavaScript ошибка: ${e.message} в ${e.filename}:${e.lineno}`);
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            addResult('error', `❌ Promise ошибка: ${e.reason}`);
+        });
+    </script>
+</body>
+</html>

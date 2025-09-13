@@ -96,8 +96,10 @@ published: true
 
 ${post.content}`;
 
-        // Кодируем в base64
-        const encodedContent = btoa(unescape(encodeURIComponent(markdownContent)));
+        // Кодируем в base64 (правильно для кириллицы)
+        const encodedContent = btoa(encodeURIComponent(markdownContent).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+            return String.fromCharCode(parseInt(p1, 16));
+        }));
 
         // Отправляем в GitHub через Netlify Git Gateway
         const apiUrl = `/.netlify/git/github/contents/content/blog/${filename}`;
