@@ -258,6 +258,7 @@
             <div style="margin-top: 2rem;">
                 <button type="submit" class="btn-publish">🚀 Опубликовать статью</button>
                 <button type="button" class="btn-secondary" onclick="cancelEdit()" style="display: none;" id="cancel-edit-btn">❌ Отменить редактирование</button>
+                <button type="button" class="btn-secondary" onclick="runDiagnosis()" id="diagnosis-btn">🔧 Диагностика</button>
                 <a href="blog.html" class="btn-secondary">👀 Посмотреть блог</a>
             </div>
         </form>
@@ -576,6 +577,33 @@
             updatePhotosPreview();
 
             showMessage('info', 'ℹ️ Редактирование отменено');
+        }
+
+        // Функция диагностики
+        async function runDiagnosis() {
+            const btn = document.getElementById('diagnosis-btn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Диагностика...';
+
+            try {
+                if (!window.FlamingoBlogSimple || !window.FlamingoBlogSimple.diagnoseSystem) {
+                    showMessage('error', '❌ Функция диагностики не найдена');
+                    return;
+                }
+
+                const result = await window.FlamingoBlogSimple.diagnoseSystem();
+                
+                if (result.success) {
+                    showMessage('success', '✅ ' + result.message);
+                } else {
+                    showMessage('error', '❌ ' + result.error);
+                }
+            } catch (error) {
+                showMessage('error', '❌ Ошибка диагностики: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔧 Диагностика';
+            }
         }
 
         // Загружаем список при загрузке страницы

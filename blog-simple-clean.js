@@ -43,12 +43,23 @@ async function saveToGitHub(post) {
         console.log('🔄 Публикуем статью через Git Gateway...');
         
         // Проверяем авторизацию
-        if (!window.netlifyIdentity || !window.netlifyIdentity.currentUser()) {
-            alert('❌ Войдите через Netlify Identity для публикации');
+        if (!window.netlifyIdentity) {
+            console.error('❌ Netlify Identity не загружен');
+            alert('❌ Netlify Identity не загружен. Перезагрузите страницу.');
             return false;
         }
+        
+        const currentUser = window.netlifyIdentity.currentUser();
+        if (!currentUser) {
+            console.error('❌ Пользователь не авторизован');
+            alert('❌ Войдите через Netlify Identity для публикации статей');
+            return false;
+        }
+        
+        console.log('✅ Пользователь авторизован:', currentUser.email);
 
-        const token = await window.netlifyIdentity.currentUser().jwt();
+        const token = await currentUser.jwt();
+        console.log('✅ Токен получен, длина:', token.length);
         
         // Создаем имя файла
         const date = new Date(post.date);
@@ -58,6 +69,7 @@ async function saveToGitHub(post) {
             .replace(/\s+/g, '-')
             .substring(0, 50);
         const filename = `${dateStr}-${slug}.md`;
+        console.log('📝 Создаем файл:', filename);
 
         // Создаем markdown
         const markdownContent = `---
@@ -135,11 +147,12 @@ async function addPost(title, content, author, locale = 'all', photos = []) {
         const success = await saveToGitHub(newPost);
         
         if (success) {
-            console.log('✅ Статья опубликована');
+            console.log('✅ Статья опубликована в GitHub');
             return true;
         } else {
-            console.warn('⚠️ Статья сохранена только локально');
-            return true; // Не показываем ошибку в админке
+            console.warn('⚠️ Статья НЕ опубликована в GitHub, сохранена только локально');
+            // Возвращаем false чтобы показать что публикация не удалась
+            return false;
         }
     } catch (error) {
         console.error('Ошибка:', error);
@@ -355,6 +368,53 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
+// Диагностическая функция
+async function diagnoseSystem() {
+    console.log('🔧 Диагностика системы...');
+    
+    // Проверяем Netlify Identity
+    if (!window.netlifyIdentity) {
+        console.error('❌ Netlify Identity не загружен');
+        return { success: false, error: 'Netlify Identity не загружен' };
+    }
+    
+    const currentUser = window.netlifyIdentity.currentUser();
+    if (!currentUser) {
+        console.error('❌ Пользователь не авторизован');
+        return { success: false, error: 'Пользователь не авторизован' };
+    }
+    
+    console.log('✅ Пользователь:', currentUser.email);
+    
+    try {
+        const token = await currentUser.jwt();
+        console.log('✅ Токен получен, длина:', token.length);
+        
+        // Проверяем Git Gateway
+        const testResponse = await fetch('/.netlify/git/github', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+        
+        console.log('🔗 Git Gateway статус:', testResponse.status);
+        
+        if (testResponse.status === 401) {
+            return { success: false, error: 'Git Gateway не авторизован' };
+        } else if (testResponse.status === 404) {
+            return { success: false, error: 'Git Gateway не найден' };
+        }
+        
+        return { success: true, message: 'Система готова к работе' };
+        
+    } catch (error) {
+        console.error('❌ Ошибка диагностики:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 // Экспорт всех функций
 window.FlamingoBlogSimple = {
     addPost,
@@ -367,5 +427,6 @@ window.FlamingoBlogSimple = {
     savePosts,
     loadPostsFromGitHub,
     sanitizeHtml,
-    escapeHtml
+    escapeHtml,
+    diagnoseSystem
 };
