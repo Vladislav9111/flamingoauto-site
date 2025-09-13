@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Test CMS — Flamingo Auto</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        .test-panel { 
+            max-width: 600px; 
+            margin: 2rem auto; 
+            padding: 2rem; 
+            background: #fff; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0.5rem;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover { background: #0056b3; }
+        .result {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="hero-header">
+                <a class="logo" href="index.html">FLAMINGO AUTO</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container test-panel">
+        <h1>🧪 Тест Netlify CMS</h1>
+        
+        <div class="result">
+            <h3>📋 Проверочный список:</h3>
+            <p>✅ Файл admin/index.html существует</p>
+            <p>✅ Файл admin/config.yml настроен</p>
+            <p>✅ Decap CMS подключен</p>
+        </div>
+
+        <h2>🔗 Способы открыть CMS:</h2>
+        
+        <p><strong>1. Прямая ссылка:</strong></p>
+        <a href="/admin/" class="btn">📝 Открыть /admin/</a>
+        
+        <p><strong>2. В новой вкладке:</strong></p>
+        <a href="/admin/" target="_blank" class="btn">🔗 Новая вкладка</a>
+        
+        <p><strong>3. JavaScript редирект:</strong></p>
+        <button onclick="window.location.href='/admin/'" class="btn">🚀 JavaScript</button>
+        
+        <p><strong>4. Полный URL:</strong></p>
+        <button onclick="window.open('https://' + window.location.hostname + '/admin/', '_blank')" class="btn">🌐 Полный URL</button>
+
+        <div class="result" style="margin-top: 2rem;">
+            <h3>🔧 Если ничего не работает:</h3>
+            <p>1. Проверьте что сайт развернут на Netlify</p>
+            <p>2. Включите Identity в Netlify Dashboard</p>
+            <p>3. Включите Git Gateway в настройках Identity</p>
+            <p>4. Добавьте себя как пользователя</p>
+            <p>5. Очистите кеш браузера</p>
+        </div>
+
+        <div class="result" style="background: #fff3cd; border-left-color: #ffc107;">
+            <h3>⚠️ Возможные проблемы:</h3>
+            <p><strong>404 ошибка:</strong> CMS не развернут или неправильный путь</p>
+            <p><strong>Белая страница:</strong> JavaScript заблокирован или ошибка загрузки</p>
+            <p><strong>Ошибка авторизации:</strong> Identity не настроен</p>
+        </div>
+    </main>
+</body>
+</html>
