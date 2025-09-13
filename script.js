@@ -8,6 +8,10 @@ const photoError = document.getElementById('photo-error');
 document.addEventListener('DOMContentLoaded', function() {
     const isRussian = window.location.pathname.includes('ru.html');
     
+    // Debug: log current language detection
+    console.log('Current path:', window.location.pathname);
+    console.log('Is Russian:', isRussian);
+    
     // Update button texts
     const submitBtn = document.getElementById('submit-btn');
     const heroBtn = document.querySelector('.btn');
@@ -17,10 +21,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (submitBtn) submitBtn.textContent = 'Отправить заявку';
         if (heroBtn) heroBtn.textContent = 'Отправить заявку';
         if (popupMessage) popupMessage.textContent = 'Ваша заявка отправлена';
+        console.log('Set Russian language');
     } else {
         if (submitBtn) submitBtn.textContent = 'Saada päring';
         if (heroBtn) heroBtn.textContent = 'Saada päring';
         if (popupMessage) popupMessage.textContent = 'Teie ankeet on saadetud';
+        console.log('Set Estonian language');
     }
 });
 
