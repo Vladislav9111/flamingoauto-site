@@ -6,10 +6,15 @@ const photoError = document.getElementById('photo-error');
 
 // Initialize language on page load
 document.addEventListener('DOMContentLoaded', function() {
-    const isRussian = window.location.pathname.includes('ru.html');
+    // Check multiple ways to determine if it's Russian
+    const isRussian = window.location.pathname.includes('ru') || 
+                     window.location.pathname.includes('/ru') ||
+                     document.documentElement.lang === 'ru' ||
+                     document.querySelector('html[lang="ru"]') !== null;
     
     // Debug: log current language detection
     console.log('Current path:', window.location.pathname);
+    console.log('HTML lang:', document.documentElement.lang);
     console.log('Is Russian:', isRussian);
     
     // Update button texts
@@ -34,7 +39,7 @@ function validatePhotos() {
     photoError.textContent = '';
     if (photoInput.files.length > 6) {
         // Check current page language for error message
-        const isRussian = window.location.pathname.includes('ru.html');
+        const isRussian = window.location.pathname.includes('ru') || window.location.pathname.includes('/ru');
         photoError.textContent = isRussian 
             ? 'Можно загрузить не более 6 фотографий.'
             : 'Saate üles laadida mitte rohkem kui 6 fotot.';
@@ -60,7 +65,7 @@ form.addEventListener('submit', async function(event) {
 
     if (isFormValid && arePhotosValid) {
         const submitButton = document.getElementById('submit-btn');
-        const isRussian = window.location.pathname.includes('ru.html');
+        const isRussian = window.location.pathname.includes('ru') || window.location.pathname.includes('/ru');
         
         submitButton.disabled = true;
         submitButton.textContent = isRussian ? 'Отправка...' : 'Saatmine...';
