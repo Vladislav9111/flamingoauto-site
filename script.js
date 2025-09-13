@@ -4,6 +4,26 @@ const closeBtn = document.querySelector('.close-btn');
 const photoInput = document.getElementById('photos');
 const photoError = document.getElementById('photo-error');
 
+// Initialize language on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const isRussian = window.location.pathname.includes('ru.html');
+    
+    // Update button texts
+    const submitBtn = document.getElementById('submit-btn');
+    const heroBtn = document.querySelector('.btn');
+    const popupMessage = document.querySelector('#popup p');
+    
+    if (isRussian) {
+        if (submitBtn) submitBtn.textContent = 'Отправить заявку';
+        if (heroBtn) heroBtn.textContent = 'Отправить заявку';
+        if (popupMessage) popupMessage.textContent = 'Ваша заявка отправлена';
+    } else {
+        if (submitBtn) submitBtn.textContent = 'Saada päring';
+        if (heroBtn) heroBtn.textContent = 'Saada päring';
+        if (popupMessage) popupMessage.textContent = 'Teie ankeet on saadetud';
+    }
+});
+
 function validatePhotos() {
     photoError.textContent = '';
     if (photoInput.files.length > 6) {
