@@ -85,10 +85,10 @@ function parseMarkdownPost(content, filename) {
         id: slug,
         title: frontmatter.title || 'Статья без названия',
         date: frontmatter.date || new Date().toISOString(),
-        excerpt: frontmatter.excerpt || description,
+        excerpt: frontmatter.excerpt || frontmatter.description || description,
         content: bodyLines.join('\n'),
         author: frontmatter.author || 'Flamingo Auto',
-        locale: frontmatter.locale || 'all',
+        locale: frontmatter.locale || frontmatter.lang || 'all',
         published: frontmatter.published !== false,
         photos: frontmatter.photos || frontmatter.images || []
     };

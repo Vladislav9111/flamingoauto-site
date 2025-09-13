@@ -1,0 +1,32 @@
+ИНСТРУКЦИИ ДЛЯ УБИРАНИЯ ГОДА ИЗ ФУТЕРА
+
+Проблема: В терминале добавляется лишний символ "с" в начале команд.
+
+Решение: Выполните следующие команды в новом терминале:
+
+1. Откройте новый терминал (PowerShell или Command Prompt)
+2. Перейдите в папку проекта:
+   cd "D:\Воркзилла\Netlify блог"
+
+3. Добавьте изменения:
+   git add index.html ru.html
+
+4. Сделайте коммит:
+   git commit -m "Remove year from footer text in all versions"
+
+5. Запушьте на GitHub:
+   git push origin main
+
+ЧТО МЫ СДЕЛАЛИ:
+
+✅ Убрали год из футера в эстонской версии (index.html)
+✅ Убрали год из футера в русской версии (ru.html)
+
+РЕЗУЛЬТАТ:
+- Эстонская версия: "Flamingo Auto. Kõik õigused kaitstud. Tallinn, Eesti"
+- Русская версия: "Flamingo Auto. Все права защищены. Таллин, Эстония"
+
+ФАЙЛЫ ДЛЯ УДАЛЕНИЯ ПОСЛЕ КОММИТА:
+- fix-footer.bat
+- fix-footer.ps1
+- FOOTER_FIX_INSTRUCTIONS.txt

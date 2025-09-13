@@ -9,15 +9,14 @@
 # Admin panel redirect with role-based access
 [[redirects]]
   from = "/admin"
-  to = "/admin.html"
+  to = "/admin/"
   status = 301
   force = true
 
 [[redirects]]
   from = "/admin/*"
-  to = "/admin.html"
-  status = 301
-  force = true
+  to = "/admin/:splat"
+  status = 200
 
 [[redirects]]
   from = "/api/*"

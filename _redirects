@@ -1,3 +1,3 @@
 # Admin redirects
-/admin /admin.html 301
-/admin/* /admin.html 301
+/admin /admin/ 301
+/admin/* /admin/:splat 200

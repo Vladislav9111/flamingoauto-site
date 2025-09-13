@@ -2,11 +2,29 @@ backend:
   name: git-gateway
   branch: main
   repo: Vladislav9111/flamingoauto-site
+  site_domain: flamingoauto.netlify.app
+  commit_messages:
+    create: "Create {{collection}} \"{{slug}}\""
+    update: "Update {{collection}} \"{{slug}}\""
+    delete: "Delete {{collection}} \"{{slug}}\""
+    uploadMedia: "Upload \"{{path}}\""
+    deleteMedia: "Delete \"{{path}}\""
 
 media_folder: "static/images/uploads"
 public_folder: "/static/images/uploads"
+media_library:
+  name: netlify
+  config:
+    output_path: "static/images/uploads"
+    public_path: "/static/images/uploads"
 
-publish_mode: editorial_workflow
+publish_mode: simple
+local_backend: false
+display_url: "https://flamingoauto.netlify.app"
+locale: "ru"
+load_config_file: false
+show_preview_links: true
+search: true
 
 collections:
   - name: "blog"
@@ -18,7 +36,16 @@ collections:
     format: "yaml-frontmatter"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    sortable_fields: ["date", "title"]
+    view_filters:
+      - label: "Published"
+        field: "published"
+        pattern: "true"
+      - label: "Draft"
+        field: "published"
+        pattern: "false"
     preview_path: "blog/{{ slug || 'post-preview' }}"
+    summary: "{{title}} - {{date}}"
 
     fields:
       - label: "Title"
@@ -32,12 +59,24 @@ collections:
         required: false
         hint: "Short description for SEO and previews"
 
+      - label: "Excerpt"
+        name: "excerpt"
+        widget: "text"
+        required: false
+        hint: "Short excerpt for article previews"
+
       - label: "Date"
         name: "date"
         widget: "datetime"
         time_format: false
-        format: "YYYY-MM-DDTHH:mm:ss.sss+ZZ"
+        format: "YYYY-MM-DDTHH:mm:ss.sssZ"
         hint: "Publication date and time"
+
+      - label: "Author"
+        name: "author"
+        widget: "string"
+        default: "Flamingo Auto"
+        hint: "Article author name"
 
       - label: "Language"
         name: "lang"
@@ -51,12 +90,42 @@ collections:
         widget: "list"
         required: false
         hint: "Optional tags for categorization"
+        field:
+          label: "Tag"
+          name: "tag"
+          widget: "string"
 
       - label: "Thumbnail Image"
         name: "thumbnail"
         widget: "image"
         required: false
         hint: "Main article image (optional)"
+
+      - label: "Photos"
+        name: "photos"
+        widget: "list"
+        required: false
+        hint: "Additional photos for the article"
+        field:
+          label: "Photo"
+          name: "photo"
+          widget: "image"
+
+      - label: "Images"
+        name: "images"
+        widget: "list"
+        required: false
+        hint: "Additional images for the article"
+        field:
+          label: "Image"
+          name: "image"
+          widget: "image"
+
+      - label: "Published"
+        name: "published"
+        widget: "boolean"
+        default: true
+        hint: "Whether this article should be published"
 
       - label: "Body"
         name: "body"

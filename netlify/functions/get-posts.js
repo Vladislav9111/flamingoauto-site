@@ -48,11 +48,11 @@ exports.handler = async (event, context) => {
       return {
         id: filename.replace('.md', ''),
         title: data.title || 'Без названия',
-        excerpt: data.excerpt || '',
+        excerpt: data.excerpt || data.description || '',
         content: content || '',
         author: data.author || 'Flamingo Auto',
         date: data.date || new Date().toISOString(),
-        locale: data.locale || 'all',
+        locale: data.locale || data.lang || 'all',
         published: data.published !== false,
         photos: data.images || data.photos || [] // Поддерживаем оба формата
       };
