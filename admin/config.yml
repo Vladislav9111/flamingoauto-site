@@ -1,30 +1,57 @@
 backend:
   name: git-gateway
   branch: main
+  commit_messages:
+    create: 'Создан {{collection}} "{{slug}}"'
+    update: 'Обновлен {{collection}} "{{slug}}"'
+    delete: 'Удален {{collection}} "{{slug}}"'
+    uploadMedia: 'Загружен файл "{{path}}"'
+    deleteMedia: 'Удален файл "{{path}}"'
+    openAuthoring: '{{message}} - {{author.name}}'
 
-# Media files will be stored in the directory under static/media
+# Настройки медиафайлов
 media_folder: "static/images"
 public_folder: "/static/images"
 
-# The page will be available at /admin/
+# Включение ручной инициализации CMS
 cms_manual_init: true
 
-# Collections define the structure of the content
+# Настройки локализации
+locale: 'ru'
+
+# Настройки редактора
+editor:
+  preview: false
+  frame: true
+
+# Коллекции контента
 collections:
+  # Коллекция для блога
   - name: "blog"
-    label: "Blog Posts"
-    label_singular: "Blog Post"
+    label: "Записи блога"
+    label_singular: "Запись блога"
     folder: "content/blog"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    summary: "{{title}} - {{date}}"
+    sortable_fields: ["date", "title"]
+    view_filters:
+      - label: "Опубликованные"
+        field: "published"
+        pattern: true
+    view_groups:
+      - label: "По языку"
+        field: "lang"
     editor:
       preview: false
     fields:
-      - {label: "Title", name: "title", widget: "string"}
-      - {label: "Publish Date", name: "date", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false}
-      - {label: "Author", name: "author", widget: "string", default: "Flamingo Auto"}
-      - {label: "Language", name: "lang", widget: "select", options: ["ru", "et", "en"], default: "ru"}
-      - {label: "Published", name: "published", widget: "boolean", default: true}
-      - {label: "Featured Image", name: "image", widget: "image", required: false}
-      - {label: "Excerpt", name: "excerpt", widget: "text", required: false}
-      - {label: "Body", name: "body", widget: "markdown"}
+      - {label: "Заголовок", name: "title", widget: "string"}
+      - {label: "Дата публикации", name: "date", widget: "datetime", format: "DD.MM.YYYY", date_format: "DD.MM.YYYY", time_format: false}
+      - {label: "Автор", name: "author", widget: "string", default: "Flamingo Auto"}
+      - {label: "Язык", name: "lang", widget: "select", options: ["ru", "et", "en"], default: "ru"}
+      - {label: "Опубликовано", name: "published", widget: "boolean", default: true}
+      - {label: "Изображение записи", name: "image", widget: "image", required: false, media_library: {config: {multiple: false}}}
+      - {label: "Краткое описание", name: "excerpt", widget: "text", required: false}
+      - {label: "Содержимое", name: "body", widget: "markdown"}
+      - {label: "Мета-описание", name: "description", widget: "text", required: false, hint: "Используется для SEO и предпросмотра в соцсетях"}
+      - {label: "Ключевые слова", name: "keywords", widget: "list", required: false, hint: "Ключевые слова для SEO"}
