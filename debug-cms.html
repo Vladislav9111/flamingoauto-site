@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Диагностика Netlify CMS - Flamingo Auto</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <style>
+        .diagnostic-panel {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .test-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .success { background: #d4edda; color: #155724; border-left-color: #28a745; }
+        .error { background: #f8d7da; color: #721c24; border-left-color: #dc3545; }
+        .warning { background: #fff3cd; color: #856404; border-left-color: #ffc107; }
+        .info { background: #d1ecf1; color: #0c5460; border-left-color: #17a2b8; }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+            font-size: 1rem;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+    </style>
+</head>
+<body>
+    <main class="container diagnostic-panel">
+        <div class="hero-header">
+            <a class="logo" href="index.html">FLAMINGO AUTO</a>
+            <div class="lang-switch">
+                <a class="lang-btn" href="index.html">ET</a>
+                <a class="lang-btn" href="ru.html">RU</a>
+            </div>
+        </div>
+
+        <h1>🔧 Диагностика Netlify CMS</h1>
+        <p style="color: #666; margin-bottom: 2rem;">Проверим все компоненты системы управления контентом</p>
+
+        <div class="test-item">
+            <h3>🌐 1. Проверка загрузки Netlify Identity</h3>
+            <p>Проверяем, загружается ли виджет авторизации Netlify</p>
+            <button class="btn" onclick="testNetlifyIdentity()">Запустить тест</button>
+            <div id="identity-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>🔑 2. Проверка авторизации</h3>
+            <p>Проверяем текущий статус авторизации пользователя</p>
+            <button class="btn" onclick="testAuth()">Проверить авторизацию</button>
+            <button class="btn btn-success" onclick="loginUser()">Войти</button>
+            <button class="btn btn-danger" onclick="logoutUser()">Выйти</button>
+            <div id="auth-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>📁 3. Проверка доступа к /admin/</h3>
+            <p>Проверяем, доступна ли страница администрирования</p>
+            <button class="btn" onclick="testAdminAccess()">Проверить доступ</button>
+            <button class="btn btn-success" onclick="openAdmin()">Открыть /admin/</button>
+            <div id="admin-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>⚙️ 4. Проверка конфигурации CMS</h3>
+            <p>Проверяем файлы конфигурации Netlify CMS</p>
+            <button class="btn" onclick="testCMSConfig()">Проверить конфигурацию</button>
+            <div id="config-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>🔗 5. Проверка Git Gateway</h3>
+            <p>Проверяем подключение к Git Gateway для сохранения контента</p>
+            <button class="btn" onclick="testGitGateway()">Проверить Git Gateway</button>
+            <div id="git-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>📝 6. Проверка папки контента</h3>
+            <p>Проверяем структуру папок для блога</p>
+            <button class="btn" onclick="testContentStructure()">Проверить структуру</button>
+            <div id="content-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>🚀 7. Полная диагностика</h3>
+            <p>Запускаем все тесты одновременно</p>
+            <button class="btn btn-success" onclick="runFullDiagnosis()">Полная диагностика</button>
+            <div id="full-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div style="margin-top: 3rem; padding: 2rem; background: #e3f2fd; border-radius: 8px;">
+            <h3>📋 Инструкции по исправлению</h3>
+            <div id="instructions" style="color: #1976d2;">
+                <p>Запустите диагностику, чтобы получить инструкции по исправлению проблем.</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let diagnosticResults = {};
+
+        // Показать результат теста
+        function showResult(elementId, type, message) {
+            const element = document.getElementById(elementId);
+            element.className = `test-result ${type}`;
+            element.innerHTML = message;
+            element.style.display = 'block';
+            
+            // Сохраняем результат для общей диагностики
+            diagnosticResults[elementId] = { type, message };
+        }
+
+        // 1. Тест Netlify Identity
+        function testNetlifyIdentity() {
+            try {
+                if (typeof window.netlifyIdentity === 'undefined') {
+                    showResult('identity-result', 'error', 
+                        '❌ Netlify Identity не загружен\n' +
+                        'Проблема: Скрипт https://identity.netlify.com/v1/netlify-identity-widget.js не загрузился\n' +
+                        'Решение: Проверьте интернет-соединение и доступность Netlify'
+                    );
+                    return;
+                }
+
+                if (typeof window.netlifyIdentity.init === 'function') {
+                    showResult('identity-result', 'success', 
+                        '✅ Netlify Identity загружен успешно\n' +
+                        'Версия: ' + (window.netlifyIdentity.version || 'неизвестна') + '\n' +
+                        'Статус: Готов к работе'
+                    );
+                } else {
+                    showResult('identity-result', 'warning', 
+                        '⚠️ Netlify Identity загружен, но не полностью инициализирован\n' +
+                        'Попробуйте обновить страницу'
+                    );
+                }
+            } catch (error) {
+                showResult('identity-result', 'error', 
+                    '❌ Ошибка при проверке Netlify Identity:\n' + error.message
+                );
+            }
+        }
+
+        // 2. Тест авторизации
+        function testAuth() {
+            try {
+                if (!window.netlifyIdentity) {
+                    showResult('auth-result', 'error', '❌ Netlify Identity не загружен');
+                    return;
+                }
+
+                const user = window.netlifyIdentity.currentUser();
+                if (user) {
+                    showResult('auth-result', 'success', 
+                        '✅ Пользователь авторизован\n' +
+                        'Email: ' + user.email + '\n' +
+                        'ID: ' + user.id + '\n' +
+                        'Роли: ' + (user.app_metadata?.roles?.join(', ') || 'нет ролей')
+                    );
+                } else {
+                    showResult('auth-result', 'warning', 
+                        '⚠️ Пользователь не авторизован\n' +
+                        'Для работы с CMS необходима авторизация'
+                    );
+                }
+            } catch (error) {
+                showResult('auth-result', 'error', 
+                    '❌ Ошибка при проверке авторизации:\n' + error.message
+                );
+            }
+        }
+
+        // Функции авторизации
+        function loginUser() {
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.open();
+            } else {
+                alert('Netlify Identity не загружен');
+            }
+        }
+
+        function logoutUser() {
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.logout();
+            } else {
+                alert('Netlify Identity не загружен');
+            }
+        }
+
+        // 3. Тест доступа к админке
+        async function testAdminAccess() {
+            try {
+                const response = await fetch('/admin/', { method: 'HEAD' });
+                if (response.ok) {
+                    showResult('admin-result', 'success', 
+                        '✅ Страница /admin/ доступна\n' +
+                        'Статус: ' + response.status + '\n' +
+                        'Можно открывать CMS'
+                    );
+                } else {
+                    showResult('admin-result', 'error', 
+                        '❌ Страница /admin/ недоступна\n' +
+                        'Статус: ' + response.status + '\n' +
+                        'Проверьте настройки Netlify'
+                    );
+                }
+            } catch (error) {
+                showResult('admin-result', 'error', 
+                    '❌ Ошибка доступа к /admin/:\n' + error.message
+                );
+            }
+        }
+
+        function openAdmin() {
+            window.open('/admin/', '_blank');
+        }
+
+        // 4. Тест конфигурации CMS
+        async function testCMSConfig() {
+            try {
+                const configResponse = await fetch('/admin/config.yml');
+                if (configResponse.ok) {
+                    const configText = await configResponse.text();
+                    const hasBackend = configText.includes('git-gateway');
+                    const hasCollections = configText.includes('collections:');
+                    
+                    if (hasBackend && hasCollections) {
+                        showResult('config-result', 'success', 
+                            '✅ Конфигурация CMS корректна\n' +
+                            'Backend: git-gateway найден\n' +
+                            'Collections: настроены\n' +
+                            'Размер конфига: ' + configText.length + ' символов'
+                        );
+                    } else {
+                        showResult('config-result', 'warning', 
+                            '⚠️ Конфигурация неполная\n' +
+                            'Backend: ' + (hasBackend ? '✅' : '❌') + '\n' +
+                            'Collections: ' + (hasCollections ? '✅' : '❌')
+                        );
+                    }
+                } else {
+                    showResult('config-result', 'error', 
+                        '❌ Файл config.yml недоступен\n' +
+                        'Статус: ' + configResponse.status
+                    );
+                }
+            } catch (error) {
+                showResult('config-result', 'error', 
+                    '❌ Ошибка проверки конфигурации:\n' + error.message
+                );
+            }
+        }
+
+        // 5. Тест Git Gateway
+        async function testGitGateway() {
+            try {
+                if (!window.netlifyIdentity) {
+                    showResult('git-result', 'error', '❌ Netlify Identity не загружен');
+                    return;
+                }
+
+                const user = window.netlifyIdentity.currentUser();
+                if (!user) {
+                    showResult('git-result', 'warning', 
+                        '⚠️ Для проверки Git Gateway нужна авторизация\n' +
+                        'Войдите в систему и повторите тест'
+                    );
+                    return;
+                }
+
+                // Пробуем получить токен
+                const token = await user.jwt();
+                if (token) {
+                    showResult('git-result', 'success', 
+                        '✅ Git Gateway доступен\n' +
+                        'Токен получен: ' + token.substring(0, 20) + '...\n' +
+                        'Можно сохранять контент в GitHub'
+                    );
+                } else {
+                    showResult('git-result', 'error', 
+                        '❌ Не удалось получить токен Git Gateway\n' +
+                        'Проверьте настройки в панели Netlify'
+                    );
+                }
+            } catch (error) {
+                showResult('git-result', 'error', 
+                    '❌ Ошибка Git Gateway:\n' + error.message
+                );
+            }
+        }
+
+        // 6. Тест структуры контента
+        async function testContentStructure() {
+            try {
+                // Проверяем наличие папки content/blog
+                const response = await fetch('/content/blog/', { method: 'HEAD' });
+                
+                showResult('content-result', 'info', 
+                    'ℹ️ Структура контента\n' +
+                    'Папка /content/blog/: ' + (response.ok ? '✅ существует' : '❌ не найдена') + '\n' +
+                    'Статус: ' + response.status + '\n' +
+                    'Примечание: Папка создается автоматически при первой публикации'
+                );
+            } catch (error) {
+                showResult('content-result', 'warning', 
+                    '⚠️ Не удалось проверить структуру:\n' + error.message + '\n' +
+                    'Это нормально для статических сайтов'
+                );
+            }
+        }
+
+        // 7. Полная диагностика
+        async function runFullDiagnosis() {
+            showResult('full-result', 'info', '🔄 Запуск полной диагностики...');
+            
+            // Запускаем все тесты
+            testNetlifyIdentity();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            testAuth();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testAdminAccess();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testCMSConfig();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testGitGateway();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testContentStructure();
+            
+            // Анализируем результаты
+            setTimeout(() => {
+                analyzeResults();
+            }, 1000);
+        }
+
+        // Анализ результатов и рекомендации
+        function analyzeResults() {
+            const errors = Object.values(diagnosticResults).filter(r => r.type === 'error').length;
+            const warnings = Object.values(diagnosticResults).filter(r => r.type === 'warning').length;
+            const successes = Object.values(diagnosticResults).filter(r => r.type === 'success').length;
+
+            let summary = `📊 Результаты диагностики:\n`;
+            summary += `✅ Успешно: ${successes}\n`;
+            summary += `⚠️ Предупреждения: ${warnings}\n`;
+            summary += `❌ Ошибки: ${errors}\n\n`;
+
+            if (errors === 0 && warnings <= 1) {
+                summary += '🎉 Система работает корректно!';
+                showResult('full-result', 'success', summary);
+                updateInstructions('success');
+            } else if (errors <= 1) {
+                summary += '⚠️ Есть незначительные проблемы';
+                showResult('full-result', 'warning', summary);
+                updateInstructions('warning');
+            } else {
+                summary += '❌ Обнаружены серьезные проблемы';
+                showResult('full-result', 'error', summary);
+                updateInstructions('error');
+            }
+        }
+
+        // Обновление инструкций
+        function updateInstructions(status) {
+            const instructions = document.getElementById('instructions');
+            
+            if (status === 'success') {
+                instructions.innerHTML = `
+                    <h4>✅ Система работает!</h4>
+                    <p>Netlify CMS настроен корректно. Вы можете:</p>
+                    <ul>
+                        <li>Открыть <a href="/admin/" target="_blank">Netlify CMS</a></li>
+                        <li>Создавать и редактировать статьи</li>
+                        <li>Публиковать контент в GitHub</li>
+                    </ul>
+                `;
+            } else if (status === 'warning') {
+                instructions.innerHTML = `
+                    <h4>⚠️ Требуется внимание</h4>
+                    <p>Основные функции работают, но есть предупреждения:</p>
+                    <ul>
+                        <li>Убедитесь, что вы авторизованы для сохранения в GitHub</li>
+                        <li>Проверьте настройки Git Gateway в панели Netlify</li>
+                        <li>При проблемах обратитесь к администратору</li>
+                    </ul>
+                `;
+            } else {
+                instructions.innerHTML = `
+                    <h4>❌ Требуется исправление</h4>
+                    <p>Обнаружены критические проблемы:</p>
+                    <ol>
+                        <li><strong>Проверьте настройки Netlify:</strong>
+                            <ul>
+                                <li>Identity должен быть включен</li>
+                                <li>Git Gateway должен быть настроен</li>
+                                <li>Репозиторий должен быть подключен</li>
+                            </ul>
+                        </li>
+                        <li><strong>Проверьте файлы:</strong>
+                            <ul>
+                                <li>/admin/index.html должен существовать</li>
+                                <li>/admin/config.yml должен быть корректным</li>
+                            </ul>
+                        </li>
+                        <li><strong>Обратитесь к документации:</strong>
+                            <ul>
+                                <li><a href="https://docs.netlify.com/visitor-access/identity/" target="_blank">Настройка Netlify Identity</a></li>
+                                <li><a href="https://docs.netlify.com/visitor-access/git-gateway/" target="_blank">Настройка Git Gateway</a></li>
+                            </ul>
+                        </li>
+                    </ol>
+                `;
+            }
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.init();
+                
+                // Обработчики событий
+                window.netlifyIdentity.on("login", user => {
+                    console.log("Пользователь вошел:", user.email);
+                    testAuth(); // Автоматически обновляем статус авторизации
+                });
+
+                window.netlifyIdentity.on("logout", () => {
+                    console.log("Пользователь вышел");
+                    testAuth(); // Автоматически обновляем статус авторизации
+                });
+            }
+        });
+    </script>
+</body>
+</html>

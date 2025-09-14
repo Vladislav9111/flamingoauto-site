@@ -11,12 +11,24 @@ exports.handler = async (event, context) => {
       path.join(__dirname, '..', '..', 'content', 'blog'),
       path.join('/opt/build/repo', 'content', 'blog'),
       path.join('/var/task', 'content', 'blog'),
-      path.join('/opt/buildhome/repo', 'content', 'blog')
+      path.join('/opt/buildhome/repo', 'content', 'blog'),
+      // Добавляем больше вариантов
+      path.join(process.env.LAMBDA_TASK_ROOT || '', '..', '..', 'content', 'blog'),
+      path.join('/tmp', 'content', 'blog')
     ];
 
     console.log('🔍 Ищем папку с постами...');
     console.log('process.cwd():', process.cwd());
     console.log('__dirname:', __dirname);
+    console.log('LAMBDA_TASK_ROOT:', process.env.LAMBDA_TASK_ROOT);
+    
+    // Проверяем что вообще есть в корне
+    try {
+      const rootFiles = fs.readdirSync(process.cwd());
+      console.log('📁 Файлы в корне:', rootFiles.slice(0, 10));
+    } catch (e) {
+      console.log('❌ Не могу прочитать корень:', e.message);
+    }
 
     let postsDirectory = null;
     for (const testPath of possiblePaths) {
@@ -42,8 +54,10 @@ exports.handler = async (event, context) => {
 
     // Читаем файлы
     const files = fs.readdirSync(postsDirectory);
-    const markdownFiles = files.filter(file => file.endsWith('.md'));
+    console.log('📁 Все файлы в папке:', files);
     
+    const markdownFiles = files.filter(file => file.endsWith('.md'));
+    console.log('📝 Markdown файлы:', markdownFiles);
     console.log('📁 Найдено .md файлов:', markdownFiles.length);
 
     const posts = markdownFiles.map(filename => {
