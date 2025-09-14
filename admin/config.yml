@@ -2,19 +2,29 @@ backend:
   name: git-gateway
   branch: main
 
+# Media files will be stored in the directory under static/media
 media_folder: "static/images"
 public_folder: "/static/images"
 
+# The page will be available at /admin/
+cms_manual_init: true
+
+# Collections define the structure of the content
 collections:
   - name: "blog"
     label: "Blog Posts"
+    label_singular: "Blog Post"
     folder: "content/blog"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    editor:
+      preview: false
     fields:
       - {label: "Title", name: "title", widget: "string"}
-      - {label: "Date", name: "date", widget: "datetime"}
+      - {label: "Publish Date", name: "date", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false}
       - {label: "Author", name: "author", widget: "string", default: "Flamingo Auto"}
       - {label: "Language", name: "lang", widget: "select", options: ["ru", "et", "en"], default: "ru"}
       - {label: "Published", name: "published", widget: "boolean", default: true}
+      - {label: "Featured Image", name: "image", widget: "image", required: false}
+      - {label: "Excerpt", name: "excerpt", widget: "text", required: false}
       - {label: "Body", name: "body", widget: "markdown"}

@@ -34,7 +34,10 @@
   <!-- CMS контейнер -->
   <div id="nc-root"></div>
   
+  <!-- Load the Netlify CMS script -->
   <script src="https://unpkg.com/netlify-cms@^2.10.0/dist/netlify-cms.js"></script>
+  <!-- Load the Netlify CMS configuration -->
+  <script src="/admin/config.yml" type="text/yaml"></script>
   
   <script>
     const loginOverlay = document.getElementById('login-overlay');
@@ -68,7 +71,20 @@
         window.netlifyIdentity.open();
       });
 
+      // Initialize Netlify Identity
       window.netlifyIdentity.init();
+      
+      // Initialize Netlify CMS after Identity is ready
+      if (window.netlifyIdentity) {
+        window.netlifyIdentity.on('init', user => {
+          if (!user) {
+            // Log the user in
+            window.netlifyIdentity.on('login', () => {
+              document.location.href = '/admin/';
+            });
+          }
+        });
+      }
     } else {
       console.error('CMS: Netlify Identity не загружен');
       document.body.innerHTML = '<div style="padding: 2rem; text-align: center;"><h2>Ошибка загрузки</h2><p>Netlify Identity не загружен</p></div>';
