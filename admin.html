@@ -5,178 +5,53 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Admin — Flamingo Auto</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
-    <link rel="shortcut icon" href="/favicon.ico">
-
-    <!-- Netlify Identity Widget -->
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     
     <style>
         .admin-panel { 
-            max-width: 800px; 
-            margin: 2rem auto; 
-            padding: 2rem; 
+            max-width: 600px; 
+            margin: 4rem auto; 
+            padding: 3rem; 
             background: #fff; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 16px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            text-align: center;
         }
-        .form-group { 
-            margin-bottom: 1.5rem; 
+        .auth-section {
+            background: #e3f2fd;
+            padding: 3rem;
+            border-radius: 12px;
+            margin: 2rem 0;
         }
-        .form-group label { 
-            display: block; 
-            margin-bottom: 0.5rem; 
-            font-weight: 600; 
-            color: #333;
-        }
-        .form-group input, .form-group textarea, .form-group select { 
-            width: 100%; 
-            padding: 0.75rem; 
-            border: 2px solid #e1e5e9; 
-            border-radius: 8px; 
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { 
-            outline: none;
-            border-color: #007bff; 
-        }
-        .form-group textarea { 
-            min-height: 150px; 
-            resize: vertical; 
-        }
-        .btn-publish { 
-            background: #28a745; 
-            color: white; 
-            padding: 1rem 2rem; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 1.1rem; 
+        .login-btn {
+            background: #1976d2;
+            color: white;
+            padding: 1.5rem 3rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
             font-weight: 600;
-            cursor: pointer; 
-            transition: background 0.3s;
-        }
-        .btn-publish:hover { 
-            background: #218838; 
-        }
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            text-decoration: none;
-            display: inline-block;
-            margin-right: 1rem;
-        }
-        .posts-preview {
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 2px solid #e1e5e9;
-        }
-        .post-item {
-            background: #f8f9fa;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #007bff;
-            position: relative;
-        }
-        .post-actions {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            display: flex;
-            gap: 0.5rem;
-        }
-        .btn-edit, .btn-delete {
-            padding: 0.25rem 0.5rem;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.8rem;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(25,118,210,0.3);
         }
-        .btn-edit {
-            background: #ffc107;
-            color: #000;
+        .login-btn:hover {
+            background: #1565c0;
+            transform: translateY(-2px);
         }
-        .btn-edit:hover {
-            background: #e0a800;
+        .loading {
+            display: none;
+            color: #1976d2;
+            font-size: 1.1rem;
+            margin-top: 2rem;
         }
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-        }
-        .btn-delete:hover {
-            background: #c82333;
-        }
-        .photo-preview {
-            position: relative;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-        }
-        .photo-preview img {
-            width: 100%;
-            height: 80px;
-            object-fit: cover;
-        }
-        .photo-remove {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .post-photos {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-        .post-photos img {
-            width: 100%;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 4px;
-        }
-        .post-meta {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
-        .success-message {
+        .user-info {
+            display: none;
             background: #d4edda;
             color: #155724;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: none;
-        }
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: none;
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
         }
     </style>
 </head>
@@ -184,532 +59,118 @@
     <main class="container admin-panel">
         <div class="hero-header">
             <a class="logo" href="index.html">FLAMINGO AUTO</a>
-            <div class="lang-switch" role="tablist" aria-label="Language switch">
-                <a class="lang-btn" href="index.html" aria-pressed="true" role="tab">ET</a>
-                <a class="lang-btn" href="ru.html" aria-pressed="false" role="tab">RU</a>
+            <div class="lang-switch">
+                <a class="lang-btn" href="index.html">ET</a>
+                <a class="lang-btn" href="ru.html">RU</a>
             </div>
         </div>
 
         <h1>📝 Административная панель</h1>
-        <p style="color: #666; margin-bottom: 2rem;">Выберите способ управления контентом</p>
+        <p style="color: #666; margin-bottom: 2rem;">Система управления контентом</p>
         
-        <div style="background: #e3f2fd; padding: 3rem; border-radius: 12px; margin-bottom: 2rem; text-align: center;">
-            <h2 style="margin: 0 0 1rem 0; color: #1976d2;">📝 Система управления контентом</h2>
-            <p style="margin: 0 0 2rem 0; color: #1976d2; font-size: 1.1rem;">Создавайте и редактируйте статьи блога</p>
+        <!-- Секция авторизации -->
+        <div id="auth-section" class="auth-section">
+            <h2 style="margin: 0 0 1rem 0; color: #1976d2;">🔐 Авторизация</h2>
+            <p style="margin: 0 0 2rem 0; color: #1976d2;">Войдите для доступа к CMS</p>
             
-            <button onclick="openNetlifyCMS()" style="display: inline-block; background: #1976d2; color: white; padding: 1.5rem 3rem; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; font-size: 1.2rem; margin-bottom: 1rem; box-shadow: 0 4px 12px rgba(25,118,210,0.3); transition: all 0.3s;">
-                🚀 Открыть CMS
+            <button id="login-btn" class="login-btn">
+                🔑 Войти через Netlify
             </button>
             
-            <br>
-            
-            <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <a href="/admin/" target="_blank" style="background: #28a745; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-size: 0.9rem;">
-                    🔗 CMS (новая вкладка)
-                </a>
-                <a href="/admin/" style="background: #ffc107; color: black; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-size: 0.9rem;">
-                    📝 CMS (эта вкладка)
-                </a>
-                <a href="/check-identity.html" style="background: #17a2b8; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-size: 0.9rem;">
-                    🔍 Проверить настройки
-                </a>
-            </div>
-            
-            <div style="margin-top: 2rem; font-size: 0.9rem; color: #666;">
-                <p><strong>Инструкции:</strong></p>
-                <p>1. Нажмите "🚀 Открыть CMS"</p>
-                <p>2. Войдите через Netlify Identity</p>
-                <p>3. Создавайте статьи через кнопку "New Blog Post"</p>
-                <p>4. Статьи автоматически появятся в <a href="/blog.html" style="color: #1976d2;">блоге</a></p>
-                
-                <div style="margin-top: 1.5rem; padding: 1rem; background: #fff3cd; border-radius: 6px;">
-                    <p><strong>Если нет кнопки авторизации:</strong></p>
-                    <p><a href="/check-identity.html" style="color: #856404;">🔍 Проверить настройки Netlify Identity</a></p>
-                </div>
-            </div>
-        </div>
-        
-        <details style="margin-bottom: 2rem;">
-            <summary style="cursor: pointer; font-weight: 600; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-                🔧 Альтернативный способ (экспериментальный)
-            </summary>
-            <div style="padding: 1rem; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 8px 8px;">
-
-        <!-- Секция авторизации -->
-        <div id="auth-section">
-            <div style="background: #e3f2fd; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
-                <p style="margin: 0 0 1rem 0; color: #1976d2;">🔐 Для сохранения в GitHub войдите через Netlify Identity</p>
-                <div id="netlify-login">
-                    <button id="login-btn" style="background: #007bff; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">
-                        🔑 Войти
-                    </button>
-                </div>
-                <div id="user-info" style="display: none;">
-                    <p style="margin: 0 0 1rem 0; color: #155724;">✅ Вы авторизованы как: <span id="user-email"></span></p>
-                    <button id="logout-btn" style="background: #dc3545; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
-                        🚪 Выйти
-                    </button>
-                </div>
-                <p style="margin: 1rem 0 0 0; font-size: 0.9rem; color: #666;">
-                    Без авторизации статьи сохраняются только локально в браузере
-                </p>
+            <div id="loading" class="loading">
+                <p>⏳ Загружаем CMS...</p>
             </div>
         </div>
 
-        <div id="success-message" class="success-message"></div>
-        <div id="error-message" class="error-message"></div>
+        <!-- Информация о пользователе -->
+        <div id="user-info" class="user-info">
+            <h3>✅ Авторизован</h3>
+            <p>Email: <span id="user-email"></span></p>
+            <p>Переходим в CMS...</p>
+        </div>
 
-        <form id="post-form">
-            <div class="form-group">
-                <label for="post-title">Заголовок статьи *</label>
-                <input type="text" id="post-title" name="title" required placeholder="Введите заголовок статьи">
-            </div>
+        <div style="margin-top: 2rem; font-size: 0.9rem; color: #666;">
+            <p><strong>Как это работает:</strong></p>
+            <p>1. Нажмите кнопку авторизации</p>
+            <p>2. Войдите через Netlify Identity</p>
+            <p>3. Автоматически откроется CMS</p>
+            <p>4. Создавайте статьи через "New Blog Post"</p>
+        </div>
 
-            <div class="form-group">
-                <label for="post-content">Тело статьи *</label>
-                <p style="font-size: 0.9rem; color: #666; margin: 0.25rem 0 0.5rem 0;">
-                    Разрешены простые теги: &lt;b&gt;, &lt;i&gt;, &lt;strong&gt;, &lt;em&gt;, &lt;p&gt;, &lt;br&gt;
-                </p>
-                <textarea id="post-content" name="content" required placeholder="Введите текст статьи с HTML-тегами..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="post-author">Автор</label>
-                <input type="text" id="post-author" name="author" placeholder="Имя автора" value="Flamingo Auto">
-            </div>
-
-            <div class="form-group">
-                <label for="post-photos">Фотографии (до 6)</label>
-                <p style="font-size: 0.9rem; color: #666; margin: 0.25rem 0 0.5rem 0;">
-                    Вы можете добавить до 6 изображений. Они будут отображаться в карточке записи.<br>
-                    <em>Рекомендуется не более 1 фото, если больше 1 фото я это тоже адаптировал</em>
-                </p>
-                <input type="file" id="post-photos" name="photos" multiple accept="image/*" style="margin-bottom: 1rem;">
-                <div id="photos-preview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem; margin-top: 1rem;"></div>
-            </div>
-
-            <div class="form-group">
-                <label for="post-locale">Язык статьи</label>
-                <select id="post-locale" name="locale">
-                    <option value="all">Все языки</option>
-                    <option value="et">Эстонский (ET)</option>
-                    <option value="ru">Русский (RU)</option>
-                </select>
-            </div>
-
-            <div style="margin-top: 2rem;">
-                <button type="submit" class="btn-publish">🚀 Опубликовать статью</button>
-                <button type="button" class="btn-secondary" onclick="cancelEdit()" style="display: none;" id="cancel-edit-btn">❌ Отменить редактирование</button>
-                <button type="button" class="btn-secondary" onclick="runDiagnosis()" id="diagnosis-btn">🔧 Диагностика</button>
-                <a href="blog.html" class="btn-secondary">👀 Посмотреть блог</a>
-            </div>
-        </form>
-
-            <div class="posts-preview">
-                <h2>📚 Опубликованные статьи</h2>
-                <div id="posts-list">
-                    <!-- Список статей будет загружен здесь -->
-                </div>
-            </div>
-            </div>
-        </details>
+        <div style="margin-top: 2rem;">
+            <a href="/blog.html" style="color: #1976d2; text-decoration: none;">👀 Посмотреть блог</a>
+        </div>
     </main>
 
-    <script src="blog-simple-clean.js"></script>
     <script>
+        const authSection = document.getElementById('auth-section');
+        const userInfo = document.getElementById('user-info');
+        const userEmail = document.getElementById('user-email');
+        const loginBtn = document.getElementById('login-btn');
+        const loading = document.getElementById('loading');
+
         // Инициализация Netlify Identity
         if (window.netlifyIdentity) {
             window.netlifyIdentity.on("init", user => {
-                updateAuthUI(user);
+                console.log('Netlify Identity инициализирован');
+                
+                if (user) {
+                    // Пользователь уже авторизован - сразу переходим в CMS
+                    showUserInfo(user);
+                    redirectToCMS();
+                } else {
+                    // Показываем кнопку входа
+                    authSection.style.display = 'block';
+                }
             });
 
             window.netlifyIdentity.on("login", user => {
-                updateAuthUI(user);
-                showMessage('success', '✅ Авторизация успешна! Теперь статьи будут сохраняться в GitHub');
+                console.log('Пользователь вошел:', user.email);
+                showUserInfo(user);
+                redirectToCMS();
             });
 
             window.netlifyIdentity.on("logout", () => {
-                updateAuthUI(null);
-                showMessage('info', 'ℹ️ Вы вышли из системы. Статьи будут сохраняться только локально');
-            });
-        }
-
-        // Обновление интерфейса авторизации
-        function updateAuthUI(user) {
-            const loginSection = document.getElementById('netlify-login');
-            const userInfo = document.getElementById('user-info');
-            const userEmail = document.getElementById('user-email');
-
-            if (user) {
-                loginSection.style.display = 'none';
-                userInfo.style.display = 'block';
-                userEmail.textContent = user.email;
-            } else {
-                loginSection.style.display = 'block';
-                userInfo.style.display = 'none';
-            }
-        }
-
-        // Обработка загрузки фотографий
-        let selectedPhotos = [];
-
-        document.getElementById('post-photos').addEventListener('change', function(e) {
-            const files = Array.from(e.target.files);
-
-            if (files.length + selectedPhotos.length > 6) {
-                alert('Максимум 6 фотографий!');
-                return;
-            }
-
-            files.forEach(file => {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        selectedPhotos.push({
-                            file: file,
-                            dataUrl: e.target.result,
-                            name: file.name
-                        });
-                        updatePhotosPreview();
-                    };
-                    reader.readAsDataURL(file);
-                }
+                console.log('Пользователь вышел');
+                location.reload();
             });
 
-            // Очищаем input для возможности повторного выбора
-            e.target.value = '';
-        });
-
-        function updatePhotosPreview() {
-            const container = document.getElementById('photos-preview');
-            container.innerHTML = selectedPhotos.map((photo, index) => `
-                <div class="photo-preview">
-                    <img src="${photo.dataUrl}" alt="${photo.name}">
-                    <button type="button" class="photo-remove" onclick="removePhoto(${index})">×</button>
-                </div>
-            `).join('');
+            window.netlifyIdentity.init();
         }
 
-        function removePhoto(index) {
-            selectedPhotos.splice(index, 1);
-            updatePhotosPreview();
+        // Показать информацию о пользователе
+        function showUserInfo(user) {
+            authSection.style.display = 'none';
+            userInfo.style.display = 'block';
+            userEmail.textContent = user.email;
         }
 
-        // Обработка формы публикации
-        document.getElementById('post-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // Показать загрузку
+        function showLoading() {
+            loginBtn.style.display = 'none';
+            loading.style.display = 'block';
+        }
 
-            const title = document.getElementById('post-title').value;
-            const content = document.getElementById('post-content').value;
-            const author = document.getElementById('post-author').value || 'Flamingo Auto';
-            const locale = document.getElementById('post-locale').value;
-
-            // Показываем индикатор загрузки
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '🔄 Публикуем...';
-            submitBtn.disabled = true;
-
-            try {
-                // Конвертируем фотографии в base64 для хранения
-                const photos = selectedPhotos.map(photo => ({
-                    name: photo.name,
-                    dataUrl: photo.dataUrl
-                }));
-
-                const editId = submitBtn.dataset.editId;
-                let success;
-
-                if (editId) {
-                    // Редактирование существующего поста
-                    success = await window.FlamingoBlogSimple.updatePost(editId, title, content, author, locale, photos);
-                } else {
-                    // Создание нового поста
-                    success = await window.FlamingoBlogSimple.addPost(title, content, author, locale, photos);
-                }
-
-                if (success) {
-                    // Успешно опубликовано/обновлено
-                    const user = window.netlifyIdentity?.currentUser();
-                    const action = editId ? 'обновлена' : 'опубликована';
-                    const storage = user ? 'и сохранена в GitHub' : 'локально';
-                    const message = `✅ Статья ${action} ${storage}!`;
-                    showMessage('success', message);
-                    
-                    console.log('✅ Публикация успешна:', {
-                        title: title,
-                        locale: locale,
-                        hasUser: !!user,
-                        userEmail: user?.email
-                    });
-
-                    // Сбрасываем форму
-                    document.getElementById('post-form').reset();
-                    document.getElementById('post-author').value = 'Flamingo Auto';
-                    selectedPhotos = [];
-                    updatePhotosPreview();
-
-                    // Сбрасываем режим редактирования
-                    if (editId) {
-                        submitBtn.textContent = '🚀 Опубликовать статью';
-                        delete submitBtn.dataset.editId;
-                        document.getElementById('cancel-edit-btn').style.display = 'none';
-                    }
-
-                    await loadPostsList();
-                } else {
-                    showMessage('error', '❌ Ошибка при публикации статьи!');
-                    console.error('❌ Публикация не удалась:', {
-                        title: title,
-                        locale: locale,
-                        hasUser: !!window.netlifyIdentity?.currentUser()
-                    });
-                }
-            } catch (error) {
-                showMessage('error', '❌ Ошибка: ' + error.message);
-            } finally {
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-            }
-        });
-
-        // Показ сообщений
-        function showMessage(type, text) {
-            const successEl = document.getElementById('success-message');
-            const errorEl = document.getElementById('error-message');
+        // Переход в CMS
+        function redirectToCMS() {
+            showLoading();
             
-            // Скрываем все сообщения
-            successEl.style.display = 'none';
-            errorEl.style.display = 'none';
-            
-            // Показываем нужное
-            if (type === 'success') {
-                successEl.textContent = text;
-                successEl.style.display = 'block';
-            } else {
-                errorEl.textContent = text;
-                errorEl.style.display = 'block';
-            }
-            
-            // Автоматически скрываем через 5 секунд
             setTimeout(() => {
-                successEl.style.display = 'none';
-                errorEl.style.display = 'none';
-            }, 5000);
+                console.log('Переходим в CMS...');
+                window.location.href = '/admin/';
+            }, 2000);
         }
 
-        // Загрузка списка статей
-        async function loadPostsList() {
-            const container = document.getElementById('posts-list');
-            container.innerHTML = '<p style="color: #666; text-align: center; padding: 2rem;">🔄 Загружаем статьи...</p>';
-
-            try {
-                console.log('🔄 Загружаем список постов...');
-                const posts = await window.FlamingoBlogSimple.getPosts();
-                console.log('📊 Получено постов:', posts.length);
-                console.log('📝 Посты:', posts);
-
-                if (posts.length === 0) {
-                    console.log('❌ Нет постов для отображения');
-                    container.innerHTML = '<p style="color: #666; text-align: center; padding: 2rem;">Пока нет опубликованных статей</p>';
-                    return;
-                }
-
-                const postsHTML = posts.map((post, index) => `
-                    <div class="post-item">
-                        <div class="post-actions">
-                            <button class="btn-edit" onclick="editPost('${post.id}')">✏️ Редактировать</button>
-                            <button class="btn-delete" onclick="deletePost('${post.id}')">🗑️ Удалить</button>
-                        </div>
-                        <div class="post-meta">
-                            ${new Date(post.date).toLocaleDateString('ru-RU')} • ${post.author} • ${post.locale.toUpperCase()}
-                        </div>
-                        <h3 style="margin: 0.5rem 0; padding-right: 200px;">${post.title}</h3>
-                        <div style="margin: 0.5rem 0; color: #444; line-height: 1.5;">
-                            ${post.content.substring(0, 150)}${post.content.length > 150 ? '...' : ''}
-                        </div>
-                        ${post.photos && post.photos.length > 0 ? `
-                            <div class="post-photos">
-                                ${post.photos.slice(0, 3).map(photo => `
-                                    <img src="${photo.dataUrl}" alt="${photo.name}" title="${photo.name}">
-                                `).join('')}
-                                ${post.photos.length > 3 ? `<div style="display: flex; align-items: center; justify-content: center; background: #e9ecef; color: #666; font-size: 0.8rem;">+${post.photos.length - 3}</div>` : ''}
-                            </div>
-                        ` : ''}
-                    </div>
-                `).join('');
-
-                container.innerHTML = postsHTML;
-            } catch (error) {
-                container.innerHTML = '<p style="color: #dc3545; text-align: center; padding: 2rem;">❌ Ошибка загрузки статей</p>';
-                console.error('Ошибка загрузки списка постов:', error);
-            }
-        }
-
-        // Редактирование поста
-        async function editPost(postId) {
-            try {
-                const posts = await window.FlamingoBlogSimple.getPosts();
-                const post = posts.find(p => p.id === postId);
-
-                if (!post) {
-                    alert('Пост не найден!');
-                    return;
-                }
-
-                // Заполняем форму данными поста
-                document.getElementById('post-title').value = post.title;
-                document.getElementById('post-content').value = post.content;
-                document.getElementById('post-author').value = post.author;
-                document.getElementById('post-locale').value = post.locale;
-
-                // Загружаем фотографии
-                selectedPhotos = post.photos || [];
-                updatePhotosPreview();
-
-                // Изменяем кнопку отправки
-                const submitBtn = document.querySelector('button[type="submit"]');
-                submitBtn.textContent = '💾 Сохранить изменения';
-                submitBtn.dataset.editId = postId;
-
-                // Показываем кнопку отмены
-                document.getElementById('cancel-edit-btn').style.display = 'inline-block';
-
-                // Прокручиваем к форме
-                document.getElementById('post-form').scrollIntoView({ behavior: 'smooth' });
-
-                showMessage('info', 'ℹ️ Редактирование поста. Внесите изменения и нажмите "Сохранить изменения"');
-            } catch (error) {
-                showMessage('error', '❌ Ошибка при загрузке поста для редактирования');
-                console.error(error);
-            }
-        }
-
-        // Удаление поста
-        async function deletePost(postId) {
-            if (!confirm('Вы уверены, что хотите удалить эту статью? Это действие нельзя отменить.')) {
-                return;
-            }
-
-            try {
-                const success = await window.FlamingoBlogSimple.deletePost(postId);
-
-                if (success) {
-                    showMessage('success', '✅ Статья успешно удалена!');
-                    await loadPostsList();
-                } else {
-                    showMessage('error', '❌ Ошибка при удалении статьи!');
-                }
-            } catch (error) {
-                showMessage('error', '❌ Ошибка: ' + error.message);
-                console.error(error);
-            }
-        }
-
-        // Отмена редактирования
-        function cancelEdit() {
-            const submitBtn = document.querySelector('button[type="submit"]');
-            submitBtn.textContent = '🚀 Опубликовать статью';
-            delete submitBtn.dataset.editId;
-
-            // Скрываем кнопку отмены
-            document.getElementById('cancel-edit-btn').style.display = 'none';
-
-            document.getElementById('post-form').reset();
-            document.getElementById('post-author').value = 'Flamingo Auto';
-            selectedPhotos = [];
-            updatePhotosPreview();
-
-            showMessage('info', 'ℹ️ Редактирование отменено');
-        }
-
-        // Функция диагностики
-        async function runDiagnosis() {
-            const btn = document.getElementById('diagnosis-btn');
-            btn.disabled = true;
-            btn.textContent = '🔄 Диагностика...';
-
-            try {
-                if (!window.FlamingoBlogSimple || !window.FlamingoBlogSimple.diagnoseSystem) {
-                    showMessage('error', '❌ Функция диагностики не найдена');
-                    return;
-                }
-
-                const result = await window.FlamingoBlogSimple.diagnoseSystem();
-                
-                if (result.success) {
-                    showMessage('success', '✅ ' + result.message);
-                } else {
-                    showMessage('error', '❌ ' + result.error);
-                }
-            } catch (error) {
-                showMessage('error', '❌ Ошибка диагностики: ' + error.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '🔧 Диагностика';
-            }
-        }
-
-        // Загружаем список при загрузке страницы
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Инициализируем Netlify Identity
-            if (window.netlifyIdentity) {
-                window.netlifyIdentity.init();
-                updateAuthUI(window.netlifyIdentity.currentUser());
-            }
-
-            // Обработчики кнопок авторизации
-            document.getElementById('login-btn').addEventListener('click', function() {
-                if (window.netlifyIdentity) {
-                    window.netlifyIdentity.open();
-                } else {
-                    alert('Netlify Identity не загружен');
-                }
-            });
-
-
-
-            document.getElementById('logout-btn').addEventListener('click', function() {
-                if (window.netlifyIdentity) {
-                    window.netlifyIdentity.logout();
-                } else {
-                    alert('Netlify Identity не загружен');
-                }
-            });
-
-            // Загружаем список постов
-            await loadPostsList();
-        });
-
-        // Функция открытия Netlify CMS
-        function openNetlifyCMS() {
-            console.log('🔄 Открываем Netlify CMS...');
+        // Обработчик кнопки входа
+        loginBtn.addEventListener('click', function() {
+            console.log('Открываем окно авторизации...');
             
-            try {
-                // Открываем CMS в новой вкладке
-                const newWindow = window.open('/admin/', '_blank');
-                
-                // Проверяем, удалось ли открыть
-                if (newWindow) {
-                    console.log('✅ CMS открыт в новой вкладке');
-                } else {
-                    // Если блокировщик попапов заблокировал
-                    alert('Блокировщик попапов заблокировал открытие CMS.\nОткройте /admin/ вручную или разрешите попапы для этого сайта.');
-                    console.warn('⚠️ Попап заблокирован, предлагаем ручное открытие');
-                }
-                
-            } catch (error) {
-                console.error('❌ Ошибка открытия CMS:', error);
-                
-                // Резервный вариант - прямая ссылка
-                const userChoice = confirm('Не удалось открыть CMS автоматически.\nОткрыть в текущей вкладке?');
-                if (userChoice) {
-                    window.location.href = '/admin/';
-                } else {
-                    alert('Откройте /admin/ вручную в новой вкладке');
-                }
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.open();
+            } else {
+                alert('Система авторизации не загружена. Обновите страницу.');
             }
-        }
+        });
     </script>
 </body>
 </html>
