@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Debug Admin</title>
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+    <h1>🔧 Debug Admin Panel</h1>
+    
+    <div id="status">
+        <h2>Status:</h2>
+        <div id="identity-status">Checking Netlify Identity...</div>
+        <div id="user-status">Checking user...</div>
+        <div id="cms-status">Checking CMS...</div>
+    </div>
+    
+    <div id="actions" style="margin-top: 2rem;">
+        <button id="login-btn">Login</button>
+        <button id="logout-btn">Logout</button>
+        <button id="test-cms">Test CMS Load</button>
+    </div>
+    
+    <div id="info" style="margin-top: 2rem; background: #f5f5f5; padding: 1rem;">
+        <h3>Info:</h3>
+        <div id="debug-info"></div>
+    </div>
+
+    <script>
+        const identityStatus = document.getElementById('identity-status');
+        const userStatus = document.getElementById('user-status');
+        const cmsStatus = document.getElementById('cms-status');
+        const debugInfo = document.getElementById('debug-info');
+        
+        function updateStatus() {
+            // Check Netlify Identity
+            if (window.netlifyIdentity) {
+                identityStatus.innerHTML = '✅ Netlify Identity loaded';
+                
+                const user = window.netlifyIdentity.currentUser();
+                if (user) {
+                    userStatus.innerHTML = `✅ User logged in: ${user.email}`;
+                    debugInfo.innerHTML += `<p>User ID: ${user.id}</p>`;
+                    debugInfo.innerHTML += `<p>User roles: ${user.app_metadata?.roles?.join(', ') || 'none'}</p>`;
+                } else {
+                    userStatus.innerHTML = '❌ No user logged in';
+                }
+            } else {
+                identityStatus.innerHTML = '❌ Netlify Identity not loaded';
+            }
+            
+            // Check CMS
+            if (window.CMS) {
+                cmsStatus.innerHTML = '✅ Netlify CMS loaded';
+            } else {
+                cmsStatus.innerHTML = '❌ Netlify CMS not loaded';
+            }
+            
+            // Debug info
+            debugInfo.innerHTML += `<p>Current URL: ${window.location.href}</p>`;
+            debugInfo.innerHTML += `<p>User Agent: ${navigator.userAgent}</p>`;
+        }
+        
+        // Event handlers
+        document.getElementById('login-btn').onclick = () => {
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.open();
+            } else {
+                alert('Netlify Identity not loaded');
+            }
+        };
+        
+        document.getElementById('logout-btn').onclick = () => {
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.logout();
+            } else {
+                alert('Netlify Identity not loaded');
+            }
+        };
+        
+        document.getElementById('test-cms').onclick = () => {
+            window.location.href = '/admin/';
+        };
+        
+        // Initialize
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.on("init", user => {
+                updateStatus();
+            });
+            
+            window.netlifyIdentity.on("login", user => {
+                updateStatus();
+            });
+            
+            window.netlifyIdentity.on("logout", () => {
+                updateStatus();
+            });
+            
+            window.netlifyIdentity.init();
+        }
+        
+        // Update status on load
+        setTimeout(updateStatus, 1000);
+    </script>
+</body>
+</html>
