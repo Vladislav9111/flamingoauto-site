@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minimal CMS - Flamingo Auto</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+<body>
+  <div id="nc-root"></div>
+  
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script src="https://unpkg.com/netlify-cms@^2.10.0/dist/netlify-cms.js"></script>
+  
+  <script>
+    // Минимальная инициализация без перезагрузок
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.init();
+    }
+  </script>
+</body>
+</html>

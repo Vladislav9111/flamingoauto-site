@@ -3,24 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Content Manager</title>
+  <meta name="robots" content="noindex" />
+  <title>Content Manager (Decap) - Flamingo Auto</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
+  <!-- Decap CMS -->
   <div id="nc-root"></div>
-  <script src="https://unpkg.com/netlify-cms@^2.10.0/dist/netlify-cms.js"></script>
+  
+  <!-- Загружаем Decap CMS (новая версия) -->
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  
   <script>
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
         if (!user) {
           window.netlifyIdentity.on("login", () => {
-            document.location.href = "/admin/";
+            document.location.href = "/admin/index-decap.html";
           });
         }
       });
+
       window.netlifyIdentity.on("logout", () => {
         document.location.href = "/";
       });
+
       window.netlifyIdentity.init();
     }
   </script>

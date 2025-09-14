@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>CMS - Flamingo Auto</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .simple-panel {
+            max-width: 500px;
+            margin: 4rem auto;
+            padding: 3rem;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .btn-big {
+            display: block;
+            background: #007bff;
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 1rem 0;
+            transition: background 0.3s;
+        }
+        .btn-big:hover {
+            background: #0056b3;
+        }
+        .btn-alt {
+            background: #6c757d;
+            font-size: 1rem;
+            padding: 1rem;
+        }
+        .btn-alt:hover {
+            background: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <main class="container simple-panel">
+        <h1>📝 Система управления</h1>
+        <p style="color: #666; margin-bottom: 2rem;">Простой доступ к CMS</p>
+        
+        <a href="/admin/" class="btn-big">
+            🚀 Открыть Netlify CMS
+        </a>
+        
+        <a href="/admin.html" class="btn-big btn-alt">
+            🔧 Альтернативная админка
+        </a>
+        
+        <div style="margin-top: 2rem; font-size: 0.9rem; color: #666;">
+            <p>Если CMS не работает:</p>
+            <p>1. Убедитесь, что вы авторизованы</p>
+            <p>2. Используйте альтернативную админку</p>
+        </div>
+    </main>
+</body>
+</html>

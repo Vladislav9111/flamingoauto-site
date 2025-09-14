@@ -1,163 +1,20 @@
 backend:
   name: git-gateway
   branch: main
-  repo: Vladislav9111/flamingoauto-site
-  commit_messages:
-    create: "Create {{collection}} \"{{slug}}\""
-    update: "Update {{collection}} \"{{slug}}\""
-    delete: "Delete {{collection}} \"{{slug}}\""
-    uploadMedia: "Upload \"{{path}}\""
-    deleteMedia: "Delete \"{{path}}\""
 
-media_folder: "static/images/uploads"
-public_folder: "/static/images/uploads"
-media_library:
-  name: netlify
-  config:
-    output_path: "static/images/uploads"
-    public_path: "/static/images/uploads"
-
-publish_mode: simple
-local_backend: false
-display_url: "https://flamingoauto.netlify.app"
-locale: "ru"
-load_config_file: false
-show_preview_links: true
-search: true
+media_folder: "static/images"
+public_folder: "/static/images"
 
 collections:
   - name: "blog"
     label: "Blog Posts"
-    label_singular: "Blog Post"
-    description: "Create and manage blog posts with multiple language support"
     folder: "content/blog"
-    extension: "md"
-    format: "yaml-frontmatter"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
-    sortable_fields: ["date", "title"]
-    view_filters:
-      - label: "Published"
-        field: "published"
-        pattern: "true"
-      - label: "Draft"
-        field: "published"
-        pattern: "false"
-    preview_path: "blog/{{ slug || 'post-preview' }}"
-    summary: "{{title}} - {{date}}"
-
     fields:
-      - label: "Title"
-        name: "title"
-        widget: "string"
-        hint: "The main title of your blog post"
-
-      - label: "Description (SEO)"
-        name: "description"
-        widget: "text"
-        required: false
-        hint: "Short description for SEO and previews"
-
-      - label: "Excerpt"
-        name: "excerpt"
-        widget: "text"
-        required: false
-        hint: "Short excerpt for article previews"
-
-      - label: "Date"
-        name: "date"
-        widget: "datetime"
-        time_format: false
-        format: "YYYY-MM-DDTHH:mm:ss.sssZ"
-        hint: "Publication date and time"
-
-      - label: "Author"
-        name: "author"
-        widget: "string"
-        default: "Flamingo Auto"
-        hint: "Article author name"
-
-      - label: "Language"
-        name: "lang"
-        widget: "select"
-        options: ["ru", "et", "en"]
-        default: "ru"
-        hint: "Article language for proper categorization"
-
-      - label: "Tags"
-        name: "tags"
-        widget: "list"
-        required: false
-        hint: "Optional tags for categorization"
-        field:
-          label: "Tag"
-          name: "tag"
-          widget: "string"
-
-      - label: "Thumbnail Image"
-        name: "thumbnail"
-        widget: "image"
-        required: false
-        hint: "Main article image (optional)"
-
-      - label: "Photos"
-        name: "photos"
-        widget: "list"
-        required: false
-        hint: "Additional photos for the article"
-        field:
-          label: "Photo"
-          name: "photo"
-          widget: "image"
-
-      - label: "Images"
-        name: "images"
-        widget: "list"
-        required: false
-        hint: "Additional images for the article"
-        field:
-          label: "Image"
-          name: "image"
-          widget: "image"
-
-      - label: "Published"
-        name: "published"
-        widget: "boolean"
-        default: true
-        hint: "Whether this article should be published"
-
-      - label: "Body"
-        name: "body"
-        widget: "markdown"
-        hint: "Main article content with full Markdown support"
-
-  - name: "pages"
-    label: "Pages"
-    label_singular: "Page"
-    description: "Static pages like About, Contact, etc."
-    folder: "content/pages"
-    extension: "md"
-    format: "yaml-frontmatter"
-    create: true
-    slug: "{{slug}}"
-    preview_path: "{{ slug || 'page-preview' }}"
-
-    fields:
-      - label: "Title"
-        name: "title"
-        widget: "string"
-
-      - label: "Description (SEO)"
-        name: "description"
-        widget: "text"
-        required: false
-
-      - label: "Language"
-        name: "lang"
-        widget: "select"
-        options: ["ru", "et", "en"]
-        default: "ru"
-
-      - label: "Body"
-        name: "body"
-        widget: "markdown"
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Date", name: "date", widget: "datetime"}
+      - {label: "Author", name: "author", widget: "string", default: "Flamingo Auto"}
+      - {label: "Language", name: "lang", widget: "select", options: ["ru", "et", "en"], default: "ru"}
+      - {label: "Published", name: "published", widget: "boolean", default: true}
+      - {label: "Body", name: "body", widget: "markdown"}
