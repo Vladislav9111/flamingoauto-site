@@ -7,8 +7,29 @@
   <title>Content Manager</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <style>
+    .logout-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      z-index: 10000;
+      font-size: 14px;
+    }
+    .logout-btn:hover {
+      background: #c82333;
+    }
+  </style>
 </head>
 <body>
+  <!-- Кнопка выхода -->
+  <button id="logout-btn" class="logout-btn" onclick="logoutUser()">🚪 Выйти</button>
+  
   <div id="nc-root"></div>
   <script src="https://unpkg.com/netlify-cms@^2.10.0/dist/netlify-cms.js"></script>
   <script>
@@ -48,6 +69,19 @@
         console.error('❌ CMS не загружен');
       }
     }, 3000);
+    
+    // Функция выхода
+    function logoutUser() {
+      if (window.netlifyIdentity) {
+        console.log('Выходим из системы...');
+        window.netlifyIdentity.logout();
+      } else {
+        alert('Netlify Identity не загружен');
+      }
+    }
+    
+    // Делаем функцию глобальной
+    window.logoutUser = logoutUser;
   </script>
 </body>
 </html>
