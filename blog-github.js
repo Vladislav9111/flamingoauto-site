@@ -1,43 +1,37 @@
 // Простая система загрузки статей из GitHub API
-const GITHUB_REPO = 'Vladislav9111/flamingoauto-site';
+const GITHUB_REPO = 'flamingoauto/flamingoauto.github.io';
 const GITHUB_BRANCH = 'main';
-const BLOG_PATH = 'content/blog';
+const POSTS_PATH = 'content/posts';
 
-// Загрузка статей через Netlify Function (приоритет) или GitHub API (fallback)
+// Загрузка статей через GitHub API
 async function loadPostsFromGitHub() {
     try {
-        console.log('🔄 Загружаем статьи...');
+        console.log('🔄 Загружаем статьи из GitHub...');
 
-        // Сначала пробуем Netlify Function
-        try {
-            const response = await fetch('/.netlify/functions/get-posts');
-            if (response.ok) {
-                const posts = await response.json();
-                console.log(`✅ Загружено через Netlify Function: ${posts.length} статей`);
-                return posts;
-            }
-        } catch (netlifyError) {
-            console.log('⚠️ Netlify Function недоступна, пробуем GitHub API');
-        }
-
-        // Fallback на GitHub API
-        const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${BLOG_PATH}`);
+        // Загружаем список файлов из папки posts
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${POSTS_PATH}`);
 
         if (!response.ok) {
             throw new Error(`GitHub API error: ${response.status}`);
         }
 
         const files = await response.json();
-        const markdownFiles = files.filter(file => file.name.endsWith('.md'));
+        const jsonFiles = files.filter(file => file.name.endsWith('.json'));
 
-        console.log(`📁 Найдено ${markdownFiles.length} markdown файлов через GitHub API`);
+        console.log(`📁 Найдено ${jsonFiles.length} JSON файлов с постами`);
 
         const posts = await Promise.all(
-            markdownFiles.map(async (file) => {
+            jsonFiles.map(async (file) => {
                 try {
                     const contentResponse = await fetch(file.download_url);
-                    const content = await contentResponse.text();
-                    return parseMarkdownPost(content, file.name);
+                    const post = await contentResponse.json();
+
+                    // Добавляем дату создания если её нет
+                    if (!post.date && post.created) {
+                        post.date = post.created;
+                    }
+
+                    return post;
                 } catch (error) {
                     console.error(`❌ Ошибка загрузки файла ${file.name}:`, error);
                     return null;
@@ -45,13 +39,13 @@ async function loadPostsFromGitHub() {
             })
         );
 
-        // Фильтруем null значения и только опубликованные посты
-        const validPosts = posts.filter(post => post && post.published);
+        // Фильтруем null значения
+        const validPosts = posts.filter(post => post !== null);
 
         // Сортируем по дате (новые сначала)
-        validPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+        validPosts.sort((a, b) => new Date(b.created || b.date) - new Date(a.created || a.date));
 
-        console.log(`✅ Загружено через GitHub API: ${validPosts.length} статей`);
+        console.log(`✅ Загружено ${validPosts.length} статей из GitHub`);
         return validPosts;
 
     } catch (error) {
@@ -134,8 +128,6 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
     console.log('📊 Получено постов:', filteredPosts.length, 'для языка:', locale);
 
     if (filteredPosts.length === 0) {
-        // Если нет статей, показываем сообщение
-
         const noPostsMessages = {
             'et': 'Artikleid pole veel avaldatud.',
             'ru': 'Пока нет опубликованных статей.',
@@ -147,17 +139,38 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
         return;
     }
 
-    const postsHTML = filteredPosts.map(post => `
-        <article style="background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:1rem;">
-            <h2 style="margin:0 0 0.5rem 0;color:#333;">${escapeHtml(post.title)}</h2>
-            <div style="color:#666;font-size:0.9rem;margin-bottom:1rem;">
-                ${new Date(post.date).toLocaleDateString('ru-RU')} • ${escapeHtml(post.author)}
-            </div>
-            <div style="line-height:1.6;color:#444;">
-                ${sanitizeHtml(post.content.substring(0, 300) + (post.content.length > 300 ? '...' : ''))}
-            </div>
-        </article>
-    `).join('');
+    const postsHTML = filteredPosts.map(post => {
+        // Обработка фотографий
+        let photosHTML = '';
+        if (post.photos && post.photos.length > 0) {
+            const photosToShow = post.photos.slice(0, 3); // Показываем максимум 3 фото в превью
+            photosHTML = `
+                <div style="display:flex;gap:0.5rem;margin:1rem 0;flex-wrap:wrap;">
+                    ${photosToShow.map(photo => `
+                        <img src="${photo}" alt="Фото к статье" 
+                             style="width:80px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #ddd;">
+                    `).join('')}
+                    ${post.photos.length > 3 ? `<span style="color:#666;font-size:0.9rem;align-self:center;">+${post.photos.length - 3} фото</span>` : ''}
+                </div>
+            `;
+        }
+
+        return `
+            <article style="background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:1rem;">
+                <h2 style="margin:0 0 0.5rem 0;color:#333;">${escapeHtml(post.title)}</h2>
+                <div style="color:#666;font-size:0.9rem;margin-bottom:1rem;">
+                    ${new Date(post.created || post.date).toLocaleDateString('ru-RU')} • ${escapeHtml(post.author || 'Flamingo Auto')}
+                </div>
+                <div style="line-height:1.6;color:#444;margin-bottom:1rem;">
+                    ${escapeHtml(post.excerpt)}
+                </div>
+                ${photosHTML}
+                <div style="line-height:1.6;color:#444;">
+                    ${sanitizeHtml(post.content.substring(0, 200) + (post.content.length > 200 ? '...' : ''))}
+                </div>
+            </article>
+        `;
+    }).join('');
 
     container.innerHTML = postsHTML;
 }
