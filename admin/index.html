@@ -4,31 +4,254 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" />
-  <title>Content Manager</title>
+  <title>Content Manager - Flamingo Auto</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .loading-content {
+      text-align: center;
+      max-width: 500px;
+      padding: 2rem;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 2rem;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .error-message {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      border: 1px solid #f5c6cb;
+    }
+    .success-message {
+      background: #d4edda;
+      color: #155724;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      border: 1px solid #c3e6cb;
+    }
+    .btn {
+      background: #007bff;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin: 0.5rem;
+    }
+    .btn:hover {
+      background: #0056b3;
+    }
+  </style>
 </head>
 <body>
+  <!-- Экран загрузки -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <h2>🚀 Загружаем Netlify CMS</h2>
+      <p id="loading-status">Инициализация системы управления контентом...</p>
+      <div id="loading-details" style="font-size: 0.9rem; color: #666; margin-top: 1rem;">
+        <p>✓ Загрузка Netlify Identity...</p>
+        <p id="auth-status">⏳ Проверка авторизации...</p>
+        <p id="cms-status">⏳ Загрузка CMS...</p>
+      </div>
+      <div id="error-container" style="display: none;"></div>
+      <div id="action-buttons" style="display: none; margin-top: 2rem;">
+        <a href="/admin.html" class="btn">🔧 Альтернативная админка</a>
+        <a href="/debug-cms.html" class="btn">🔍 Диагностика</a>
+        <button onclick="location.reload()" class="btn">🔄 Перезагрузить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Контейнер для CMS -->
   <div id="nc-root"></div>
+
+  <!-- Загрузка CMS -->
   <script src="https://unpkg.com/netlify-cms@^2.10.0/dist/netlify-cms.js"></script>
+  
   <script>
+    let loadingTimeout;
+    let cmsLoaded = false;
+
+    // Функция обновления статуса
+    function updateStatus(elementId, text, success = null) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.innerHTML = success === true ? `✓ ${text}` : 
+                           success === false ? `❌ ${text}` : 
+                           `⏳ ${text}`;
+      }
+    }
+
+    // Функция показа ошибки
+    function showError(message, details = '') {
+      const container = document.getElementById('error-container');
+      container.innerHTML = `
+        <div class="error-message">
+          <h4>❌ Ошибка загрузки CMS</h4>
+          <p>${message}</p>
+          ${details ? `<details><summary>Подробности</summary><pre>${details}</pre></details>` : ''}
+        </div>
+      `;
+      container.style.display = 'block';
+      document.getElementById('action-buttons').style.display = 'block';
+    }
+
+    // Функция скрытия экрана загрузки
+    function hideLoadingScreen() {
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen) {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+        }, 500);
+      }
+    }
+
+    // Таймаут для загрузки
+    loadingTimeout = setTimeout(() => {
+      if (!cmsLoaded) {
+        showError(
+          'CMS загружается слишком долго. Возможные причины:',
+          '• Медленное интернет-соединение\n• Проблемы с Netlify Identity\n• Блокировка скриптов браузером\n• Проблемы с Git Gateway'
+        );
+      }
+    }, 15000); // 15 секунд
+
+    // Обработка Netlify Identity
     if (window.netlifyIdentity) {
+      console.log('🔄 Инициализация Netlify Identity...');
+      
       window.netlifyIdentity.on("init", user => {
+        console.log('✓ Netlify Identity инициализирован', user ? `Пользователь: ${user.email}` : 'Пользователь не авторизован');
+        updateStatus('auth-status', user ? `Авторизован: ${user.email}` : 'Требуется авторизация', !!user);
+        
         if (!user) {
+          // Если пользователь не авторизован, показываем кнопку входа
+          setTimeout(() => {
+            if (!cmsLoaded) {
+              showError(
+                'Для работы с CMS необходима авторизация через Netlify Identity.',
+                'Нажмите кнопку ниже для входа в систему.'
+              );
+              const container = document.getElementById('error-container');
+              container.innerHTML += `
+                <div style="text-align: center; margin-top: 1rem;">
+                  <button onclick="window.netlifyIdentity.open()" class="btn">🔑 Войти в систему</button>
+                </div>
+              `;
+            }
+          }, 3000);
+          
           window.netlifyIdentity.on("login", () => {
-            document.location.href = "/admin/";
+            console.log('✓ Пользователь вошел в систему');
+            updateStatus('loading-status', 'Перезагружаем CMS после авторизации...');
+            setTimeout(() => {
+              document.location.href = "/admin/";
+            }, 1000);
           });
         }
       });
-      
-      // Handle logout
+
       window.netlifyIdentity.on("logout", () => {
+        console.log('ℹ️ Пользователь вышел из системы');
         document.location.href = "/";
       });
-      
-      // Initialize the widget
-      window.netlifyIdentity.init();
+
+      // Инициализируем Identity
+      try {
+        window.netlifyIdentity.init();
+        updateStatus('auth-status', 'Netlify Identity загружен', true);
+      } catch (error) {
+        console.error('❌ Ошибка инициализации Netlify Identity:', error);
+        updateStatus('auth-status', 'Ошибка загрузки Netlify Identity', false);
+        showError('Не удалось загрузить Netlify Identity', error.message);
+      }
+    } else {
+      console.error('❌ Netlify Identity не загружен');
+      updateStatus('auth-status', 'Netlify Identity не найден', false);
+      showError('Netlify Identity не загружен. Проверьте интернет-соединение.');
     }
+
+    // Проверка загрузки CMS
+    function checkCMSLoaded() {
+      if (window.CMS || window.NetlifyCMS) {
+        console.log('✓ Netlify CMS загружен');
+        updateStatus('cms-status', 'CMS загружен успешно', true);
+        updateStatus('loading-status', 'Запуск CMS...');
+        
+        cmsLoaded = true;
+        clearTimeout(loadingTimeout);
+        
+        // Скрываем экран загрузки через небольшую задержку
+        setTimeout(() => {
+          hideLoadingScreen();
+        }, 2000);
+        
+        return true;
+      }
+      return false;
+    }
+
+    // Проверяем загрузку CMS каждые 500ms
+    const cmsCheckInterval = setInterval(() => {
+      if (checkCMSLoaded()) {
+        clearInterval(cmsCheckInterval);
+      }
+    }, 500);
+
+    // Обработка ошибок загрузки скриптов
+    window.addEventListener('error', (event) => {
+      if (event.filename && event.filename.includes('netlify-cms')) {
+        console.error('❌ Ошибка загрузки Netlify CMS:', event.error);
+        updateStatus('cms-status', 'Ошибка загрузки CMS', false);
+        showError('Не удалось загрузить Netlify CMS', event.error?.message || 'Неизвестная ошибка');
+      }
+    });
+
+    // Дополнительная проверка через 5 секунд
+    setTimeout(() => {
+      if (!cmsLoaded && !checkCMSLoaded()) {
+        updateStatus('cms-status', 'CMS загружается...', null);
+        updateStatus('loading-status', 'Ожидание загрузки CMS...');
+      }
+    }, 5000);
+
+    console.log('🚀 Скрипт инициализации CMS запущен');
   </script>
 </body>
 </html>
