@@ -3,12 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Content Manager</title>
+  <meta name="robots" content="noindex" />
+  <title>Content Manager - Flamingo Auto</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
   <div id="nc-root"></div>
-  <script src="https://unpkg.com/netlify-cms@^2.10.0/dist/netlify-cms.js"></script>
+  
+  <!-- Используем Decap CMS (современная версия Netlify CMS) -->
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  
   <script>
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
@@ -18,9 +23,11 @@
           });
         }
       });
+
       window.netlifyIdentity.on("logout", () => {
         document.location.href = "/";
       });
+
       window.netlifyIdentity.init();
     }
   </script>
