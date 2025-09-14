@@ -1,17 +1,17 @@
-const fs = require('fs');
-const path = require('path');
-
+// Загрузка постов через GitHub API (резервный способ)
 exports.handler = async (event, context) => {
   try {
-    console.log('🔄 Загружаем посты из content/blog...');
+    console.log('🔄 Загружаем посты через GitHub API...');
     
-    // В Netlify файлы находятся в корне проекта
-    const postsPath = path.join(process.cwd(), 'content', 'blog');
-    console.log('📁 Путь к постам:', postsPath);
+    const owner = 'Vladislav9111';
+    const repo = 'flamingoauto-site';
+    const path = 'content/blog';
     
-    // Проверяем существование папки
-    if (!fs.existsSync(postsPath)) {
-      console.log('❌ Папка content/blog не найдена');
+    // Получаем список файлов в папке content/blog
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`);
+    
+    if (!response.ok) {
+      console.error('❌ Ошибка GitHub API:', response.status);
       return {
         statusCode: 200,
         headers: {
@@ -22,23 +22,23 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Читаем все .md файлы
-    const files = fs.readdirSync(postsPath);
-    const mdFiles = files.filter(file => file.endsWith('.md'));
+    const files = await response.json();
+    const mdFiles = files.filter(file => file.name.endsWith('.md'));
     console.log('📝 Найдено .md файлов:', mdFiles.length);
 
     const posts = [];
 
-    for (const filename of mdFiles) {
+    // Загружаем содержимое каждого файла
+    for (const file of mdFiles) {
       try {
-        const filePath = path.join(postsPath, filename);
-        const content = fs.readFileSync(filePath, 'utf8');
+        const fileResponse = await fetch(file.download_url);
+        const content = await fileResponse.text();
         
         // Парсим frontmatter
         const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
         
         if (!frontmatterMatch) {
-          console.log('⚠️ Файл без frontmatter:', filename);
+          console.log('⚠️ Файл без frontmatter:', file.name);
           continue;
         }
 
@@ -57,7 +57,7 @@ exports.handler = async (event, context) => {
 
         // Создаем объект поста
         const post = {
-          id: filename.replace('.md', ''),
+          id: file.name.replace('.md', ''),
           title: frontmatter.title || 'Без названия',
           content: bodyContent.trim(),
           author: frontmatter.author || 'Flamingo Auto',
@@ -73,14 +73,14 @@ exports.handler = async (event, context) => {
         }
 
       } catch (error) {
-        console.error('❌ Ошибка обработки файла', filename, ':', error);
+        console.error('❌ Ошибка загрузки файла', file.name, ':', error);
       }
     }
 
     // Сортируем по дате (новые первыми)
     posts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    console.log('✅ Возвращаем постов:', posts.length);
+    console.log('✅ Возвращаем постов через GitHub API:', posts.length);
 
     return {
       statusCode: 200,
@@ -92,7 +92,7 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('❌ Ошибка функции:', error);
+    console.error('❌ Ошибка GitHub API функции:', error);
     return {
       statusCode: 500,
       headers: {
@@ -100,8 +100,7 @@ exports.handler = async (event, context) => {
         'Access-Control-Allow-Origin': '*',
       },
       body: JSON.stringify({ 
-        error: error.message,
-        stack: error.stack 
+        error: error.message 
       }),
     };
   }

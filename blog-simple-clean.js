@@ -166,19 +166,34 @@ async function addPost(title, content, author, locale = 'all', photos = []) {
 // Загрузка постов из GitHub
 async function loadPostsFromGitHub() {
     try {
-        console.log('🔄 Запрашиваем /.netlify/functions/get-posts-simple');
-        const response = await fetch('/.netlify/functions/get-posts-simple');
+        console.log('🔄 Пробуем загрузить посты из файловой системы...');
+        let response = await fetch('/.netlify/functions/get-posts-simple');
         
-        console.log('📡 Ответ сервера:', response.status, response.statusText);
+        console.log('📡 Ответ файловой системы:', response.status);
         
         if (response.ok) {
             const posts = await response.json();
-            console.log('✅ Получены посты из Netlify Function:', posts.length);
+            if (posts.length > 0) {
+                console.log('✅ Получены посты из файловой системы:', posts.length);
+                savePosts(posts); // Кешируем локально
+                return posts;
+            }
+        }
+        
+        // Если файловая система не работает, пробуем GitHub API
+        console.log('🔄 Пробуем загрузить через GitHub API...');
+        response = await fetch('/.netlify/functions/get-posts-github');
+        
+        console.log('📡 Ответ GitHub API:', response.status);
+        
+        if (response.ok) {
+            const posts = await response.json();
+            console.log('✅ Получены посты через GitHub API:', posts.length);
             savePosts(posts); // Кешируем локально
             return posts;
         } else {
             const errorText = await response.text();
-            console.error('❌ Ошибка Netlify Function:', response.status, errorText);
+            console.error('❌ Ошибка GitHub API:', response.status, errorText);
             return [];
         }
     } catch (error) {
