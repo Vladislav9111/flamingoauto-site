@@ -146,27 +146,50 @@
         let currentUser = null;
 
         // Initialize Netlify Identity
-        if (window.netlifyIdentity) {
+        console.log('🔄 Проверяем Netlify Identity...');
+        
+        if (typeof window.netlifyIdentity === 'undefined') {
+            console.error('❌ Netlify Identity не загружен!');
+            loginError.textContent = 'Система авторизации не загружена. Проверьте подключение к интернету и обновите страницу.';
+            loginError.style.display = 'block';
+        } else {
+            console.log('✅ Netlify Identity найден, инициализируем...');
+            
             window.netlifyIdentity.on("init", user => {
-                console.log('Netlify Identity инициализирован');
+                console.log('✅ Netlify Identity инициализирован');
                 if (user) {
+                    console.log('👤 Найден авторизованный пользователь:', user.email);
                     showEditor(user);
                 } else {
+                    console.log('👤 Пользователь не авторизован');
                     showLogin();
                 }
             });
 
             window.netlifyIdentity.on("login", user => {
-                console.log('Пользователь вошел:', user.email);
+                console.log('✅ Пользователь вошел:', user.email);
                 showEditor(user);
             });
 
             window.netlifyIdentity.on("logout", () => {
-                console.log('Пользователь вышел');
+                console.log('👋 Пользователь вышел');
                 showLogin();
             });
 
-            window.netlifyIdentity.init();
+            window.netlifyIdentity.on("error", err => {
+                console.error('❌ Ошибка Netlify Identity:', err);
+                loginError.textContent = `Ошибка системы авторизации: ${err.message}`;
+                loginError.style.display = 'block';
+            });
+
+            try {
+                window.netlifyIdentity.init();
+                console.log('🔄 Netlify Identity.init() вызван');
+            } catch (error) {
+                console.error('❌ Ошибка при инициализации:', error);
+                loginError.textContent = `Ошибка инициализации: ${error.message}`;
+                loginError.style.display = 'block';
+            }
         }
 
         function showEditor(user) {
@@ -186,11 +209,22 @@
 
         // Login button handler
         loginBtn.addEventListener('click', () => {
+            console.log('🔄 Нажата кнопка входа');
             loginError.style.display = 'none';
-            if (window.netlifyIdentity) {
-                window.netlifyIdentity.open();
-            } else {
+            
+            if (typeof window.netlifyIdentity === 'undefined') {
+                console.error('❌ Netlify Identity не загружен');
                 loginError.textContent = 'Система авторизации не загружена. Обновите страницу.';
+                loginError.style.display = 'block';
+                return;
+            }
+            
+            try {
+                console.log('🔄 Открываем окно авторизации...');
+                window.netlifyIdentity.open();
+            } catch (error) {
+                console.error('❌ Ошибка открытия окна авторизации:', error);
+                loginError.textContent = `Ошибка авторизации: ${error.message}`;
                 loginError.style.display = 'block';
             }
         });
