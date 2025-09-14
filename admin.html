@@ -156,10 +156,11 @@
             showLoading();
             
             setTimeout(() => {
+                const email = userEmail.textContent || 'пользователь';
                 userInfo.innerHTML = `
                     <h3>✅ Авторизован</h3>
-                    <p>Email: <span>${userEmail.textContent}</span></p>
-                    <a href="/admin/" style="display: inline-block; background: #1976d2; color: white; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 1rem;">
+                    <p>Email: ${email}</p>
+                    <a href="/admin/" target="_blank" style="display: inline-block; background: #1976d2; color: white; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 1rem; cursor: pointer;">
                         🚀 Открыть CMS
                     </a>
                 `;
