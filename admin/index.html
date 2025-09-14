@@ -3,189 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flamingo Auto - Админ-панель</title>
+  <meta name="robots" content="noindex" />
+  <title>Content Manager</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-  <style>
-    body { 
-      margin: 0; 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background-color: #f5f5f5;
-    }
-    .login-overlay {
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      width: 100%; 
-      height: 100%;
-      background: rgba(0,0,0,0.8); 
-      display: flex; 
-      justify-content: center; 
-      align-items: center;
-      z-index: 9999;
-    }
-    .login-panel {
-      background: white; 
-      padding: 2.5rem; 
-      border-radius: 12px; 
-      text-align: center;
-      max-width: 400px;
-      width: 90%;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    }
-    .login-btn {
-      background: #1976d2; 
-      color: white; 
-      padding: 0.8rem 2rem; 
-      border: none;
-      border-radius: 6px; 
-      cursor: pointer; 
-      font-size: 1rem;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      margin-top: 1rem;
-    }
-    .login-btn:hover {
-      background: #1565c0;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-    }
-    #nc-root {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    .cms-header {
-      background: #1976d2;
-      color: white;
-      padding: 0.8rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .cms-logo {
-      font-weight: 600;
-      font-size: 1.2rem;
-    }
-    .cms-logout {
-      color: white;
-      text-decoration: none;
-      opacity: 0.9;
-      font-size: 0.9rem;
-    }
-    .cms-logout:hover {
-      text-decoration: underline;
-      opacity: 1;
-    }
-  </style>
 </head>
 <body>
-  <!-- Overlay для неавторизованных -->
-  <div id="login-overlay" class="login-overlay" style="display: none;">
-    <div class="login-panel">
-      <h2 style="margin-top: 0; color: #333;">🔐 Требуется авторизация</h2>
-      <p style="color: #666; margin-bottom: 1.5rem;">Войдите в систему, чтобы получить доступ к панели управления</p>
-      <button id="login-btn" class="login-btn">Войти через Netlify</button>
-    </div>
-  </div>
-
-  <!-- CMS контейнер -->
   <div id="nc-root"></div>
-  
-  <!-- Загружаем Netlify CMS -->
   <script src="https://unpkg.com/netlify-cms@^2.10.0/dist/netlify-cms.js"></script>
-  
   <script>
-    // Проверяем, загружен ли Netlify Identity
     if (window.netlifyIdentity) {
-      // Инициализируем Netlify Identity
-      window.netlifyIdentity.init();
-      
-      // Показываем overlay, если пользователь не авторизован
-      const loginOverlay = document.getElementById('login-overlay');
-      const loginBtn = document.getElementById('login-btn');
-      
-      // Обработчик инициализации Identity
-      window.netlifyIdentity.on('init', user => {
-        console.log('Netlify Identity инициализирован, пользователь:', user ? user.email : 'не авторизован');
-        
+      window.netlifyIdentity.on("init", user => {
         if (!user) {
-          // Показываем overlay для входа
-          loginOverlay.style.display = 'flex';
-        } else {
-          // Пользователь авторизован - скрываем overlay
-          loginOverlay.style.display = 'none';
-          
-          // Добавляем кнопку выхода в шапку CMS
-          const cmsRoot = document.getElementById('nc-root');
-          if (cmsRoot) {
-            const header = document.createElement('div');
-            header.className = 'cms-header';
-            header.innerHTML = `
-              <div class="cms-logo">Flamingo Auto - Админ-панель</div>
-              <a href="#" class="cms-logout" id="logout-btn">Выйти (${user.email})</a>
-            `;
-            cmsRoot.prepend(header);
-            
-            // Обработчик кнопки выхода
-            const logoutBtn = document.getElementById('logout-btn');
-            if (logoutBtn) {
-              logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                window.netlifyIdentity.logout();
-              });
-            }
-          }
+          window.netlifyIdentity.on("login", () => {
+            document.location.href = "/admin/";
+          });
         }
       });
-
-      // Обработчик входа
-      window.netlifyIdentity.on('login', user => {
-        console.log('Пользователь вошел:', user.email);
-        loginOverlay.style.display = 'none';
-        // Перезагружаем страницу после входа
-        window.location.href = '/admin/';
+      window.netlifyIdentity.on("logout", () => {
+        document.location.href = "/";
       });
-
-      // Обработчик выхода
-      window.netlifyIdentity.on('logout', () => {
-        console.log('Пользователь вышел');
-        loginOverlay.style.display = 'flex';
-        // Удаляем шапку CMS
-        const header = document.querySelector('.cms-header');
-        if (header) header.remove();
-      });
-
-      // Обработчик кнопки входа
-      if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
-          window.netlifyIdentity.open('login');
-        });
-      }
-      
-      // Инициализируем Netlify CMS после загрузки Identity
-      window.netlifyIdentity.on('init', user => {
-        if (user) {
-          // Пользователь авторизован, загружаем CMS
-          console.log('Загружаем Netlify CMS...');
-        }
-      });
-      
-    } else {
-      // Если Netlify Identity не загрузился
-      console.error('Ошибка: Netlify Identity не загружен');
-      document.body.innerHTML = `
-        <div style="padding: 2rem; text-align: center; max-width: 600px; margin: 2rem auto;">
-          <h2 style="color: #d32f2f;">Ошибка загрузки</h2>
-          <p>Не удалось загрузить Netlify Identity. Пожалуйста, проверьте настройки вашего сайта в Netlify.</p>
-          <p>Убедитесь, что:</p>
-          <ul style="text-align: left; max-width: 400px; margin: 1rem auto;">
-            <li>Включен Netlify Identity</li>
-            <li>Настроен Git Gateway</li>
-            <li>Указан правильный URL сайта в настройках Identity</li>
-          </ul>
-          <p><a href="https://app.netlify.com/sites/YOUR_SITE_NAME/settings/identity" target="_blank" style="color: #1976d2; text-decoration: none;">Проверить настройки в панели Netlify →</a></p>
-        </div>
-      `;
+      window.netlifyIdentity.init();
     }
   </script>
 </body>
