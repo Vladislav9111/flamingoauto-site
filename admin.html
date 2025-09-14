@@ -115,9 +115,9 @@
                 console.log('Netlify Identity инициализирован');
                 
                 if (user) {
-                    // Пользователь уже авторизован - сразу переходим в CMS
+                    // Пользователь уже авторизован - показываем ссылку на CMS
                     showUserInfo(user);
-                    redirectToCMS();
+                    showCMSLink();
                 } else {
                     // Показываем кнопку входа
                     authSection.style.display = 'block';
@@ -127,7 +127,7 @@
             window.netlifyIdentity.on("login", user => {
                 console.log('Пользователь вошел:', user.email);
                 showUserInfo(user);
-                redirectToCMS();
+                showCMSLink();
             });
 
             window.netlifyIdentity.on("logout", () => {
@@ -151,14 +151,19 @@
             loading.style.display = 'block';
         }
 
-        // Переход в CMS
-        function redirectToCMS() {
+        // Показать ссылку на CMS
+        function showCMSLink() {
             showLoading();
             
             setTimeout(() => {
-                console.log('Переходим в CMS...');
-                window.location.href = '/admin/';
-            }, 2000);
+                userInfo.innerHTML = `
+                    <h3>✅ Авторизован</h3>
+                    <p>Email: <span>${userEmail.textContent}</span></p>
+                    <a href="/admin/" style="display: inline-block; background: #1976d2; color: white; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 1rem;">
+                        🚀 Открыть CMS
+                    </a>
+                `;
+            }, 1000);
         }
 
         // Обработчик кнопки входа
