@@ -5,73 +5,16 @@ backend:
 media_folder: "static/images"
 public_folder: "/static/images"
 
-publish_mode: simple
-locale: "ru"
-
 collections:
   - name: "blog"
-    label: "📝 Статьи блога"
-    label_singular: "Статья"
-    description: "Создание и управление статьями блога"
+    label: "Blog Posts"
     folder: "content/blog"
-    extension: "md"
-    format: "yaml-frontmatter"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
-    sortable_fields: ["date", "title"]
-    summary: "{{title}} - {{date}}"
-    
     fields:
-      - label: "Заголовок"
-        name: "title"
-        widget: "string"
-        required: true
-        hint: "Заголовок статьи"
-
-      - label: "Дата публикации"
-        name: "date"
-        widget: "datetime"
-        default: "{{now}}"
-        time_format: false
-        format: "YYYY-MM-DDTHH:mm:ss.sssZ"
-        hint: "Дата и время публикации"
-
-      - label: "Автор"
-        name: "author"
-        widget: "string"
-        default: "Flamingo Auto"
-        hint: "Автор статьи"
-
-      - label: "Язык"
-        name: "lang"
-        widget: "select"
-        options: 
-          - { label: "Русский", value: "ru" }
-          - { label: "Эстонский", value: "et" }
-          - { label: "Английский", value: "en" }
-        default: "ru"
-        hint: "Язык статьи для правильного отображения"
-
-      - label: "Краткое описание"
-        name: "excerpt"
-        widget: "text"
-        required: false
-        hint: "Краткое описание для превью (необязательно)"
-
-      - label: "Изображение"
-        name: "image"
-        widget: "image"
-        required: false
-        hint: "Главное изображение статьи (необязательно)"
-
-      - label: "Опубликовано"
-        name: "published"
-        widget: "boolean"
-        default: true
-        hint: "Опубликовать статью на сайте"
-
-      - label: "Содержание"
-        name: "body"
-        widget: "markdown"
-        required: true
-        hint: "Основной текст статьи"
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Date", name: "date", widget: "datetime"}
+      - {label: "Author", name: "author", widget: "string", default: "Flamingo Auto"}
+      - {label: "Language", name: "lang", widget: "select", options: ["ru", "et", "en"], default: "ru"}
+      - {label: "Published", name: "published", widget: "boolean", default: true}
+      - {label: "Body", name: "body", widget: "markdown"}
