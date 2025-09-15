@@ -8,6 +8,11 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    // Проверяем наличие GitHub токена
+    if (!process.env.GITHUB_TOKEN) {
+      throw new Error('GitHub token not configured');
+    }
+
     // Получаем список файлов из папки content/posts (только JSON)
     const response = await fetch(`https://api.github.com/repos/Vladislav9111/flamingoauto-site/contents/content/posts`, {
       headers: {
@@ -17,7 +22,22 @@ exports.handler = async (event, context) => {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch posts from GitHub');
+      const errorText = await response.text();
+      console.error('GitHub API error:', response.status, errorText);
+      
+      if (response.status === 404) {
+        // Папка не существует, возвращаем пустой массив
+        return {
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          },
+          body: JSON.stringify([])
+        };
+      }
+      
+      throw new Error(`GitHub API error: ${response.status} ${errorText}`);
     }
 
     const files = await response.json();
