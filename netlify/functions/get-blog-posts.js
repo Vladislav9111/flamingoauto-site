@@ -8,7 +8,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Получаем список файлов из папки content/posts
+    // Получаем список файлов из папки content/posts (только JSON)
     const response = await fetch(`https://api.github.com/repos/Vladislav9111/flamingoauto-site/contents/content/posts`, {
       headers: {
         'Authorization': `token ${process.env.GITHUB_TOKEN}`,
@@ -23,7 +23,7 @@ exports.handler = async (event, context) => {
     const files = await response.json();
     const posts = [];
 
-    // Получаем содержимое каждого файла
+    // Получаем содержимое каждого JSON файла
     for (const file of files) {
       if (file.name.endsWith('.json')) {
         try {
