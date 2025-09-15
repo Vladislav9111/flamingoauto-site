@@ -59,6 +59,33 @@
             opacity: 0.9;
             transform: translateY(-1px);
         }
+        
+        /* Posts management */
+        .post-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .post-item h3 {
+            margin: 0 0 0.5rem 0;
+            color: #495057;
+        }
+        .post-meta {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-bottom: 0.75rem;
+        }
+        .post-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .post-actions .btn {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 <body>
@@ -113,11 +140,32 @@
 
             <div class="admin-actions">
                 <button id="save-post" class="btn">💾 Сохранить запись</button>
+                <button id="update-post" class="btn" style="display:none;background:#28a745;color:white;">✏️ Обновить запись</button>
+                <button id="cancel-edit" class="btn" style="display:none;background:#6c757d;color:white;">❌ Отменить</button>
+                <button id="manage-posts" class="btn" style="background:#17a2b8;color:white;">📋 Управление постами</button>
                 <button id="logout-btn" class="btn" style="background:#fff;color:#dc3545;border:1px solid #eee;">🚪 Выйти</button>
                 <a href="blog.html" class="btn" style="background:#fff;color:var(--primary-color);border:1px solid #eee;">📖 Блог</a>
             </div>
 
             <div id="admin-feedback" class="muted" style="margin-top:0.75rem;"></div>
+        </div>
+
+        <!-- Управление постами -->
+        <div id="posts-management" style="display:none; margin-top:1.25rem;">
+            <div style="background: #e7f3ff; color: #004085; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                📋 Управление опубликованными постами
+            </div>
+
+            <div class="admin-actions" style="margin-bottom: 1rem;">
+                <button id="back-to-editor" class="btn">← Назад к редактору</button>
+                <button id="refresh-posts" class="btn" style="background:#28a745;color:white;">🔄 Обновить список</button>
+            </div>
+
+            <div id="posts-list">
+                <div id="posts-loading" style="text-align:center;padding:2rem;color:#666;">
+                    ⏳ Загружаем посты...
+                </div>
+            </div>
         </div>
     </main>
 
@@ -161,9 +209,19 @@
             const loginInput = document.getElementById('admin-password');
             const loginError = document.getElementById('login-error');
             const saveBtn = document.getElementById('save-post');
+            const updateBtn = document.getElementById('update-post');
+            const cancelEditBtn = document.getElementById('cancel-edit');
+            const managePostsBtn = document.getElementById('manage-posts');
+            const backToEditorBtn = document.getElementById('back-to-editor');
+            const refreshPostsBtn = document.getElementById('refresh-posts');
             const logoutBtn = document.getElementById('logout-btn');
             const feedback = document.getElementById('admin-feedback');
             const photosInput = document.getElementById('post-photos');
+            const postsManagement = document.getElementById('posts-management');
+            const postsList = document.getElementById('posts-list');
+            
+            // Current editing state
+            let currentEditingPost = null;
 
         // Check if already logged in
         if (sessionStorage.getItem('flamingo_admin_authed') === '1') {
@@ -214,6 +272,83 @@
         logoutBtn.addEventListener('click', () => {
             sessionStorage.removeItem('flamingo_admin_authed');
             showLogin();
+        });
+
+        // Show posts management
+        managePostsBtn.addEventListener('click', () => {
+            editorArea.style.display = 'none';
+            postsManagement.style.display = 'block';
+            loadPosts();
+        });
+
+        // Back to editor
+        backToEditorBtn.addEventListener('click', () => {
+            postsManagement.style.display = 'none';
+            editorArea.style.display = 'block';
+            cancelEdit();
+        });
+
+        // Refresh posts
+        refreshPostsBtn.addEventListener('click', () => {
+            loadPosts();
+        });
+
+        // Cancel edit
+        cancelEditBtn.addEventListener('click', () => {
+            cancelEdit();
+        });
+
+        // Update post handler
+        updateBtn.addEventListener('click', async () => {
+            if (!currentEditingPost) return;
+
+            const title = document.getElementById('post-title').value.trim();
+            const excerpt = document.getElementById('post-excerpt').value.trim();
+            const content = document.getElementById('post-content').value.trim();
+            const locale = document.getElementById('post-locale').value;
+
+            if (!title || !excerpt) {
+                feedback.textContent = 'Укажите заголовок и короткое описание.';
+                return;
+            }
+
+            feedback.textContent = '⏳ Обновляем запись...';
+            updateBtn.disabled = true;
+
+            try {
+                // Process photos
+                const files = photosInput ? Array.from(photosInput.files).slice(0, 6) : [];
+                const photosData = [];
+                for (const file of files) {
+                    try {
+                        photosData.push(await readFileAsDataURL(file));
+                    } catch (e) {
+                        console.warn('Failed to read photo', e);
+                    }
+                }
+
+                // Update post object
+                const updatedPost = {
+                    ...currentEditingPost,
+                    title,
+                    excerpt,
+                    content,
+                    locale,
+                    photos: files.length > 0 ? photosData : currentEditingPost.photos
+                };
+
+                // Update via Netlify function
+                await updatePost(updatedPost, currentEditingPost.filename, currentEditingPost.sha);
+
+                feedback.textContent = '✅ Запись успешно обновлена!';
+                cancelEdit();
+                
+            } catch (error) {
+                console.error('Ошибка обновления:', error);
+                feedback.textContent = `❌ Ошибка обновления: ${error.message}`;
+            } finally {
+                updateBtn.disabled = false;
+            }
         });
 
         // Save post handler
@@ -293,6 +428,159 @@
             }
 
             return response.json();
+        }
+
+        // Load posts from GitHub
+        async function loadPosts() {
+            const loadingDiv = document.getElementById('posts-loading');
+            loadingDiv.style.display = 'block';
+            loadingDiv.textContent = '⏳ Загружаем посты...';
+
+            try {
+                const response = await fetch('/.netlify/functions/get-blog-posts');
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки постов');
+                }
+
+                const posts = await response.json();
+                displayPosts(posts);
+                
+            } catch (error) {
+                console.error('Ошибка загрузки постов:', error);
+                loadingDiv.textContent = `❌ Ошибка загрузки: ${error.message}`;
+            }
+        }
+
+        // Display posts list
+        function displayPosts(posts) {
+            const loadingDiv = document.getElementById('posts-loading');
+            loadingDiv.style.display = 'none';
+
+            if (posts.length === 0) {
+                postsList.innerHTML = '<div style="text-align:center;padding:2rem;color:#666;">📝 Постов пока нет</div>';
+                return;
+            }
+
+            const postsHtml = posts.map(post => `
+                <div class="post-item">
+                    <h3>${post.title}</h3>
+                    <div class="post-meta">
+                        📅 ${new Date(post.created).toLocaleDateString('ru-RU')}
+                        ${post.updated ? `• ✏️ ${new Date(post.updated).toLocaleDateString('ru-RU')}` : ''}
+                        • 🌐 ${post.locale === 'all' ? 'ET + RU' : post.locale.toUpperCase()}
+                        ${post.photos && post.photos.length > 0 ? `• 📷 ${post.photos.length} фото` : ''}
+                    </div>
+                    <p style="margin:0.5rem 0;color:#6c757d;">${post.excerpt}</p>
+                    <div class="post-actions">
+                        <button class="btn" onclick="editPost('${post.filename}')" style="background:#ffc107;color:#212529;">✏️ Редактировать</button>
+                        <button class="btn" onclick="deletePost('${post.filename}', '${post.sha}', '${post.title.replace(/'/g, "\\'")}'))" style="background:#dc3545;color:white;">🗑️ Удалить</button>
+                    </div>
+                </div>
+            `).join('');
+
+            postsList.innerHTML = postsHtml;
+        }
+
+        // Edit post
+        window.editPost = async function(filename) {
+            try {
+                const response = await fetch('/.netlify/functions/get-blog-posts');
+                const posts = await response.json();
+                const post = posts.find(p => p.filename === filename);
+                
+                if (!post) {
+                    alert('Пост не найден');
+                    return;
+                }
+
+                // Fill form with post data
+                document.getElementById('post-title').value = post.title;
+                document.getElementById('post-excerpt').value = post.excerpt;
+                document.getElementById('post-content').value = post.content;
+                document.getElementById('post-locale').value = post.locale;
+
+                // Set editing state
+                currentEditingPost = post;
+                
+                // Switch UI to edit mode
+                saveBtn.style.display = 'none';
+                updateBtn.style.display = 'inline-block';
+                cancelEditBtn.style.display = 'inline-block';
+                
+                // Go back to editor
+                postsManagement.style.display = 'none';
+                editorArea.style.display = 'block';
+                
+                feedback.textContent = `✏️ Редактирование: ${post.title}`;
+                
+            } catch (error) {
+                alert(`Ошибка загрузки поста: ${error.message}`);
+            }
+        };
+
+        // Update post
+        async function updatePost(post, filename, sha) {
+            const response = await fetch('/.netlify/functions/update-blog-post', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ post, filename, sha })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Ошибка обновления');
+            }
+
+            return response.json();
+        }
+
+        // Delete post
+        window.deletePost = async function(filename, sha, title) {
+            if (!confirm(`Вы уверены, что хотите удалить пост "${title}"?\n\nЭто действие нельзя отменить!`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/.netlify/functions/delete-blog-post', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ filename, sha, title })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Ошибка удаления');
+                }
+
+                alert('✅ Пост успешно удален!');
+                loadPosts(); // Refresh list
+                
+            } catch (error) {
+                alert(`❌ Ошибка удаления: ${error.message}`);
+            }
+        };
+
+        // Cancel edit mode
+        function cancelEdit() {
+            currentEditingPost = null;
+            
+            // Reset form
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-excerpt').value = '';
+            document.getElementById('post-content').value = '';
+            document.getElementById('post-locale').value = 'ru';
+            if (photosInput) photosInput.value = '';
+            
+            // Reset UI
+            saveBtn.style.display = 'inline-block';
+            updateBtn.style.display = 'none';
+            cancelEditBtn.style.display = 'none';
+            
+            feedback.textContent = '';
         }
 
         // Helper: read file as data URL
