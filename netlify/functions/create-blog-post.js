@@ -35,7 +35,7 @@ exports.handler = async (event, context) => {
         message: `Add blog post: ${post.title}`,
         content: encodedContent,
         committer: {
-          name: 'Flamingo Auto Admin',
+          name: 'Flamingo Auto',
           email: 'admin@flamingoauto.eu'
         }
       })
