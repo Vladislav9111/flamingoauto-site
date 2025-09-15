@@ -18,8 +18,11 @@ exports.handler = async (event, context) => {
       };
     }
 
+    // Определяем папку по расширению файла
+    const folder = filename.endsWith('.json') ? 'content/posts' : 'content/blog';
+    
     // GitHub API запрос для удаления файла
-    const githubResponse = await fetch(`https://api.github.com/repos/Vladislav9111/flamingoauto-site/contents/content/posts/${filename}`, {
+    const githubResponse = await fetch(`https://api.github.com/repos/Vladislav9111/flamingoauto-site/contents/${folder}/${filename}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `token ${process.env.GITHUB_TOKEN}`,
