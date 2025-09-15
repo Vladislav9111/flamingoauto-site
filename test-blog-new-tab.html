@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Тест блога - новые вкладки</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .test-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #f8f9fa;
+        }
+        .test-info {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-info">
+            <h2>🧪 Тестирование функции открытия постов в новых вкладках</h2>
+            <p><strong>Что тестируем:</strong></p>
+            <ul>
+                <li>✅ Клик по заголовку поста открывает полный текст в новой вкладке</li>
+                <li>✅ Кнопка "Читать полностью" открывает пост в новой вкладке</li>
+                <li>✅ Клик по изображению открывает его в новой вкладке</li>
+                <li>✅ Красивое оформление новых страниц</li>
+            </ul>
+        </div>
+
+        <h1>Блог Flamingo Auto</h1>
+        <p>Полезные материалы о продаже автомобилей, советы и истории.</p>
+
+        <div id="posts-container" style="margin-top:2rem;"></div>
+
+        <div id="no-posts" style="background:#fff;padding:1.25rem;border-radius:8px;margin-top:1rem; display:none;">
+            <h2>Пока нет публикаций</h2>
+            <p>Добавьте первую запись через панель администратора.</p>
+        </div>
+    </div>
+
+    <script src="blog-github.js"></script>
+    <script>
+        // Дополнительное логирование для тестирования
+        console.log('🧪 Тестовая страница загружена');
+        
+        // Переопределяем функцию для дополнительного логирования
+        const originalOpenFullPost = window.openFullPost;
+        window.openFullPost = function(postIndex) {
+            console.log('🔗 Открываем пост в новой вкладке:', postIndex);
+            return originalOpenFullPost(postIndex);
+        };
+
+        const originalOpenImageInNewTab = window.openImageInNewTab;
+        window.openImageInNewTab = function(imageSrc) {
+            console.log('🖼️ Открываем изображение в новой вкладке:', imageSrc);
+            return originalOpenImageInNewTab(imageSrc);
+        };
+    </script>
+</body>
+</html>

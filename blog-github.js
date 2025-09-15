@@ -179,15 +179,18 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
         const hasMore = (post.content || '').length > 200;
         
         return `
-            <article style="background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:1rem;">
-                <h2 style="margin:0 0 0.5rem 0;color:#333;cursor:pointer;transition:color 0.3s;" 
+            <article style="background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:1rem;transition:transform 0.2s;" 
+                     onmouseover="this.style.transform='translateY(-2px)'" 
+                     onmouseout="this.style.transform='translateY(0)'">
+                <h2 style="margin:0 0 0.5rem 0;color:#333;cursor:pointer;transition:all 0.3s;text-decoration:underline;text-decoration-color:transparent;" 
                     onclick="openFullPost(${index})" 
-                    onmouseover="this.style.color='#007bff'" 
-                    onmouseout="this.style.color='#333'">
-                    ${escapeHtml(post.title)}
+                    onmouseover="this.style.color='#007bff';this.style.textDecorationColor='#007bff'" 
+                    onmouseout="this.style.color='#333';this.style.textDecorationColor='transparent'"
+                    title="Нажмите, чтобы открыть полный текст в новой вкладке">
+                    ${escapeHtml(post.title)} 🔗
                 </h2>
                 <div style="color:#666;font-size:0.9rem;margin-bottom:1rem;">
-                    ${new Date(post.created || post.date).toLocaleDateString('ru-RU')} • ${escapeHtml(post.author || 'Flamingo Auto')}
+                    📅 ${new Date(post.created || post.date).toLocaleDateString('ru-RU')} • ✍️ ${escapeHtml(post.author || 'Flamingo Auto')}
                 </div>
                 <div style="line-height:1.6;color:#444;margin-bottom:1rem;">
                     ${escapeHtml(post.excerpt || '')}
@@ -196,7 +199,7 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
                 <div style="line-height:1.6;color:#444;">
                     ${sanitizeHtml(shortContent)}${hasMore ? '...' : ''}
                 </div>
-                ${hasMore ? `<button onclick="openFullPost(${index})" style="background:#007bff;color:white;border:none;padding:0.5rem 1rem;border-radius:4px;cursor:pointer;margin-top:1rem;">Читать полностью</button>` : ''}
+                ${hasMore ? `<button onclick="openFullPost(${index})" style="background:#007bff;color:white;border:none;padding:0.75rem 1.5rem;border-radius:6px;cursor:pointer;margin-top:1rem;font-weight:500;transition:background 0.3s;" onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007bff'">📖 Читать полностью в новой вкладке</button>` : ''}
             </article>
         `;
     }).join('');
@@ -209,9 +212,10 @@ function postsToImages(photos, postIndex) {
     return photosToShow.map((photo, photoIndex) => `
         <img src="${photo.dataUrl || photo}" alt="Фото к статье" 
              style="width:80px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #ddd;cursor:pointer;transition:transform 0.3s;"
-             onclick="openImageModal('${photo.dataUrl || photo}', ${postIndex}, ${photoIndex})"
+             onclick="openImageInNewTab('${photo.dataUrl || photo}')"
              onmouseover="this.style.transform='scale(1.05)'"
-             onmouseout="this.style.transform='scale(1)'">
+             onmouseout="this.style.transform='scale(1)'"
+             title="Нажмите, чтобы открыть изображение в новой вкладке">
     `).join('');
 }
 
@@ -274,7 +278,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 // Глобальная переменная для хранения постов
 let globalPosts = [];
 
-// Функция для открытия полного поста
+// Функция для открытия полного поста в новой вкладке
 window.openFullPost = function(postIndex) {
     const post = globalPosts[postIndex];
     if (!post) return;
@@ -282,36 +286,117 @@ window.openFullPost = function(postIndex) {
     let photosHTML = '';
     if (post.photos && post.photos.length > 0) {
         photosHTML = `
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:1rem 0;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0;">
                 ${post.photos.map((photo, index) => `
                     <img src="${photo.dataUrl || photo}" alt="Фото ${index + 1}" 
-                         style="width:100%;height:200px;object-fit:cover;border-radius:8px;cursor:pointer;"
-                         onclick="openImageModal('${photo.dataUrl || photo}', ${postIndex}, ${index})">
+                         style="width:100%;height:200px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">
                 `).join('')}
             </div>
         `;
     }
     
-    const modalHTML = `
-        <div id="post-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;display:flex;align-items:center;justify-content:center;padding:2rem;" onclick="closePostModal()">
-            <div style="background:white;max-width:800px;max-height:90vh;overflow-y:auto;border-radius:12px;position:relative;" onclick="event.stopPropagation()">
-                <button onclick="closePostModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:2rem;cursor:pointer;z-index:1001;">&times;</button>
-                <div style="padding:2rem;">
-                    <h1 style="margin:0 0 1rem 0;color:#333;">${escapeHtml(post.title)}</h1>
-                    <div style="color:#666;font-size:0.9rem;margin-bottom:2rem;border-bottom:1px solid #eee;padding-bottom:1rem;">
-                        ${new Date(post.created || post.date).toLocaleDateString('ru-RU')} • ${escapeHtml(post.author || 'Flamingo Auto')}
-                    </div>
-                    ${photosHTML}
-                    <div style="line-height:1.8;color:#444;font-size:1.1rem;">
-                        ${sanitizeHtml(post.content || '')}
+    // Создаем HTML для новой страницы
+    const fullPostHTML = `
+        <!DOCTYPE html>
+        <html lang="ru">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <title>${escapeHtml(post.title)} — Flamingo Auto Blog</title>
+            <meta name="description" content="${escapeHtml(post.excerpt || '')}">
+            <link rel="icon" type="image/png" href="/favicon.png">
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                    font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    background: #f8f9fa;
+                    padding: 2rem 1rem;
+                }
+                .container {
+                    max-width: 800px;
+                    margin: 0 auto;
+                    background: white;
+                    padding: 3rem;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                }
+                .header {
+                    border-bottom: 2px solid #007bff;
+                    padding-bottom: 1rem;
+                    margin-bottom: 2rem;
+                }
+                .back-link {
+                    display: inline-block;
+                    color: #007bff;
+                    text-decoration: none;
+                    margin-bottom: 1rem;
+                    font-weight: 500;
+                    transition: color 0.3s;
+                }
+                .back-link:hover {
+                    color: #0056b3;
+                }
+                h1 {
+                    color: #333;
+                    font-size: 2.5rem;
+                    font-weight: 600;
+                    margin-bottom: 1rem;
+                    line-height: 1.2;
+                }
+                .meta {
+                    color: #666;
+                    font-size: 1rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                }
+                .content {
+                    font-size: 1.1rem;
+                    line-height: 1.8;
+                    color: #444;
+                }
+                .content p {
+                    margin-bottom: 1.5rem;
+                }
+                img {
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 8px;
+                }
+                @media (max-width: 768px) {
+                    body { padding: 1rem 0.5rem; }
+                    .container { padding: 2rem 1.5rem; }
+                    h1 { font-size: 2rem; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <a href="javascript:window.close()" class="back-link">← Закрыть</a>
+                    <h1>${escapeHtml(post.title)}</h1>
+                    <div class="meta">
+                        <span>📅 ${new Date(post.created || post.date).toLocaleDateString('ru-RU')}</span>
+                        <span>✍️ ${escapeHtml(post.author || 'Flamingo Auto')}</span>
                     </div>
                 </div>
+                
+                ${photosHTML}
+                
+                <div class="content">
+                    ${sanitizeHtml(post.content || '')}
+                </div>
             </div>
-        </div>
+        </body>
+        </html>
     `;
     
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    document.body.style.overflow = 'hidden';
+    // Открываем новую вкладку с полным постом
+    const newWindow = window.open('', '_blank');
+    newWindow.document.write(fullPostHTML);
+    newWindow.document.close();
 };
 
 // Функция для закрытия модального окна поста
@@ -323,7 +408,60 @@ window.closePostModal = function() {
     }
 };
 
-// Функция для открытия изображения в полном размере
+// Функция для открытия изображения в новой вкладке
+window.openImageInNewTab = function(imageSrc) {
+    const imageHTML = `
+        <!DOCTYPE html>
+        <html lang="ru">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <title>Изображение — Flamingo Auto</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                    background: #000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
+                    padding: 2rem;
+                }
+                img {
+                    max-width: 100%;
+                    max-height: 100vh;
+                    object-fit: contain;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+                }
+                .close-btn {
+                    position: fixed;
+                    top: 2rem;
+                    right: 2rem;
+                    background: rgba(255,255,255,0.9);
+                    border: none;
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    font-size: 1.5rem;
+                    cursor: pointer;
+                    z-index: 1000;
+                }
+            </style>
+        </head>
+        <body>
+            <button class="close-btn" onclick="window.close()" title="Закрыть">&times;</button>
+            <img src="${imageSrc}" alt="Изображение">
+        </body>
+        </html>
+    `;
+    
+    const newWindow = window.open('', '_blank');
+    newWindow.document.write(imageHTML);
+    newWindow.document.close();
+};
+
+// Функция для открытия изображения в полном размере (старая версия для совместимости)
 window.openImageModal = function(imageSrc, postIndex, imageIndex) {
     const post = globalPosts[postIndex];
     const currentIndex = imageIndex;
