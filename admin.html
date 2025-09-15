@@ -143,6 +143,7 @@
                 <button id="update-post" class="btn" style="display:none;background:#28a745;color:white;">✏️ Обновить запись</button>
                 <button id="cancel-edit" class="btn" style="display:none;background:#6c757d;color:white;">❌ Отменить</button>
                 <button id="manage-posts" class="btn" style="background:#17a2b8;color:white;">📋 Управление постами</button>
+                <button id="change-password-btn" class="btn" style="background:#ffc107;color:#212529;font-weight:600;">🔑 Сменить пароль</button>
                 <button id="logout-btn" class="btn" style="background:#fff;color:#dc3545;border:1px solid #eee;">🚪 Выйти</button>
                 <a href="blog.html" class="btn" style="background:#fff;color:var(--primary-color);border:1px solid #eee;">📖 Блог</a>
             </div>
@@ -167,12 +168,35 @@
                 </div>
             </div>
         </div>
+
+        <!-- Модальное окно смены пароля -->
+        <div id="change-password-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;">
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:2rem;border-radius:8px;max-width:400px;width:90%;">
+                <h3 style="margin:0 0 1rem 0;">🔑 Смена пароля</h3>
+                
+                <label for="current-password">Текущий пароль</label>
+                <input id="current-password" type="password" placeholder="Введите текущий пароль" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;margin-bottom:1rem;" />
+                
+                <label for="new-password">Новый пароль</label>
+                <input id="new-password" type="password" placeholder="Введите новый пароль" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;margin-bottom:1rem;" />
+                
+                <label for="confirm-password">Подтвердите новый пароль</label>
+                <input id="confirm-password" type="password" placeholder="Повторите новый пароль" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;margin-bottom:1rem;" />
+                
+                <div id="password-error" class="error-message" style="display:none;margin-bottom:1rem;"></div>
+                
+                <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+                    <button id="cancel-password-change" class="btn" style="background:#6c757d;color:white;">Отмена</button>
+                    <button id="confirm-password-change" class="btn" style="background:#28a745;color:white;">Сохранить</button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script type="module" src="script.js"></script>
     <script type="module">
-        // Admin password
-        const ADMIN_PASSWORD = 'flamingo2024';
+        // Admin password - will be loaded from config
+        let ADMIN_PASSWORD = 'flamingo2024'; // fallback
         
         // GitHub token will be loaded from Netlify function
         let GITHUB_TOKEN = null;
@@ -185,6 +209,7 @@
                 if (response.ok) {
                     const config = await response.json();
                     GITHUB_TOKEN = config.GITHUB_TOKEN;
+                    // Пароль остается локальным для безопасности
                     console.log('✅ Config loaded from Netlify');
                     return true;
                 } else {
@@ -220,6 +245,16 @@
             const postsManagement = document.getElementById('posts-management');
             const postsList = document.getElementById('posts-list');
             
+            // Password change elements
+            const changePasswordBtn = document.getElementById('change-password-btn');
+            const changePasswordModal = document.getElementById('change-password-modal');
+            const cancelPasswordChange = document.getElementById('cancel-password-change');
+            const confirmPasswordChange = document.getElementById('confirm-password-change');
+            const currentPasswordInput = document.getElementById('current-password');
+            const newPasswordInput = document.getElementById('new-password');
+            const confirmPasswordInput = document.getElementById('confirm-password');
+            const passwordError = document.getElementById('password-error');
+            
             // Current editing state
             let currentEditingPost = null;
 
@@ -243,21 +278,16 @@
 
         // Login button handler
         loginBtn.addEventListener('click', () => {
-            console.log('🔄 Кнопка входа нажата');
-            console.log('Введённый пароль:', loginInput.value);
-            console.log('Ожидаемый пароль:', ADMIN_PASSWORD);
-            console.log('Пароли совпадают?', loginInput.value === ADMIN_PASSWORD);
-            
             loginError.style.display = 'none';
             
             if (loginInput.value === ADMIN_PASSWORD) {
-                console.log('✅ Пароль верный, авторизуем');
                 sessionStorage.setItem('flamingo_admin_authed', '1');
                 showEditor();
             } else {
-                console.log('❌ Пароль неверный');
-                loginError.textContent = `Неверный пароль. Ожидается: ${ADMIN_PASSWORD}`;
-                loginError.style.display = 'block';
+                // Убираем подсказку при неправильном пароле - просто очищаем поле
+                loginInput.value = '';
+                loginInput.focus();
+                // Никаких сообщений об ошибке не показываем
             }
         });
 
@@ -609,6 +639,109 @@
                 reader.readAsDataURL(file);
             });
         }
+
+        // Password change handlers
+        changePasswordBtn.addEventListener('click', () => {
+            changePasswordModal.style.display = 'block';
+            currentPasswordInput.value = '';
+            newPasswordInput.value = '';
+            confirmPasswordInput.value = '';
+            passwordError.style.display = 'none';
+        });
+
+        cancelPasswordChange.addEventListener('click', () => {
+            changePasswordModal.style.display = 'none';
+        });
+
+        confirmPasswordChange.addEventListener('click', async () => {
+            const currentPassword = currentPasswordInput.value.trim();
+            const newPassword = newPasswordInput.value.trim();
+            const confirmPassword = confirmPasswordInput.value.trim();
+
+            passwordError.style.display = 'none';
+
+            // Validate inputs
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                passwordError.textContent = 'Заполните все поля';
+                passwordError.style.display = 'block';
+                return;
+            }
+
+            if (currentPassword !== ADMIN_PASSWORD) {
+                passwordError.textContent = 'Неверный текущий пароль';
+                passwordError.style.display = 'block';
+                currentPasswordInput.value = '';
+                currentPasswordInput.focus();
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                passwordError.textContent = 'Новый пароль должен содержать минимум 6 символов';
+                passwordError.style.display = 'block';
+                newPasswordInput.focus();
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                passwordError.textContent = 'Пароли не совпадают';
+                passwordError.style.display = 'block';
+                confirmPasswordInput.value = '';
+                confirmPasswordInput.focus();
+                return;
+            }
+
+            try {
+                confirmPasswordChange.disabled = true;
+                confirmPasswordChange.textContent = 'Сохраняем...';
+
+                // Отправляем запрос на смену пароля через Netlify функцию
+                const response = await fetch('/.netlify/functions/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        currentPassword: currentPassword,
+                        newPassword: newPassword
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Ошибка при смене пароля');
+                }
+
+                // Показываем сообщение об успехе
+                alert(`✅ ${result.message}\n\n${result.note || ''}`);
+                
+                changePasswordModal.style.display = 'none';
+                
+                // Обновляем локальный пароль для текущей сессии
+                ADMIN_PASSWORD = newPassword;
+                
+            } catch (error) {
+                passwordError.textContent = error.message;
+                passwordError.style.display = 'block';
+            } finally {
+                confirmPasswordChange.disabled = false;
+                confirmPasswordChange.textContent = 'Сохранить';
+            }
+        });
+
+        // Close modal on outside click
+        changePasswordModal.addEventListener('click', (e) => {
+            if (e.target === changePasswordModal) {
+                changePasswordModal.style.display = 'none';
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && changePasswordModal.style.display === 'block') {
+                changePasswordModal.style.display = 'none';
+            }
+        });
 
         }); // End DOMContentLoaded
     </script>
