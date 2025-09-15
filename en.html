@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flamingo Auto - Autode müük</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: #ff6b6b;
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        .lang-switch {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .lang-switch a {
+            padding: 0.25rem 0.5rem;
+            border: 1px solid white;
+            border-radius: 3px;
+            text-decoration: none;
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .lang-switch a.active {
+            background: white;
+            color: #ff6b6b;
+        }
+        
+        main {
+            margin-top: 80px;
+            padding: 2rem 0;
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+            margin-bottom: 3rem;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #ff6b6b;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .feature {
+            text-align: center;
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .feature h3 {
+            color: #ff6b6b;
+            margin-bottom: 1rem;
+        }
+        
+        .contact-section {
+            background: #f8f9fa;
+            padding: 4rem 0;
+            margin: 3rem 0;
+        }
+        
+        .contact-form {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .submit-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        
+        .submit-btn:hover {
+            background: #ff5252;
+        }
+        
+        .success-message {
+            background: #4caf50;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .error-message {
+            background: #f44336;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .blog-section {
+            margin: 3rem 0;
+        }
+        
+        .blog-section h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #ff6b6b;
+        }
+        
+        .blog-posts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .blog-post {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+        
+        .blog-post:hover {
+            transform: translateY(-5px);
+        }
+        
+        .blog-post-content {
+            padding: 1.5rem;
+        }
+        
+        .blog-post h3 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .blog-post-meta {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">🦩 Flamingo Auto</div>
+            <ul class="nav-links">
+                <li><a href="#home">Avaleht</a></li>
+                <li><a href="#services">Teenused</a></li>
+                <li><a href="/blog.html">Blogi</a></li>
+                <li><a href="#contact">Kontakt</a></li>
+            </ul>
+            <div class="lang-switch">
+                <a href="/">RU</a>
+                <a href="/en.html" class="active">ET</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero" id="home">
+            <div class="container">
+                <h1>Müü oma auto kiiresti ja õiglase hinnaga</h1>
+                <p>Ilma liigse paberitööta — vormistame dokumendid ja maksame kohe</p>
+                <a href="#contact" class="cta-button">Saada päring</a>
+            </div>
+        </section>
+
+        <section class="container" id="services">
+            <div class="features">
+                <div class="feature">
+                    <h3>🚗 Kõik autod</h3>
+                    <p>Ostame autosid üle Eesti — sõltumata margist, mudelist või seisukorrast</p>
+                </div>
+                <div class="feature">
+                    <h3>⚡ Kiiresti</h3>
+                    <p>Anname ausa hinnapakkumise ühe tööpäeva jooksul</p>
+                </div>
+                <div class="feature">
+                    <h3>💰 Õiglane hind</h3>
+                    <p>Aus hinnang ilma peidetud tasudeta</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="contact-section" id="contact">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #ff6b6b;">Saada auto hindamise taotlus</h2>
+                <div class="contact-form">
+                    <div class="success-message" id="success-message">
+                        Teie taotlus on edukalt saadetud! Võtame teiega ühendust ühe tööpäeva jooksul.
+                    </div>
+                    <div class="error-message" id="error-message">
+                        Taotluse saatmisel tekkis viga. Palun proovige uuesti.
+                    </div>
+                    
+                    <form id="contact-form" name="contact-et" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+                        <input type="hidden" name="form-name" value="contact-et">
+                        <p style="display: none;">
+                            <label>Don't fill this out if you're human: <input name="bot-field"></label>
+                        </p>
+                        
+                        <h3 style="margin-bottom: 1rem; color: #333;">Auto andmed</h3>
+                        
+                        <div class="form-group">
+                            <label for="regNumber">Registreerimisnumber *</label>
+                            <input type="text" id="regNumber" name="regNumber" required placeholder="123ABC">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="make">Mark</label>
+                                <input type="text" id="make" name="make" placeholder="BMW, Audi, Toyota...">
+                            </div>
+                            <div class="form-group">
+                                <label for="model">Mudel</label>
+                                <input type="text" id="model" name="model" placeholder="Corolla, A4, X5...">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="year">Väljalaskeaasta</label>
+                                <input type="number" id="year" name="year" min="1980" max="2024" placeholder="2020">
+                            </div>
+                            <div class="form-group">
+                                <label for="mileage">Läbisõit (km)</label>
+                                <input type="number" id="mileage" name="mileage" placeholder="150000">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="transmission">Käigukast</label>
+                                <select id="transmission" name="transmission">
+                                    <option value="">Vali</option>
+                                    <option value="manual">Mehaaniline</option>
+                                    <option value="automatic">Automaatne</option>
+                                    <option value="cvt">CVT</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="engine">Mootor</label>
+                                <input type="text" id="engine" name="engine" placeholder="1.6 bensiin, 2.0 diisel...">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="desiredPrice">Soovitud hind (€)</label>
+                            <input type="number" id="desiredPrice" name="desiredPrice" placeholder="15000">
+                        </div>
+                        
+                        <h3 style="margin: 2rem 0 1rem 0; color: #333;">Kontaktandmed</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Nimi *</label>
+                                <input type="text" id="name" name="name" required placeholder="Teie nimi">
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Telefon *</label>
+                                <input type="tel" id="phone" name="phone" required placeholder="+372 1234567">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">E-post *</label>
+                                <input type="email" id="email" name="email" required placeholder="teie@email.ee">
+                            </div>
+                            <div class="form-group">
+                                <label for="city">Linn *</label>
+                                <input type="text" id="city" name="city" required placeholder="Tallinn">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="additional">Lisainfo</label>
+                            <textarea id="additional" name="additional" placeholder="Auto iseärasused, kahjustused, lisavarustus..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn">Saada päring</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Flamingo Auto. Kõik õigused kaitstud.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Form handling
+        document.getElementById('contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.querySelector('.submit-btn');
+            const successMsg = document.getElementById('success-message');
+            const errorMsg = document.getElementById('error-message');
+            
+            // Hide previous messages
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+            
+            // Show loading state
+            submitBtn.textContent = 'Saatmine...';
+            submitBtn.disabled = true;
+            
+            // Submit form through Netlify
+            const formData = new FormData(this);
+            
+            fetch('/', {
+                method: 'POST',
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams(formData).toString()
+            })
+            .then(() => {
+                // Show success message
+                successMsg.style.display = 'block';
+                this.reset();
+                
+                // Scroll to message
+                successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            })
+            .catch(() => {
+                // Show error message
+                errorMsg.style.display = 'block';
+                errorMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            })
+            .finally(() => {
+                // Restore button
+                submitBtn.textContent = 'Saada päring';
+                submitBtn.disabled = false;
+            });
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

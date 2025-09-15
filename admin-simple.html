@@ -98,9 +98,22 @@
 
     <script type="module" src="script.js"></script>
     <script type="module">
-        import { GITHUB_TOKEN } from './config.js';
+        // Безопасная загрузка конфигурации
+        let GITHUB_TOKEN = null;
+        let configLoaded = false;
         
-        // Simple admin password (change this!)
+        try {
+            const config = await import('./config.js');
+            GITHUB_TOKEN = config.GITHUB_TOKEN;
+            configLoaded = true;
+            console.log('✅ Конфигурация загружена');
+        } catch (error) {
+            console.error('❌ Ошибка загрузки config.js:', error);
+            const errorDiv = document.getElementById('config-error');
+            if (errorDiv) errorDiv.style.display = 'block';
+        }
+        
+        // Пароль админа (в реальном проекте должен быть на сервере)
         const ADMIN_PASSWORD = 'flamingo2024';
         
         // GitHub API configuration
