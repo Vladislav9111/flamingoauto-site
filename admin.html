@@ -461,7 +461,7 @@
                 return;
             }
 
-            const postsHtml = posts.map(post => `
+            const postsHtml = posts.map((post, index) => `
                 <div class="post-item">
                     <h3>${post.title}</h3>
                     <div class="post-meta">
@@ -472,17 +472,34 @@
                     </div>
                     <p style="margin:0.5rem 0;color:#6c757d;">${post.excerpt}</p>
                     <div class="post-actions">
-                        <button class="btn" onclick="editPost('${post.filename}')" style="background:#ffc107;color:#212529;">✏️ Редактировать</button>
-                        <button class="btn" onclick="deletePost('${post.filename}', '${post.sha}', '${post.title.replace(/'/g, "\\'")}'))" style="background:#dc3545;color:white;">🗑️ Удалить</button>
+                        <button class="btn edit-post-btn" data-filename="${post.filename}" style="background:#ffc107;color:#212529;">✏️ Редактировать</button>
+                        <button class="btn delete-post-btn" data-filename="${post.filename}" data-sha="${post.sha}" data-title="${post.title}" style="background:#dc3545;color:white;">🗑️ Удалить</button>
                     </div>
                 </div>
             `).join('');
 
             postsList.innerHTML = postsHtml;
+
+            // Add event listeners for edit and delete buttons
+            document.querySelectorAll('.edit-post-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const filename = btn.dataset.filename;
+                    editPost(filename);
+                });
+            });
+
+            document.querySelectorAll('.delete-post-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const filename = btn.dataset.filename;
+                    const sha = btn.dataset.sha;
+                    const title = btn.dataset.title;
+                    deletePost(filename, sha, title);
+                });
+            });
         }
 
         // Edit post
-        window.editPost = async function(filename) {
+        async function editPost(filename) {
             try {
                 const response = await fetch('/.netlify/functions/get-blog-posts');
                 const posts = await response.json();
@@ -516,7 +533,7 @@
             } catch (error) {
                 alert(`Ошибка загрузки поста: ${error.message}`);
             }
-        };
+        }
 
         // Update post
         async function updatePost(post, filename, sha) {
@@ -537,7 +554,7 @@
         }
 
         // Delete post
-        window.deletePost = async function(filename, sha, title) {
+        async function deletePost(filename, sha, title) {
             if (!confirm(`Вы уверены, что хотите удалить пост "${title}"?\n\nЭто действие нельзя отменить!`)) {
                 return;
             }
@@ -562,7 +579,7 @@
             } catch (error) {
                 alert(`❌ Ошибка удаления: ${error.message}`);
             }
-        };
+        }
 
         // Cancel edit mode
         function cancelEdit() {
