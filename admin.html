@@ -122,11 +122,12 @@
     </main>
 
     <script type="module" src="script.js"></script>
-    <script type="module">
-        import { GITHUB_TOKEN } from './config.js';
-        
+    <script>
         // Simple admin password (change this!)
         const ADMIN_PASSWORD = 'flamingo2024';
+        
+        // GitHub token (replace with your real token)
+        const GITHUB_TOKEN = 'ghp_Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8';
         
         // GitHub API configuration
         const GITHUB_CONFIG = {
@@ -135,16 +136,18 @@
             token: GITHUB_TOKEN
         };
 
-        // DOM elements
-        const loginArea = document.getElementById('login-area');
-        const editorArea = document.getElementById('editor-area');
-        const loginBtn = document.getElementById('login-btn');
-        const loginInput = document.getElementById('admin-password');
-        const loginError = document.getElementById('login-error');
-        const saveBtn = document.getElementById('save-post');
-        const logoutBtn = document.getElementById('logout-btn');
-        const feedback = document.getElementById('admin-feedback');
-        const photosInput = document.getElementById('post-photos');
+        // Wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const loginArea = document.getElementById('login-area');
+            const editorArea = document.getElementById('editor-area');
+            const loginBtn = document.getElementById('login-btn');
+            const loginInput = document.getElementById('admin-password');
+            const loginError = document.getElementById('login-error');
+            const saveBtn = document.getElementById('save-post');
+            const logoutBtn = document.getElementById('logout-btn');
+            const feedback = document.getElementById('admin-feedback');
+            const photosInput = document.getElementById('post-photos');
 
         // Check if already logged in
         if (sessionStorage.getItem('flamingo_admin_authed') === '1') {
@@ -295,6 +298,8 @@
                 reader.readAsDataURL(file);
             });
         }
+
+        }); // End DOMContentLoaded
     </script>
 </body>
 </html>
