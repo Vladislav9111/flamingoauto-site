@@ -7,14 +7,17 @@ const photoError = document.getElementById('photo-error');
 // Initialize language on page load
 document.addEventListener('DOMContentLoaded', function() {
     // Check multiple ways to determine if it's Russian
-    const isRussian = window.location.pathname.includes('ru') || 
-                     window.location.pathname.includes('/ru') ||
+    const isRussian = window.location.pathname.includes('ru.html') || 
+                     window.location.pathname.includes('/ru.html') ||
+                     window.location.pathname.endsWith('ru') ||
                      document.documentElement.lang === 'ru' ||
-                     document.querySelector('html[lang="ru"]') !== null;
+                     document.querySelector('html[lang="ru"]') !== null ||
+                     document.title.includes('Продайте авто');
     
     // Debug: log current language detection
     console.log('Current path:', window.location.pathname);
     console.log('HTML lang:', document.documentElement.lang);
+    console.log('Document title:', document.title);
     console.log('Is Russian:', isRussian);
     
     // Update button texts
@@ -39,7 +42,11 @@ function validatePhotos() {
     photoError.textContent = '';
     if (photoInput.files.length > 6) {
         // Check current page language for error message
-        const isRussian = window.location.pathname.includes('ru') || window.location.pathname.includes('/ru');
+        const isRussian = window.location.pathname.includes('ru.html') || 
+                         window.location.pathname.includes('/ru.html') ||
+                         window.location.pathname.endsWith('ru') ||
+                         document.documentElement.lang === 'ru' ||
+                         document.title.includes('Продайте авто');
         photoError.textContent = isRussian 
             ? 'Можно загрузить не более 6 фотографий.'
             : 'Saate üles laadida mitte rohkem kui 6 fotot.';
@@ -65,7 +72,11 @@ form.addEventListener('submit', async function(event) {
 
     if (isFormValid && arePhotosValid) {
         const submitButton = document.getElementById('submit-btn');
-        const isRussian = window.location.pathname.includes('ru') || window.location.pathname.includes('/ru');
+        const isRussian = window.location.pathname.includes('ru.html') || 
+                         window.location.pathname.includes('/ru.html') ||
+                         window.location.pathname.endsWith('ru') ||
+                         document.documentElement.lang === 'ru' ||
+                         document.title.includes('Продайте авто');
         
         submitButton.disabled = true;
         submitButton.textContent = isRussian ? 'Отправка...' : 'Saatmine...';
@@ -216,4 +227,25 @@ window.testTelegramFunction = async function() {
         console.error('❌ Network error:', error);
         alert('❌ Network error: ' + error.message);
     }
+};
+
+// Debug function for language detection
+window.debugLanguage = function() {
+    const isRussian = window.location.pathname.includes('ru.html') || 
+                     window.location.pathname.includes('/ru.html') ||
+                     window.location.pathname.endsWith('ru') ||
+                     document.documentElement.lang === 'ru' ||
+                     document.title.includes('Продайте авто');
+    
+    console.log('🔍 Language Debug Info:');
+    console.log('- Current path:', window.location.pathname);
+    console.log('- HTML lang:', document.documentElement.lang);
+    console.log('- Document title:', document.title);
+    console.log('- Includes ru.html:', window.location.pathname.includes('ru.html'));
+    console.log('- Includes /ru.html:', window.location.pathname.includes('/ru.html'));
+    console.log('- Ends with ru:', window.location.pathname.endsWith('ru'));
+    console.log('- Title includes Продайте авто:', document.title.includes('Продайте авто'));
+    console.log('- Final isRussian:', isRussian);
+    
+    alert(`Language detection: ${isRussian ? 'Russian' : 'Estonian'}`);
 };
