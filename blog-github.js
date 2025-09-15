@@ -163,20 +163,29 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
         return;
     }
 
-    const postsHTML = filteredPosts.map(post => {
+    const postsHTML = filteredPosts.map((post, index) => {
         let photosHTML = '';
         if (post.photos && post.photos.length > 0) {
             const photosToShow = post.photos.slice(0, 3);
             photosHTML = `
                 <div style="display:flex;gap:0.5rem;margin:1rem 0;flex-wrap:wrap;">
-                    ${postsToImages(post.photos)}
+                    ${postsToImages(post.photos, index)}
                     ${post.photos.length > 3 ? `<span style="color:#666;font-size:0.9rem;align-self:center;">+${post.photos.length - 3} фото</span>` : ''}
                 </div>
             `;
         }
+        
+        const shortContent = (post.content || '').substring(0, 200);
+        const hasMore = (post.content || '').length > 200;
+        
         return `
             <article style="background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:1rem;">
-                <h2 style="margin:0 0 0.5rem 0;color:#333;">${escapeHtml(post.title)}</h2>
+                <h2 style="margin:0 0 0.5rem 0;color:#333;cursor:pointer;transition:color 0.3s;" 
+                    onclick="openFullPost(${index})" 
+                    onmouseover="this.style.color='#007bff'" 
+                    onmouseout="this.style.color='#333'">
+                    ${escapeHtml(post.title)}
+                </h2>
                 <div style="color:#666;font-size:0.9rem;margin-bottom:1rem;">
                     ${new Date(post.created || post.date).toLocaleDateString('ru-RU')} • ${escapeHtml(post.author || 'Flamingo Auto')}
                 </div>
@@ -185,8 +194,9 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
                 </div>
                 ${photosHTML}
                 <div style="line-height:1.6;color:#444;">
-                    ${sanitizeHtml((post.content || '').substring(0, 200) + ((post.content || '').length > 200 ? '...' : ''))}
+                    ${sanitizeHtml(shortContent)}${hasMore ? '...' : ''}
                 </div>
+                ${hasMore ? `<button onclick="openFullPost(${index})" style="background:#007bff;color:white;border:none;padding:0.5rem 1rem;border-radius:4px;cursor:pointer;margin-top:1rem;">Читать полностью</button>` : ''}
             </article>
         `;
     }).join('');
@@ -194,11 +204,14 @@ async function renderBlogPosts(containerId = 'posts-container', locale = null) {
     container.innerHTML = postsHTML;
 }
 
-function postsToImages(photos) {
+function postsToImages(photos, postIndex) {
     const photosToShow = photos.slice(0, 3);
-    return photosToShow.map(photo => `
+    return photosToShow.map((photo, photoIndex) => `
         <img src="${photo.dataUrl || photo}" alt="Фото к статье" 
-             style="width:80px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #ddd;">
+             style="width:80px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #ddd;cursor:pointer;transition:transform 0.3s;"
+             onclick="openImageModal('${photo.dataUrl || photo}', ${postIndex}, ${photoIndex})"
+             onmouseover="this.style.transform='scale(1.05)'"
+             onmouseout="this.style.transform='scale(1)'">
     `).join('');
 }
 
@@ -258,6 +271,123 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 });
 
+// Глобальная переменная для хранения постов
+let globalPosts = [];
+
+// Функция для открытия полного поста
+window.openFullPost = function(postIndex) {
+    const post = globalPosts[postIndex];
+    if (!post) return;
+    
+    let photosHTML = '';
+    if (post.photos && post.photos.length > 0) {
+        photosHTML = `
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:1rem 0;">
+                ${post.photos.map((photo, index) => `
+                    <img src="${photo.dataUrl || photo}" alt="Фото ${index + 1}" 
+                         style="width:100%;height:200px;object-fit:cover;border-radius:8px;cursor:pointer;"
+                         onclick="openImageModal('${photo.dataUrl || photo}', ${postIndex}, ${index})">
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    const modalHTML = `
+        <div id="post-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;display:flex;align-items:center;justify-content:center;padding:2rem;" onclick="closePostModal()">
+            <div style="background:white;max-width:800px;max-height:90vh;overflow-y:auto;border-radius:12px;position:relative;" onclick="event.stopPropagation()">
+                <button onclick="closePostModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:2rem;cursor:pointer;z-index:1001;">&times;</button>
+                <div style="padding:2rem;">
+                    <h1 style="margin:0 0 1rem 0;color:#333;">${escapeHtml(post.title)}</h1>
+                    <div style="color:#666;font-size:0.9rem;margin-bottom:2rem;border-bottom:1px solid #eee;padding-bottom:1rem;">
+                        ${new Date(post.created || post.date).toLocaleDateString('ru-RU')} • ${escapeHtml(post.author || 'Flamingo Auto')}
+                    </div>
+                    ${photosHTML}
+                    <div style="line-height:1.8;color:#444;font-size:1.1rem;">
+                        ${sanitizeHtml(post.content || '')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.style.overflow = 'hidden';
+};
+
+// Функция для закрытия модального окна поста
+window.closePostModal = function() {
+    const modal = document.getElementById('post-modal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
+};
+
+// Функция для открытия изображения в полном размере
+window.openImageModal = function(imageSrc, postIndex, imageIndex) {
+    const post = globalPosts[postIndex];
+    const currentIndex = imageIndex;
+    const totalImages = post.photos.length;
+    
+    const modalHTML = `
+        <div id="image-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:1001;display:flex;align-items:center;justify-content:center;" onclick="closeImageModal()">
+            <button onclick="closeImageModal()" style="position:absolute;top:2rem;right:2rem;background:white;border:none;width:40px;height:40px;border-radius:50%;font-size:1.5rem;cursor:pointer;z-index:1002;">&times;</button>
+            
+            ${totalImages > 1 ? `
+                <button onclick="prevImage(${postIndex}, ${currentIndex})" style="position:absolute;left:2rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.8);border:none;width:50px;height:50px;border-radius:50%;font-size:1.5rem;cursor:pointer;z-index:1002;">‹</button>
+                <button onclick="nextImage(${postIndex}, ${currentIndex})" style="position:absolute;right:2rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.8);border:none;width:50px;height:50px;border-radius:50%;font-size:1.5rem;cursor:pointer;z-index:1002;">›</button>
+            ` : ''}
+            
+            <div style="text-align:center;max-width:90%;max-height:90%;" onclick="event.stopPropagation()">
+                <img id="modal-image" src="${imageSrc}" alt="Фото" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;">
+                ${totalImages > 1 ? `<div style="color:white;margin-top:1rem;font-size:1.1rem;">${currentIndex + 1} из ${totalImages}</div>` : ''}
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.style.overflow = 'hidden';
+};
+
+// Функция для закрытия модального окна изображения
+window.closeImageModal = function() {
+    const modal = document.getElementById('image-modal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
+};
+
+// Навигация по изображениям
+window.prevImage = function(postIndex, currentIndex) {
+    const post = globalPosts[postIndex];
+    const newIndex = currentIndex > 0 ? currentIndex - 1 : post.photos.length - 1;
+    closeImageModal();
+    openImageModal(post.photos[newIndex].dataUrl || post.photos[newIndex], postIndex, newIndex);
+};
+
+window.nextImage = function(postIndex, currentIndex) {
+    const post = globalPosts[postIndex];
+    const newIndex = currentIndex < post.photos.length - 1 ? currentIndex + 1 : 0;
+    closeImageModal();
+    openImageModal(post.photos[newIndex].dataUrl || post.photos[newIndex], postIndex, newIndex);
+};
+
+// Обновляем функцию рендеринга чтобы сохранять посты глобально
+const originalRenderBlogPosts = renderBlogPosts;
+renderBlogPosts = async function(containerId = 'posts-container', locale = null) {
+    const posts = await loadAllPostsFromGitHub();
+    const filteredPosts = locale ? posts.filter(post => {
+        const postLocale = (post.locale || 'all').toLowerCase();
+        const targetLocale = locale.toLowerCase();
+        return postLocale === 'all' || postLocale === targetLocale;
+    }) : posts;
+    
+    globalPosts = filteredPosts; // Сохраняем для модальных окон
+    
+    return originalRenderBlogPosts(containerId, locale);
+};
+
 // Экспортируем функции для тестов
 window.BlogGitHub = {
     loadPostsFromGitHub,           // JSON
@@ -265,5 +395,9 @@ window.BlogGitHub = {
     loadAllPostsFromGitHub,        // Комбинированная загрузка
     renderBlogPosts,
     getCurrentLocale,
-    parseMarkdownPost
+    parseMarkdownPost,
+    openFullPost,
+    openImageModal,
+    closePostModal,
+    closeImageModal
 };
