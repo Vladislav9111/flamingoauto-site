@@ -21,31 +21,11 @@ exports.handler = async (event, context) => {
     // Обновляем дату изменения
     post.updated = new Date().toISOString();
 
-    // Определяем папку и формат по расширению файла
-    const folder = filename.endsWith('.json') ? 'content/posts' : 'content/blog';
-    let content, encodedContent;
-    
-    if (filename.endsWith('.json')) {
-      // JSON формат
-      content = JSON.stringify(post, null, 2);
-      encodedContent = Buffer.from(content, 'utf8').toString('base64');
-    } else {
-      // Markdown формат
-      const frontmatter = `---
-title: "${post.title}"
-date: ${post.created}
-author: ${post.author}
-published: true
-locale: ${post.locale}
-excerpt: "${post.excerpt}"
----
+    // GitHub API запрос для обновления файла
+    const content = JSON.stringify(post, null, 2);
+    const encodedContent = Buffer.from(content, 'utf8').toString('base64');
 
-${post.content}`;
-      content = frontmatter;
-      encodedContent = Buffer.from(content, 'utf8').toString('base64');
-    }
-
-    const githubResponse = await fetch(`https://api.github.com/repos/Vladislav9111/flamingoauto-site/contents/${folder}/${filename}`, {
+    const githubResponse = await fetch(`https://api.github.com/repos/Vladislav9111/flamingoauto-site/contents/content/posts/${filename}`, {
       method: 'PUT',
       headers: {
         'Authorization': `token ${process.env.GITHUB_TOKEN}`,
