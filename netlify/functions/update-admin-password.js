@@ -89,9 +89,9 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({
           success: true,
           message: 'Пароль успешно изменен и автоматически обновлен в Netlify!',
-          note: 'Изменения вступят в силу после следующего деплоя. Деплой запущен автоматически.',
+          note: 'Переменная окружения обновлена. Изменения вступят в силу при следующем деплое сайта.',
           autoUpdated: true,
-          deployTriggered: netlifyResult.deployTriggered
+          deployTriggered: false
         })
       };
     } else {
@@ -169,29 +169,11 @@ async function updateNetlifyEnvVar(hashedPassword) {
       };
     }
 
-    console.log('Environment variable updated, triggering deploy...');
+    console.log('Environment variable updated successfully');
     
-    // Запускаем новый деплой
-    const deployResponse = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/builds`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${netlifyToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        clear_cache: true
-      })
-    });
-
-    const deployTriggered = deployResponse.ok;
-    
-    if (!deployTriggered) {
-      console.warn('Deploy trigger failed, but env var was updated');
-    }
-
     return {
       success: true,
-      deployTriggered: deployTriggered
+      deployTriggered: false // Деплой не нужен - переменные применятся при следующем деплое
     };
 
   } catch (error) {
