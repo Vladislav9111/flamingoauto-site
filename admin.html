@@ -8,9 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
 
-    
     <style>
-        /* Admin panel styling based on archive version */
         .admin-panel { 
             max-width: 900px; 
             margin: 2rem auto; 
@@ -35,57 +33,6 @@
         .muted { color: #666; font-size: 0.95rem; }
         .error-message { color: #dc3545; margin-top: 0.5rem; }
         .success-message { color: #28a745; margin-top: 0.5rem; }
-        
-        /* Login section */
-        .login-section {
-            text-align: center;
-            padding: 2rem;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin: 1rem 0;
-        }
-        .login-btn {
-            background: var(--primary-color);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .login-btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-        
-        /* Posts management */
-        .post-item {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        .post-item h3 {
-            margin: 0 0 0.5rem 0;
-            color: #495057;
-        }
-        .post-meta {
-            font-size: 0.875rem;
-            color: #6c757d;
-            margin-bottom: 0.75rem;
-        }
-        .post-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        .post-actions .btn {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-        }
     </style>
 </head>
 <body>
@@ -140,33 +87,12 @@
 
             <div class="admin-actions">
                 <button id="save-post" class="btn">💾 Сохранить запись</button>
-                <button id="update-post" class="btn" style="display:none;background:#28a745;color:white;">✏️ Обновить запись</button>
-                <button id="cancel-edit" class="btn" style="display:none;background:#6c757d;color:white;">❌ Отменить</button>
-                <button id="manage-posts" class="btn" style="background:#17a2b8;color:white;">📋 Управление постами</button>
                 <button id="change-password-btn" class="btn" style="background:#ffc107;color:#212529;font-weight:600;">🔑 Сменить пароль</button>
                 <button id="logout-btn" class="btn" style="background:#fff;color:#dc3545;border:1px solid #eee;">🚪 Выйти</button>
                 <a href="blog.html" class="btn" style="background:#fff;color:var(--primary-color);border:1px solid #eee;">📖 Блог</a>
             </div>
 
             <div id="admin-feedback" class="muted" style="margin-top:0.75rem;"></div>
-        </div>
-
-        <!-- Управление постами -->
-        <div id="posts-management" style="display:none; margin-top:1.25rem;">
-            <div style="background: #e7f3ff; color: #004085; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-                📋 Управление опубликованными постами
-            </div>
-
-            <div class="admin-actions" style="margin-bottom: 1rem;">
-                <button id="back-to-editor" class="btn">← Назад к редактору</button>
-                <button id="refresh-posts" class="btn" style="background:#28a745;color:white;">🔄 Обновить список</button>
-            </div>
-
-            <div id="posts-list">
-                <div id="posts-loading" style="text-align:center;padding:2rem;color:#666;">
-                    ⏳ Загружаем посты...
-                </div>
-            </div>
         </div>
 
         <!-- Модальное окно смены пароля -->
@@ -195,70 +121,31 @@
 
     <script type="module" src="script.js"></script>
     <script type="module">
-        // Admin password - will be loaded from config
-        let ADMIN_PASSWORD = 'flamingo2024'; // fallback
+        // Пароль админа
+        let ADMIN_PASSWORD = 'flamingo2024';
         
-        // GitHub token will be loaded from Netlify function
-        let GITHUB_TOKEN = null;
+        // DOM elements
+        const loginArea = document.getElementById('login-area');
+        const editorArea = document.getElementById('editor-area');
+        const loginBtn = document.getElementById('login-btn');
+        const loginInput = document.getElementById('admin-password');
+        const loginError = document.getElementById('login-error');
+        const saveBtn = document.getElementById('save-post');
+        const logoutBtn = document.getElementById('logout-btn');
+        const feedback = document.getElementById('admin-feedback');
+        const photosInput = document.getElementById('post-photos');
+        
+        // Password change elements
+        const changePasswordBtn = document.getElementById('change-password-btn');
+        const changePasswordModal = document.getElementById('change-password-modal');
+        const cancelPasswordChange = document.getElementById('cancel-password-change');
+        const confirmPasswordChange = document.getElementById('confirm-password-change');
+        const currentPasswordInput = document.getElementById('current-password');
+        const newPasswordInput = document.getElementById('new-password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const passwordError = document.getElementById('password-error');
 
-
-        // Load config from Netlify function
-        async function loadConfig() {
-            try {
-                const response = await fetch('/.netlify/functions/get-config');
-                if (response.ok) {
-                    const config = await response.json();
-                    GITHUB_TOKEN = config.GITHUB_TOKEN;
-                    // Пароль остается локальным для безопасности
-                    console.log('✅ Config loaded from Netlify');
-                    return true;
-                } else {
-                    console.warn('⚠️ Netlify config not available, using fallback');
-                    return false;
-                }
-            } catch (error) {
-                console.warn('⚠️ Config load error:', error);
-                return false;
-            }
-        }
-
-        // Wait for DOM to load
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Load config first
-            await loadConfig();
-            
-            // DOM elements
-            const loginArea = document.getElementById('login-area');
-            const editorArea = document.getElementById('editor-area');
-            const loginBtn = document.getElementById('login-btn');
-            const loginInput = document.getElementById('admin-password');
-            const loginError = document.getElementById('login-error');
-            const saveBtn = document.getElementById('save-post');
-            const updateBtn = document.getElementById('update-post');
-            const cancelEditBtn = document.getElementById('cancel-edit');
-            const managePostsBtn = document.getElementById('manage-posts');
-            const backToEditorBtn = document.getElementById('back-to-editor');
-            const refreshPostsBtn = document.getElementById('refresh-posts');
-            const logoutBtn = document.getElementById('logout-btn');
-            const feedback = document.getElementById('admin-feedback');
-            const photosInput = document.getElementById('post-photos');
-            const postsManagement = document.getElementById('posts-management');
-            const postsList = document.getElementById('posts-list');
-            
-            // Password change elements
-            const changePasswordBtn = document.getElementById('change-password-btn');
-            const changePasswordModal = document.getElementById('change-password-modal');
-            const cancelPasswordChange = document.getElementById('cancel-password-change');
-            const confirmPasswordChange = document.getElementById('confirm-password-change');
-            const currentPasswordInput = document.getElementById('current-password');
-            const newPasswordInput = document.getElementById('new-password');
-            const confirmPasswordInput = document.getElementById('confirm-password');
-            const passwordError = document.getElementById('password-error');
-            
-            // Current editing state
-            let currentEditingPost = null;
-
-        // Check if already logged in
+        // Проверка авторизации при загрузке
         if (sessionStorage.getItem('flamingo_admin_authed') === '1') {
             showEditor();
         }
@@ -276,7 +163,7 @@
             feedback.textContent = '';
         }
 
-        // Login button handler
+        // Обработчик входа
         loginBtn.addEventListener('click', () => {
             loginError.style.display = 'none';
             
@@ -284,150 +171,82 @@
                 sessionStorage.setItem('flamingo_admin_authed', '1');
                 showEditor();
             } else {
-                // Убираем подсказку при неправильном пароле - просто очищаем поле
                 loginInput.value = '';
                 loginInput.focus();
-                // Никаких сообщений об ошибке не показываем
             }
         });
 
-        // Allow Enter key to submit login
+        // Enter для входа
         loginInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 loginBtn.click();
             }
         });
 
-        // Logout button handler
+        // Выход
         logoutBtn.addEventListener('click', () => {
             sessionStorage.removeItem('flamingo_admin_authed');
             showLogin();
         });
 
-        // Show posts management
-        managePostsBtn.addEventListener('click', () => {
-            editorArea.style.display = 'none';
-            postsManagement.style.display = 'block';
-            loadPosts();
-        });
-
-        // Back to editor
-        backToEditorBtn.addEventListener('click', () => {
-            postsManagement.style.display = 'none';
-            editorArea.style.display = 'block';
-            cancelEdit();
-        });
-
-        // Refresh posts
-        refreshPostsBtn.addEventListener('click', () => {
-            loadPosts();
-        });
-
-        // Cancel edit
-        cancelEditBtn.addEventListener('click', () => {
-            cancelEdit();
-        });
-
-        // Update post handler
-        updateBtn.addEventListener('click', async () => {
-            if (!currentEditingPost) return;
-
-            const title = document.getElementById('post-title').value.trim();
-            const excerpt = document.getElementById('post-excerpt').value.trim();
-            const content = document.getElementById('post-content').value.trim();
-            const locale = document.getElementById('post-locale').value;
-
-            if (!title || !excerpt) {
-                feedback.textContent = 'Укажите заголовок и короткое описание.';
-                return;
-            }
-
-            feedback.textContent = '⏳ Обновляем запись...';
-            updateBtn.disabled = true;
-
-            try {
-                // Process photos
-                const files = photosInput ? Array.from(photosInput.files).slice(0, 6) : [];
-                const photosData = [];
-                for (const file of files) {
-                    try {
-                        photosData.push(await readFileAsDataURL(file));
-                    } catch (e) {
-                        console.warn('Failed to read photo', e);
-                    }
-                }
-
-                // Update post object
-                const updatedPost = {
-                    ...currentEditingPost,
-                    title,
-                    excerpt,
-                    content,
-                    locale,
-                    photos: files.length > 0 ? photosData : currentEditingPost.photos
-                };
-
-                // Update via Netlify function
-                await updatePost(updatedPost, currentEditingPost.filename, currentEditingPost.sha);
-
-                feedback.textContent = '✅ Запись успешно обновлена!';
-                cancelEdit();
-                
-            } catch (error) {
-                console.error('Ошибка обновления:', error);
-                feedback.textContent = `❌ Ошибка обновления: ${error.message}`;
-            } finally {
-                updateBtn.disabled = false;
-            }
-        });
-
-        // Save post handler
+        // Сохранение поста
         saveBtn.addEventListener('click', async () => {
             const title = document.getElementById('post-title').value.trim();
             const excerpt = document.getElementById('post-excerpt').value.trim();
             const content = document.getElementById('post-content').value.trim();
             const locale = document.getElementById('post-locale').value;
 
-            if (!title || !excerpt) {
-                feedback.textContent = 'Укажите заголовок и короткое описание.';
+            if (!title || !excerpt || !content) {
+                feedback.textContent = '❌ Заполните все обязательные поля: заголовок, описание и содержание.';
                 return;
             }
 
-
-
-            feedback.textContent = '⏳ Сохраняем запись в GitHub...';
+            feedback.textContent = '⏳ Сохраняем запись...';
             saveBtn.disabled = true;
 
             try {
-                // Process photos
+                // Обработка фотографий
                 const files = photosInput ? Array.from(photosInput.files).slice(0, 6) : [];
                 const photosData = [];
+
                 for (const file of files) {
                     try {
-                        photosData.push(await readFileAsDataURL(file));
+                        const dataUrl = await readFileAsDataURL(file);
+                        photosData.push(dataUrl);
                     } catch (e) {
-                        console.warn('Failed to read photo', e);
+                        console.warn('Ошибка чтения фото:', e);
                     }
                 }
 
-                // Create post object
+                // Создание объекта поста
                 const post = {
                     id: Date.now(),
-                    title,
-                    excerpt,
-                    content,
+                    title: title,
+                    excerpt: excerpt,
+                    content: content,
                     created: new Date().toISOString(),
                     locale,
                     photos: photosData,
                     author: 'Flamingo Auto'
                 };
 
-                // Save to GitHub
-                await savePostToGitHub(post);
+                // Сохранение через Netlify функцию
+                const response = await fetch('/.netlify/functions/create-blog-post', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(post)
+                });
 
-                feedback.textContent = '✅ Запись успешно сохранена в GitHub! Перейдите на страницу блога, чтобы увидеть её.';
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Ошибка сохранения');
+                }
+
+                feedback.textContent = '✅ Запись успешно сохранена! Перейдите на страницу блога, чтобы увидеть её.';
                 
-                // Reset form
+                // Очистка формы
                 document.getElementById('post-title').value = '';
                 document.getElementById('post-excerpt').value = '';
                 document.getElementById('post-content').value = '';
@@ -441,204 +260,6 @@
                 saveBtn.disabled = false;
             }
         });
-
-        // Save post to GitHub via Netlify function
-        async function savePostToGitHub(post) {
-            const response = await fetch('/.netlify/functions/create-blog-post', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(post)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Ошибка сохранения');
-            }
-
-            return response.json();
-        }
-
-        // Load posts from GitHub
-        async function loadPosts() {
-            const loadingDiv = document.getElementById('posts-loading');
-            loadingDiv.style.display = 'block';
-            loadingDiv.textContent = '⏳ Загружаем посты...';
-
-            try {
-                const response = await fetch('/.netlify/functions/get-blog-posts');
-                if (!response.ok) {
-                    throw new Error('Ошибка загрузки постов');
-                }
-
-                const posts = await response.json();
-                displayPosts(posts);
-                
-            } catch (error) {
-                console.error('Ошибка загрузки постов:', error);
-                loadingDiv.textContent = `❌ Ошибка загрузки: ${error.message}`;
-            }
-        }
-
-        // Display posts list
-        function displayPosts(posts) {
-            const loadingDiv = document.getElementById('posts-loading');
-            loadingDiv.style.display = 'none';
-
-            if (posts.length === 0) {
-                postsList.innerHTML = '<div style="text-align:center;padding:2rem;color:#666;">📝 Постов пока нет</div>';
-                return;
-            }
-
-            const postsHtml = posts.map((post, index) => `
-                <div class="post-item">
-                    <h3>${post.title}</h3>
-                    <div class="post-meta">
-                        📅 ${new Date(post.created).toLocaleDateString('ru-RU')}
-                        ${post.updated ? `• ✏️ ${new Date(post.updated).toLocaleDateString('ru-RU')}` : ''}
-                        • 🌐 ${post.locale === 'all' ? 'ET + RU' : post.locale.toUpperCase()}
-                        ${post.photos && post.photos.length > 0 ? `• 📷 ${post.photos.length} фото` : ''}
-                    </div>
-                    <p style="margin:0.5rem 0;color:#6c757d;">${post.excerpt}</p>
-                    <div class="post-actions">
-                        <button class="btn edit-post-btn" data-filename="${post.filename}" style="background:#ffc107;color:#212529;">✏️ Редактировать</button>
-                        <button class="btn delete-post-btn" data-filename="${post.filename}" data-sha="${post.sha}" data-title="${post.title}" style="background:#dc3545;color:white;">🗑️ Удалить</button>
-                    </div>
-                </div>
-            `).join('');
-
-            postsList.innerHTML = postsHtml;
-
-            // Add event listeners for edit and delete buttons
-            document.querySelectorAll('.edit-post-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const filename = btn.dataset.filename;
-                    editPost(filename);
-                });
-            });
-
-            document.querySelectorAll('.delete-post-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const filename = btn.dataset.filename;
-                    const sha = btn.dataset.sha;
-                    const title = btn.dataset.title;
-                    deletePost(filename, sha, title);
-                });
-            });
-        }
-
-        // Edit post
-        async function editPost(filename) {
-            try {
-                const response = await fetch('/.netlify/functions/get-blog-posts');
-                const posts = await response.json();
-                const post = posts.find(p => p.filename === filename);
-                
-                if (!post) {
-                    alert('Пост не найден');
-                    return;
-                }
-
-                // Fill form with post data
-                document.getElementById('post-title').value = post.title;
-                document.getElementById('post-excerpt').value = post.excerpt;
-                document.getElementById('post-content').value = post.content;
-                document.getElementById('post-locale').value = post.locale;
-
-                // Set editing state
-                currentEditingPost = post;
-                
-                // Switch UI to edit mode
-                saveBtn.style.display = 'none';
-                updateBtn.style.display = 'inline-block';
-                cancelEditBtn.style.display = 'inline-block';
-                
-                // Go back to editor
-                postsManagement.style.display = 'none';
-                editorArea.style.display = 'block';
-                
-                feedback.textContent = `✏️ Редактирование: ${post.title}`;
-                
-            } catch (error) {
-                alert(`Ошибка загрузки поста: ${error.message}`);
-            }
-        }
-
-        // Update post
-        async function updatePost(post, filename, sha) {
-            const response = await fetch('/.netlify/functions/update-blog-post', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ post, filename, sha })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Ошибка обновления');
-            }
-
-            return response.json();
-        }
-
-        // Delete post
-        async function deletePost(filename, sha, title) {
-            if (!confirm(`Вы уверены, что хотите удалить пост "${title}"?\n\nЭто действие нельзя отменить!`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch('/.netlify/functions/delete-blog-post', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ filename, sha, title })
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Ошибка удаления');
-                }
-
-                alert('✅ Пост успешно удален!');
-                loadPosts(); // Refresh list
-                
-            } catch (error) {
-                alert(`❌ Ошибка удаления: ${error.message}`);
-            }
-        }
-
-        // Cancel edit mode
-        function cancelEdit() {
-            currentEditingPost = null;
-            
-            // Reset form
-            document.getElementById('post-title').value = '';
-            document.getElementById('post-excerpt').value = '';
-            document.getElementById('post-content').value = '';
-            document.getElementById('post-locale').value = 'ru';
-            if (photosInput) photosInput.value = '';
-            
-            // Reset UI
-            saveBtn.style.display = 'inline-block';
-            updateBtn.style.display = 'none';
-            cancelEditBtn.style.display = 'none';
-            
-            feedback.textContent = '';
-        }
-
-        // Helper: read file as data URL
-        function readFileAsDataURL(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
 
         // Password change handlers
         changePasswordBtn.addEventListener('click', () => {
@@ -749,32 +370,15 @@
             }
         });
 
-        });
-    </script>
-</body>
-</html>
-                passwordError.style.display = 'block';
-            } finally {
-                confirmPasswordChange.disabled = false;
-                confirmPasswordChange.textContent = 'Сохранить';
-            }
-        });
-
-        // Close modal on outside click
-        changePasswordModal.addEventListener('click', (e) => {
-            if (e.target === changePasswordModal) {
-                changePasswordModal.style.display = 'none';
-            }
-        });
-
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && changePasswordModal.style.display === 'block') {
-                changePasswordModal.style.display = 'none';
-            }
-        });
-
-        }); // End DOMContentLoaded
+        // Helper: read file as data URL
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
     </script>
 </body>
 </html>
