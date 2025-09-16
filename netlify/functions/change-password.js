@@ -27,6 +27,9 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    console.log('Change password request received');
+    console.log('Request body:', event.body);
+    
     const { currentPassword, newPassword } = JSON.parse(event.body);
 
     // Проверяем входные данные
