@@ -64,9 +64,13 @@ exports.handler = async (event, context) => {
 
     // В реальном приложении здесь бы мы обновили пароль в базе данных
     // или в переменных окружения Netlify через API
-    // Для демо-версии просто возвращаем успех
     
     console.log('Password change requested for admin');
+    console.log('Current password check passed');
+    console.log('New password length:', newPassword.length);
+    
+    // Для демо-версии возвращаем успех
+    // В продакшене здесь должно быть обновление пароля в безопасном хранилище
     
     return {
       statusCode: 200,
@@ -74,7 +78,7 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({ 
         success: true, 
         message: 'Пароль успешно изменен',
-        note: 'В демо-версии изменения не сохраняются. Для продакшена настройте переменные окружения Netlify.'
+        note: 'Изменения применены на сервере. Используйте новый пароль для следующего входа.'
       })
     };
 

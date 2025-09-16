@@ -694,42 +694,31 @@
                 confirmPasswordChange.disabled = true;
                 confirmPasswordChange.textContent = 'Сохраняем...';
 
-                // Пробуем отправить запрос на смену пароля через Netlify функцию
-                try {
-                    const response = await fetch('/.netlify/functions/change-password', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            currentPassword: currentPassword,
-                            newPassword: newPassword
-                        })
-                    });
+                // Отправляем запрос на смену пароля через Netlify функцию
+                const response = await fetch('/.netlify/functions/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        currentPassword: currentPassword,
+                        newPassword: newPassword
+                    })
+                });
 
-                    const result = await response.json();
+                const result = await response.json();
 
-                    if (!response.ok) {
-                        throw new Error(result.error || 'Ошибка при смене пароля');
-                    }
-
-                    // Показываем сообщение об успехе
-                    alert(`✅ ${result.message}\n\n${result.note || ''}`);
-                    
-                    changePasswordModal.style.display = 'none';
-                    
-                    // Обновляем локальный пароль для текущей сессии
-                    ADMIN_PASSWORD = newPassword;
-                    
-                } catch (fetchError) {
-                    console.warn('Netlify function not available, using local password change:', fetchError);
-                    
-                    // Fallback: локальная смена пароля
-                    ADMIN_PASSWORD = newPassword;
-                    
-                    alert('✅ Пароль успешно изменен!\n\n⚠️ Внимание: Изменения сохранены только для текущей сессии, так как серверная функция недоступна.');
-                    changePasswordModal.style.display = 'none';
+                if (!response.ok) {
+                    throw new Error(result.error || 'Ошибка при смене пароля');
                 }
+
+                // Показываем сообщение об успехе
+                alert(`✅ ${result.message}\n\n${result.note || ''}`);
+                
+                changePasswordModal.style.display = 'none';
+                
+                // Обновляем локальный пароль для текущей сессии
+                ADMIN_PASSWORD = newPassword;
                 
             } catch (error) {
                 passwordError.textContent = error.message;
