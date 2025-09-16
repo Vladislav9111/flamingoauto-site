@@ -29,6 +29,7 @@
         <button class="btn-primary" onclick="checkAdminConfig()">⚙️ Проверить конфигурацию</button>
         <button class="btn-primary" onclick="showHashPasswordForm()">🔐 Зашифровать пароль</button>
         <button class="btn-primary" onclick="testPasswordChange()">🔑 Тест смены пароля</button>
+        <button class="btn-primary" onclick="testAutoPasswordUpdate()">🤖 Тест автообновления</button>
         <button class="btn-secondary" onclick="clearResults()">🧹 Очистить результаты</button>
     </div>
 
@@ -241,6 +242,60 @@
                 addResult('error', '❌ Ошибка сети', `
                     <p><strong>Ошибка:</strong> ${error.message}</p>
                     <p>Функция шифрования недоступна.</p>
+                `);
+            }
+        }
+
+        async function testAutoPasswordUpdate() {
+            addResult('info', '🔄 Тестируем автоматическое обновление пароля...', 'Отправляем запрос на автообновление');
+            
+            try {
+                const response = await fetch('/.netlify/functions/update-admin-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        currentPassword: 'flamingo2024',
+                        newPassword: 'test123456'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.autoUpdated) {
+                        addResult('success', '🤖 Автообновление работает!', `
+                            <p><strong>Статус:</strong> ${response.status}</p>
+                            <p><strong>Сообщение:</strong> ${data.message}</p>
+                            <p><strong>Автообновление:</strong> ✅ Включено</p>
+                            <p><strong>Деплой запущен:</strong> ${data.deployTriggered ? '✅ Да' : '⚠️ Нет'}</p>
+                            <p><strong>Примечание:</strong> ${data.note}</p>
+                            <div style="background: #d4edda; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                                <strong>🎉 Отлично!</strong> Смена пароля полностью автоматизирована.
+                            </div>
+                        `);
+                    } else {
+                        addResult('warning', '⚠️ Автообновление недоступно', `
+                            <p><strong>Статус:</strong> ${response.status}</p>
+                            <p><strong>Сообщение:</strong> ${data.message}</p>
+                            <p><strong>Автообновление:</strong> ❌ Отключено</p>
+                            <p><strong>Ошибка:</strong> ${data.error}</p>
+                            <div style="background: #fff3cd; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                                <strong>💡 Настройка:</strong> Добавьте NETLIFY_ACCESS_TOKEN и NETLIFY_SITE_ID в переменные окружения.
+                            </div>
+                        `);
+                    }
+                } else {
+                    addResult('error', '❌ Ошибка автообновления', `
+                        <p><strong>Статус:</strong> ${response.status}</p>
+                        <p><strong>Ошибка:</strong> ${data.error}</p>
+                    `);
+                }
+            } catch (error) {
+                addResult('error', '❌ Ошибка при тестировании автообновления', `
+                    <p><strong>Ошибка:</strong> ${error.message}</p>
+                    <p>Функция автообновления недоступна.</p>
                 `);
             }
         }
