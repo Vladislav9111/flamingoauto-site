@@ -49,7 +49,7 @@ exports.handler = async (event, context) => {
     }
 
     // Получаем текущий пароль из переменных окружения
-    const storedPassword = process.env.ADMIN_PASSWORD || 'flamingo2024';
+    const storedPassword = process.env.ADMIN_PASSWORD || 'HDoSf4qGf2aV4Yp';
     
     console.log('Verifying current password...');
     

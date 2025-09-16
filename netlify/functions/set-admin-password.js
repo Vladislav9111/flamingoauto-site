@@ -1,4 +1,4 @@
-// Функция для сброса пароля администратора к значению по умолчанию
+// Функция для установки конкретного пароля администратора
 const { hashPassword } = require('./utils/password-utils');
 
 exports.handler = async (event, context) => {
@@ -27,39 +27,54 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    console.log('Password reset request received');
+    console.log('Set password request received');
     
-    const { confirmReset } = JSON.parse(event.body);
+    const { newPassword, confirmPassword } = JSON.parse(event.body);
 
-    if (confirmReset !== 'YES_RESET_PASSWORD') {
+    if (!newPassword || !confirmPassword) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Подтверждение сброса не получено' })
+        body: JSON.stringify({ error: 'Не указан пароль или подтверждение' })
       };
     }
 
-    // Хешируем пароль по умолчанию
-    const defaultPassword = 'HDoSf4qGf2aV4Yp';
-    console.log('Hashing default password...');
-    const hashedPassword = await hashPassword(defaultPassword);
+    if (newPassword !== confirmPassword) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Пароли не совпадают' })
+      };
+    }
+
+    if (newPassword.length < 6) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Пароль должен содержать минимум 6 символов' })
+      };
+    }
+
+    // Хешируем новый пароль
+    console.log('Hashing new password...');
+    const hashedPassword = await hashPassword(newPassword);
     
-    console.log('Attempting to update Netlify env var with default password...');
+    console.log('Attempting to update Netlify env var with new password...');
 
     // Обновляем переменную окружения через Netlify API
     const netlifyResult = await updateNetlifyEnvVar(hashedPassword);
     
     if (netlifyResult.success) {
-      console.log('Password reset successful');
+      console.log('Password set successful');
       
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
           success: true,
-          message: 'Пароль сброшен к значению по умолчанию',
-          defaultPassword: defaultPassword,
-          note: 'Используйте пароль "flamingo2024" для входа в админку. Изменения применятся при следующем деплое.',
+          message: 'Пароль успешно установлен и зашифрован',
+          password: newPassword,
+          note: 'Используйте новый пароль для входа в админку. Изменения применятся при следующем деплое.',
           hashedPassword: hashedPassword
         })
       };
@@ -69,11 +84,12 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({
           success: false,
-          message: 'Не удалось сбросить пароль автоматически',
+          message: 'Не удалось установить пароль автоматически',
           error: netlifyResult.error,
+          hashedPassword: hashedPassword,
           manualInstructions: [
             '1. Перейдите в Netlify Dashboard → Site settings → Environment variables',
-            '2. Найдите ADMIN_PASSWORD и обновите значение на: flamingo2024',
+            '2. Найдите ADMIN_PASSWORD и обновите значение на приведенный выше хеш',
             '3. Передеплойте сайт'
           ]
         })
@@ -81,11 +97,11 @@ exports.handler = async (event, context) => {
     }
 
   } catch (error) {
-    console.error('Password reset error:', error);
+    console.error('Set password error:', error);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Внутренняя ошибка сервера при сбросе пароля' })
+      body: JSON.stringify({ error: 'Внутренняя ошибка сервера при установке пароля' })
     };
   }
 };

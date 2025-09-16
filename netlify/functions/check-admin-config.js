@@ -35,7 +35,7 @@ exports.handler = async (event, context) => {
     console.log('GITHUB_TOKEN env var:', githubToken ? 'SET' : 'NOT SET');
 
     const passwordIsHashed = adminPassword ? isHashedPassword(adminPassword) : false;
-    const usingDefaultPassword = !adminPassword || adminPassword === 'flamingo2024';
+    const usingDefaultPassword = !adminPassword || adminPassword === 'HDoSf4qGf2aV4Yp';
 
     return {
       statusCode: 200,
@@ -47,7 +47,7 @@ exports.handler = async (event, context) => {
           adminPasswordHashed: passwordIsHashed,
           adminPasswordDefault: usingDefaultPassword,
           githubTokenSet: !!githubToken,
-          defaultPassword: usingDefaultPassword ? (adminPassword || 'flamingo2024') : '[ЗАШИФРОВАН]',
+          defaultPassword: usingDefaultPassword ? (adminPassword || 'HDoSf4qGf2aV4Yp') : '[ЗАШИФРОВАН]',
           securityLevel: passwordIsHashed ? 'ВЫСОКИЙ' : (usingDefaultPassword ? 'НИЗКИЙ' : 'СРЕДНИЙ')
         },
         message: 'Конфигурация проверена'
