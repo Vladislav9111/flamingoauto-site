@@ -26,6 +26,7 @@
 
     <div class="test-buttons">
         <button class="btn-primary" onclick="testConnection()">🔗 Тест подключения</button>
+        <button class="btn-primary" onclick="checkAdminConfig()">⚙️ Проверить конфигурацию</button>
         <button class="btn-primary" onclick="testPasswordChange()">🔑 Тест смены пароля</button>
         <button class="btn-secondary" onclick="clearResults()">🧹 Очистить результаты</button>
     </div>
@@ -121,6 +122,51 @@
                     <p><strong>Ошибка:</strong> ${error.message}</p>
                     <p>Это та же ошибка, которую вы видите в админке.</p>
                     <p><strong>Решение:</strong> Используйте admin-fixed.html для локальной смены пароля.</p>
+                `);
+            }
+        }
+
+        async function checkAdminConfig() {
+            addResult('info', '🔄 Проверяем конфигурацию админа...', 'Запрашиваем настройки пароля');
+            
+            try {
+                const response = await fetch('/.netlify/functions/check-admin-config', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const config = data.config;
+                    let configInfo = `
+                        <p><strong>Пароль админа настроен:</strong> ${config.adminPasswordSet ? '✅ Да' : '❌ Нет'}</p>
+                        <p><strong>Используется пароль по умолчанию:</strong> ${config.adminPasswordDefault ? '⚠️ Да' : '✅ Нет'}</p>
+                        <p><strong>GitHub токен настроен:</strong> ${config.githubTokenSet ? '✅ Да' : '❌ Нет'}</p>
+                        <p><strong>Текущий пароль для входа:</strong> <code>${config.defaultPassword}</code></p>
+                    `;
+                    
+                    if (config.adminPasswordDefault) {
+                        configInfo += `
+                            <div style="background: #fff3cd; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                                <strong>⚠️ Рекомендация:</strong> Настройте переменную окружения ADMIN_PASSWORD в Netlify для безопасности.
+                            </div>
+                        `;
+                    }
+                    
+                    addResult('success', '✅ Конфигурация получена!', configInfo);
+                } else {
+                    addResult('error', '❌ Ошибка получения конфигурации', `
+                        <p><strong>Статус:</strong> ${response.status}</p>
+                        <p><strong>Ошибка:</strong> ${data.error}</p>
+                    `);
+                }
+            } catch (error) {
+                addResult('error', '❌ Ошибка проверки конфигурации', `
+                    <p><strong>Ошибка:</strong> ${error.message}</p>
+                    <p>Функция проверки конфигурации недоступна.</p>
                 `);
             }
         }

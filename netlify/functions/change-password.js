@@ -43,6 +43,9 @@ exports.handler = async (event, context) => {
 
     // Получаем текущий пароль из переменных окружения
     const storedPassword = process.env.ADMIN_PASSWORD || 'flamingo2024';
+    
+    console.log('Stored password from env:', storedPassword ? 'SET' : 'NOT SET');
+    console.log('Using default password:', storedPassword === 'flamingo2024');
 
     // Проверяем текущий пароль
     if (currentPassword !== storedPassword) {
