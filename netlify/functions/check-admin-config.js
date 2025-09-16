@@ -1,4 +1,6 @@
 // Функция для проверки конфигурации админа
+const { isHashedPassword } = require('./utils/password-utils');
+
 exports.handler = async (event, context) => {
   const headers = {
     'Content-Type': 'application/json',
@@ -32,6 +34,9 @@ exports.handler = async (event, context) => {
     console.log('ADMIN_PASSWORD env var:', adminPassword ? 'SET' : 'NOT SET');
     console.log('GITHUB_TOKEN env var:', githubToken ? 'SET' : 'NOT SET');
 
+    const passwordIsHashed = adminPassword ? isHashedPassword(adminPassword) : false;
+    const usingDefaultPassword = !adminPassword || adminPassword === 'flamingo2024';
+
     return {
       statusCode: 200,
       headers,
@@ -39,9 +44,11 @@ exports.handler = async (event, context) => {
         success: true,
         config: {
           adminPasswordSet: !!adminPassword,
-          adminPasswordDefault: !adminPassword || adminPassword === 'flamingo2024',
+          adminPasswordHashed: passwordIsHashed,
+          adminPasswordDefault: usingDefaultPassword,
           githubTokenSet: !!githubToken,
-          defaultPassword: adminPassword || 'flamingo2024'
+          defaultPassword: usingDefaultPassword ? (adminPassword || 'flamingo2024') : '[ЗАШИФРОВАН]',
+          securityLevel: passwordIsHashed ? 'ВЫСОКИЙ' : (usingDefaultPassword ? 'НИЗКИЙ' : 'СРЕДНИЙ')
         },
         message: 'Конфигурация проверена'
       })

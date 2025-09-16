@@ -1,4 +1,6 @@
 // Netlify Function для смены пароля администратора
+const { hashPassword, verifyPassword, isHashedPassword } = require('./utils/password-utils');
+
 exports.handler = async (event, context) => {
   // CORS headers
   const headers = {
@@ -45,10 +47,22 @@ exports.handler = async (event, context) => {
     const storedPassword = process.env.ADMIN_PASSWORD || 'flamingo2024';
     
     console.log('Stored password from env:', storedPassword ? 'SET' : 'NOT SET');
-    console.log('Using default password:', storedPassword === 'flamingo2024');
+    console.log('Password is hashed:', isHashedPassword(storedPassword));
 
-    // Проверяем текущий пароль
-    if (currentPassword !== storedPassword) {
+    // Проверяем текущий пароль (поддерживаем как хешированные, так и обычные пароли)
+    let passwordValid = false;
+    
+    if (isHashedPassword(storedPassword)) {
+      // Проверяем хешированный пароль
+      passwordValid = await verifyPassword(currentPassword, storedPassword);
+      console.log('Verified hashed password:', passwordValid);
+    } else {
+      // Проверяем обычный пароль (для обратной совместимости)
+      passwordValid = currentPassword === storedPassword;
+      console.log('Verified plain password:', passwordValid);
+    }
+
+    if (!passwordValid) {
       return {
         statusCode: 401,
         headers,
@@ -65,23 +79,28 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // В реальном приложении здесь бы мы обновили пароль в базе данных
-    // или в переменных окружения Netlify через API
-    
+    // Хешируем новый пароль
     console.log('Password change requested for admin');
     console.log('Current password check passed');
     console.log('New password length:', newPassword.length);
+    console.log('Hashing new password...');
     
-    // Для демо-версии возвращаем успех
-    // В продакшене здесь должно быть обновление пароля в безопасном хранилище
+    const hashedNewPassword = await hashPassword(newPassword);
+    console.log('New password hashed successfully');
     
+    // В реальном приложении здесь бы мы сохранили хешированный пароль
+    // в базе данных или обновили переменную окружения через Netlify API
+    
+    // Для демо-версии возвращаем хешированный пароль в ответе
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({ 
         success: true, 
-        message: 'Пароль успешно изменен',
-        note: 'Изменения применены на сервере. Используйте новый пароль для следующего входа.'
+        message: 'Пароль успешно изменен и зашифрован',
+        note: 'Новый пароль зашифрован с помощью bcrypt. Для продакшена сохраните хеш в переменных окружения.',
+        hashedPassword: hashedNewPassword,
+        instructions: 'Скопируйте хеш выше и установите его как ADMIN_PASSWORD в настройках Netlify'
       })
     };
 
