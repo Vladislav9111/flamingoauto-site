@@ -31,6 +31,7 @@
         <button class="btn-primary" onclick="testPasswordChange()">🔑 Тест смены пароля</button>
         <button class="btn-primary" onclick="checkAutoUpdateSetup()">⚙️ Проверить настройку автообновления</button>
         <button class="btn-primary" onclick="testAutoPasswordUpdate()">🤖 Тест автообновления</button>
+        <button class="btn-secondary" onclick="resetAdminPassword()" style="background:#dc3545;color:white;">🔄 Сбросить пароль</button>
         <button class="btn-secondary" onclick="clearResults()">🧹 Очистить результаты</button>
     </div>
 
@@ -369,6 +370,56 @@
                 addResult('error', '❌ Ошибка при проверке настройки', `
                     <p><strong>Ошибка:</strong> ${error.message}</p>
                     <p>Функция проверки настройки недоступна.</p>
+                `);
+            }
+        }
+
+        async function resetAdminPassword() {
+            if (!confirm('⚠️ ВНИМАНИЕ!\n\nВы действительно хотите сбросить пароль администратора к значению по умолчанию "flamingo2024"?\n\nЭто действие нельзя отменить!')) {
+                return;
+            }
+
+            addResult('info', '🔄 Сбрасываем пароль...', 'Устанавливаем пароль по умолчанию');
+            
+            try {
+                const response = await fetch('/.netlify/functions/reset-admin-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        confirmReset: 'YES_RESET_PASSWORD'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addResult('success', '✅ Пароль сброшен!', `
+                        <p><strong>Сообщение:</strong> ${data.message}</p>
+                        <p><strong>Пароль для входа:</strong> <code>${data.defaultPassword}</code></p>
+                        <p><strong>Примечание:</strong> ${data.note}</p>
+                        <div style="background: #d4edda; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                            <strong>🎉 Готово!</strong> Теперь вы можете войти в админку с паролем <code>${data.defaultPassword}</code>
+                        </div>
+                    `);
+                } else {
+                    let errorInfo = `<p><strong>Ошибка:</strong> ${data.error || data.message}</p>`;
+                    
+                    if (data.manualInstructions) {
+                        errorInfo += '<h4>📋 Ручная настройка:</h4><ol>';
+                        data.manualInstructions.forEach(inst => {
+                            errorInfo += `<li>${inst}</li>`;
+                        });
+                        errorInfo += '</ol>';
+                    }
+                    
+                    addResult('warning', '⚠️ Требуется ручная настройка', errorInfo);
+                }
+            } catch (error) {
+                addResult('error', '❌ Ошибка сброса пароля', `
+                    <p><strong>Ошибка:</strong> ${error.message}</p>
+                    <p>Попробуйте сбросить пароль вручную в настройках Netlify.</p>
                 `);
             }
         }
