@@ -1,13 +1,27 @@
 // Netlify Function для смены пароля администратора
 exports.handler = async (event, context) => {
+  // CORS headers
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
+
+  // Handle preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+
   // Проверяем метод запроса
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
@@ -19,10 +33,7 @@ exports.handler = async (event, context) => {
     if (!currentPassword || !newPassword) {
       return {
         statusCode: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        },
+        headers,
         body: JSON.stringify({ error: 'Не указан текущий или новый пароль' })
       };
     }
@@ -34,10 +45,7 @@ exports.handler = async (event, context) => {
     if (currentPassword !== storedPassword) {
       return {
         statusCode: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        },
+        headers,
         body: JSON.stringify({ error: 'Неверный текущий пароль' })
       };
     }
@@ -46,10 +54,7 @@ exports.handler = async (event, context) => {
     if (newPassword.length < 6) {
       return {
         statusCode: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        },
+        headers,
         body: JSON.stringify({ error: 'Новый пароль должен содержать минимум 6 символов' })
       };
     }
@@ -62,10 +67,7 @@ exports.handler = async (event, context) => {
     
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers,
       body: JSON.stringify({ 
         success: true, 
         message: 'Пароль успешно изменен',
@@ -77,10 +79,7 @@ exports.handler = async (event, context) => {
     console.error('Password change error:', error);
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers,
       body: JSON.stringify({ error: 'Внутренняя ошибка сервера' })
     };
   }
