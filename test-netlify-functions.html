@@ -29,6 +29,7 @@
         <button class="btn-primary" onclick="checkAdminConfig()">⚙️ Проверить конфигурацию</button>
         <button class="btn-primary" onclick="showHashPasswordForm()">🔐 Зашифровать пароль</button>
         <button class="btn-primary" onclick="testPasswordChange()">🔑 Тест смены пароля</button>
+        <button class="btn-primary" onclick="checkAutoUpdateSetup()">⚙️ Проверить настройку автообновления</button>
         <button class="btn-primary" onclick="testAutoPasswordUpdate()">🤖 Тест автообновления</button>
         <button class="btn-secondary" onclick="clearResults()">🧹 Очистить результаты</button>
     </div>
@@ -296,6 +297,78 @@
                 addResult('error', '❌ Ошибка при тестировании автообновления', `
                     <p><strong>Ошибка:</strong> ${error.message}</p>
                     <p>Функция автообновления недоступна.</p>
+                `);
+            }
+        }
+
+        async function checkAutoUpdateSetup() {
+            addResult('info', '🔄 Проверяем настройку автообновления...', 'Анализируем переменные окружения');
+            
+            try {
+                const response = await fetch('/.netlify/functions/setup-auto-update', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let statusClass = data.status === 'ready' ? 'success' : 
+                                     data.status === 'partial' ? 'warning' : 'error';
+                    
+                    let setupInfo = `
+                        <p><strong>Статус:</strong> ${data.message}</p>
+                        <p><strong>NETLIFY_ACCESS_TOKEN:</strong> ${data.setup.netlifyTokenSet ? '✅ Установлен' : '❌ Не установлен'}</p>
+                        <p><strong>NETLIFY_SITE_ID:</strong> ${data.setup.siteIdSet ? '✅ Установлен' : '❌ Не установлен'}</p>
+                        <p><strong>ADMIN_PASSWORD:</strong> ${data.setup.adminPasswordSet ? '✅ Установлен' : '❌ Не установлен'}</p>
+                        <p><strong>Автообновление готово:</strong> ${data.setup.autoUpdateReady ? '✅ Да' : '❌ Нет'}</p>
+                    `;
+                    
+                    if (data.instructions && data.instructions.length > 0) {
+                        setupInfo += '<h4>📋 Инструкции по настройке:</h4><ol>';
+                        data.instructions.forEach(inst => {
+                            setupInfo += `<li><strong>${inst.title}</strong><br>${inst.description}<br><em>${inst.action}</em></li>`;
+                        });
+                        setupInfo += '</ol>';
+                    }
+                    
+                    if (data.nextSteps && data.nextSteps.length > 0) {
+                        setupInfo += '<h4>🎯 Следующие шаги:</h4><ul>';
+                        data.nextSteps.forEach(step => {
+                            setupInfo += `<li>${step}</li>`;
+                        });
+                        setupInfo += '</ul>';
+                    }
+                    
+                    if (data.status === 'ready') {
+                        setupInfo += `
+                            <div style="background: #d4edda; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                                <strong>🎉 Отлично!</strong> Автообновление полностью настроено. Теперь при смене пароля в админке он будет автоматически обновляться в Netlify.
+                            </div>
+                        `;
+                    } else {
+                        setupInfo += `
+                            <div style="background: #fff3cd; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                                <strong>💡 Подсказка:</strong> Следуйте инструкциям выше для завершения настройки автообновления.
+                                <br><br>
+                                <strong>📖 Подробная инструкция:</strong> <a href="НАСТРОЙКА_АВТООБНОВЛЕНИЯ.md" target="_blank">НАСТРОЙКА_АВТООБНОВЛЕНИЯ.md</a>
+                            </div>
+                        `;
+                    }
+                    
+                    addResult(statusClass, '⚙️ Проверка настройки завершена', setupInfo);
+                } else {
+                    addResult('error', '❌ Ошибка проверки настройки', `
+                        <p><strong>Статус:</strong> ${response.status}</p>
+                        <p><strong>Ошибка:</strong> ${data.error}</p>
+                    `);
+                }
+            } catch (error) {
+                addResult('error', '❌ Ошибка при проверке настройки', `
+                    <p><strong>Ошибка:</strong> ${error.message}</p>
+                    <p>Функция проверки настройки недоступна.</p>
                 `);
             }
         }
