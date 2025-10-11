@@ -349,7 +349,7 @@
                         Taotluse saatmisel tekkis viga. Palun proovige uuesti.
                     </div>
                     
-                    <form id="contact-form" name="contact-et" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+                    <form id="contact-form" name="contact-et" method="POST" data-netlify="true" netlify-honeypot="bot-field" data-upload-guard="on">
                         <input type="hidden" name="form-name" value="contact-et">
                         <p style="display: none;">
                             <label>Don't fill this out if you're human: <input name="bot-field"></label>
@@ -506,5 +506,7 @@
             });
         });
     </script>
+
+    <script src="/js/upload-guard.js"></script>
 </body>
 </html>

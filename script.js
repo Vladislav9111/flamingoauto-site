@@ -115,6 +115,10 @@ form.addEventListener('submit', async function(event) {
                 body: formData // No Content-Type header for FormData
             });
 
+            if (response.status === 413) {
+                alert('Суммарный размер прикреплённых файлов превышает 5 МБ. Уменьшите размер изображений или прикрепите меньше файлов.');
+                return;
+            }
             const result = await response.json();
 
             if (response.ok && result.success) {
