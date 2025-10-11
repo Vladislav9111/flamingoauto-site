@@ -3,7 +3,7 @@ import Busboy from 'busboy';
 
 const MAX_TOTAL_BYTES = 5 * 1024 * 1024; // 5 MB
 
-export const handler = async (event, context) => {
+export const handler = async (event) => {
   try {
     if (event.httpMethod !== 'POST') {
       return { statusCode: 405, body: 'Method Not Allowed' };
@@ -18,7 +18,7 @@ export const handler = async (event, context) => {
     }
 
     const contentType = event.headers['content-type'] || event.headers['Content-Type'] || '';
-    if (!contentType.toLowerCase().includes('multipart/form-data')) {
+    if (!contentType || !contentType.toLowerCase().includes('multipart/form-data')) {
       const fields = parseNonMultipart(event);
       const text = buildLeadText(fields, []);
       await tgSendMessage(text);
@@ -27,13 +27,14 @@ export const handler = async (event, context) => {
 
     const files = [];
     const fields = {};
+
     await new Promise((resolve, reject) => {
       const bb = Busboy({ headers: { 'content-type': contentType } });
       let acc = 0;
 
       bb.on('file', (name, file, info) => {
         const chunks = [];
-        file.on('data', d => {
+        file.on('data', (d) => {
           acc += d.length;
           if (acc > MAX_TOTAL_BYTES) {
             bb.removeAllListeners();
@@ -45,9 +46,10 @@ export const handler = async (event, context) => {
         });
         file.on('end', () => {
           const buffer = Buffer.concat(chunks);
-          files.push({ field: name, filename: info.filename, mime: info.mimeType, buffer });
+          files.push({ field:name, filename:info.filename, mime:info.mimeType, buffer });
         });
       });
+
       bb.on('field', (name, val) => { fields[name] = val; });
       bb.on('error', reject);
       bb.on('finish', resolve);
@@ -61,7 +63,7 @@ export const handler = async (event, context) => {
       throw err;
     });
 
-    const totalBytes = files.reduce((s, f) => s + (f.buffer?.length || 0), 0);
+    const totalBytes = files.reduce((s,f)=>s+(f.buffer?.length||0),0);
     if (totalBytes > MAX_TOTAL_BYTES) {
       return json(413, { ok:false, code:'PAYLOAD_TOO_LARGE', message:'Total attachments size exceeds 5 MB.' });
     }
@@ -76,7 +78,7 @@ export const handler = async (event, context) => {
     return json(200, { ok:true });
 
   } catch (e) {
-    if (e && (e.statusCode == 413 || String(e).includes('PAYLOAD_TOO_LARGE'))) {
+    if (e && (e.statusCode === 413 || String(e).includes('PAYLOAD_TOO_LARGE'))) {
       return json(413, { ok:false, code:'PAYLOAD_TOO_LARGE', message:'Total attachments size exceeds 5 MB.' });
     }
     console.error('send-telegram error', e);
@@ -133,9 +135,5 @@ async function tgSendDocument(buffer, filename, mime) {
 }
 
 function json(statusCode, obj) {
-  return {
-    statusCode,
-    headers: { 'content-type': 'application/json; charset=utf-8' },
-    body: JSON.stringify(obj)
-  };
+  return { statusCode, headers:{ 'content-type':'application/json; charset=utf-8' }, body: JSON.stringify(obj) };
 }
