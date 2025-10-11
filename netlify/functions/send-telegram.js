@@ -202,7 +202,29 @@ exports.handler = async (event, context) => {
         return {
             statusCode: 405,
             headers: corsHeaders,
-            body: JSON.stringify({ error: 'Method not allowed', method: event.httpMethod })
+            body: JSON.stringify({ error: 'Method not allowed', method: event.httpMethod }
+    // 🔒 Early payload size guard (sum <= 5 MB)
+    const MAX_TOTAL_BYTES = 5 * 1024 * 1024;
+    try {
+        const rawLen = event.body ? event.body.length : 0;
+        const approxBytes = event.isBase64Encoded
+            ? Math.floor(rawLen * 3 / 4)
+            : Buffer.byteLength(event.body || '', 'utf8');
+
+        console.log('Approx request size (bytes):', approxBytes);
+        if (approxBytes > MAX_TOTAL_BYTES) {
+            console.warn('Payload exceeds 5MB, returning 413');
+            return {
+                statusCode: 413,
+                headers: corsHeaders,
+                body: JSON.stringify({ success: false, error: 'PAYLOAD_TOO_LARGE', message: 'Total attachments size exceeds 5 MB' })
+            };
+        }
+    } catch (sizeErr) {
+        console.error('Size check error:', sizeErr);
+        // continue — do not block request if we cannot determine size
+    }
+)
         };
     }
 
