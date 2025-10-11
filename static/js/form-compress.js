@@ -36,6 +36,7 @@
     ];
     for (let i = 0; i < files.length; i++) {
       const f = files[i];
+      // non-images go as-is (if they fit)
       if (!/^image\//i.test(f.type)) {
         if (used + f.size > budgetBytes) throw new Error('OVER_BUDGET');
         out.push(f); used += f.size; continue;

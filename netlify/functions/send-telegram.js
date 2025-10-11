@@ -1,14 +1,17 @@
-// netlify/functions/send-telegram.js
-import Busboy from 'busboy';
+// netlify/functions/send-telegram.js (CommonJS)
+const Busboy   = require('busboy');
+const fetch    = require('node-fetch');      // v2 (CommonJS)
+const FormData = require('form-data');
 
 const MAX_TOTAL_BYTES = 5 * 1024 * 1024; // 5 MB
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
   try {
     if (event.httpMethod !== 'POST') {
       return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
+    // Early total-body guard (Netlify passes base64 for multipart)
     const rawLen = event.body ? event.body.length : 0;
     const approxBytes = event.isBase64Encoded
       ? Math.floor(rawLen * 3 / 4)
@@ -54,11 +57,12 @@ export const handler = async (event) => {
       bb.on('error', reject);
       bb.on('finish', resolve);
 
-      const buf = event.isBase64Encoded ? Buffer.from(event.body, 'base64') : Buffer.from(event.body || '', 'utf8');
+      const buf = event.isBase64Encoded ? Buffer.from(event.body, 'base64')
+                                        : Buffer.from(event.body || '', 'utf8');
       bb.end(buf);
     }).catch(err => {
       if (String(err).includes('PAYLOAD_TOO_LARGE')) {
-        throw Object.assign(new Error('PAYLOAD_TOO_LARGE'), { statusCode: 413 });
+        const e = new Error('PAYLOAD_TOO_LARGE'); e.statusCode = 413; throw e;
       }
       throw err;
     });
@@ -71,6 +75,7 @@ export const handler = async (event) => {
     const text = buildLeadText(fields, files.map(f => f.filename));
     await tgSendMessage(text);
 
+    // Send documents one-by-one
     for (const f of files) {
       await tgSendDocument(f.buffer, f.filename, f.mime || 'application/octet-stream');
     }
@@ -129,7 +134,8 @@ async function tgSendDocument(buffer, filename, mime) {
 
   const form = new FormData();
   form.append('chat_id', chat);
-  form.append('document', new Blob([buffer], { type: mime }), filename);
+  // form-data supports Buffer directly with filename+contentType
+  form.append('document', buffer, { filename, contentType: mime });
 
   await fetch(url, { method: 'POST', body: form });
 }

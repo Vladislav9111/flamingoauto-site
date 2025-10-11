@@ -1,0 +1,26 @@
+Flamingo Auto — 5MB fix build (2025-10-11T22:18:16.668010Z)
+
+Added: static/js/form-compress.js
+Updated: netlify/functions/send-telegram.js
+HTML patched (data-compress + script):
+- admin.html
+- blog-et.html
+- blog-ru.html
+- blog.html
+- en.html
+- index.html
+- ru.html
+- setup-auto-update.html
+- test-blog-new-tab.html
+- test-netlify-functions.html
+- test-password-change.html
+- Archive (1)/admin.html
+- Archive (1)/blog-et.html
+- Archive (1)/blog-ru.html
+- Archive (1)/blog.html
+- Archive (1)/index.html
+- Archive (1)/ru.html
+- admin/debug.html
+- admin/index.html
+- admin/new-index.html
+- admin/test.html
