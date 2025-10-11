@@ -183,6 +183,31 @@ exports.handler = async (event, context) => {
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Content-Type': 'application/json'
     };
+    // --- Size guard (returns 413 instead of 500) ---
+    const MAX_TOTAL_BYTES = 5.5 * 1024 * 1024; // ~5.5 MB
+    const h = event.headers || {};
+    const lenHeader = h['content-length'] || h['Content-Length'];
+    const declaredLen = lenHeader ? parseInt(lenHeader, 10) : null;
+    let actualLen = null;
+    if (typeof event.body === 'string') {
+        try {
+            if (event.isBase64Encoded) {
+                actualLen = Buffer.from(event.body, 'base64').length; // decoded size
+            } else {
+                actualLen = Buffer.byteLength(event.body, 'utf8');
+            }
+        } catch(_) {}
+    }
+    const effLen = declaredLen || actualLen;
+    if (effLen && effLen > MAX_TOTAL_BYTES) {
+        console.warn('⛔ Payload exceeds limit:', effLen, 'bytes');
+        return {
+            statusCode: 413,
+            headers: corsHeaders,
+            body: JSON.stringify({ ok:false, error:'Payload Too Large', receivedBytes: effLen, limitBytes: MAX_TOTAL_BYTES })
+        };
+    }
+
 
     console.log('HTTP Method:', event.httpMethod);
 
