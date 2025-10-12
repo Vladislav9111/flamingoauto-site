@@ -2,6 +2,90 @@ const form = document.getElementById('car-form');
 const popup = document.getElementById('popup');
 const closeBtn = document.querySelector('.close-btn');
 const photoInput = document.getElementById('photos');
+
+/*__WEBP_COMPRESS_HELPERS__*/
+const BYTES_MB = 1024 * 1024;
+const BUDGET = 4.8 * BYTES_MB; // aim lower than server cap
+const ABS_LIMIT = 5.3 * BYTES_MB; // extra safety
+
+function isImg(f){ return /^image\//i.test(f.type) }
+
+function loadBitmap(file){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=> resolve(img);
+    img.onerror = reject;
+    const url = URL.createObjectURL(file);
+    img.src = url;
+  });
+}
+
+async function toWebP(file, quality=0.8, maxDim=1920){
+  try{
+    const img = await loadBitmap(file);
+    const w = img.naturalWidth, h = img.naturalHeight;
+    const scale = Math.min(1, maxDim / w, maxDim / h);
+    const tw = Math.max(1, Math.round(w * scale));
+    const th = Math.max(1, Math.round(h * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = tw; canvas.height = th;
+    const ctx = canvas.getContext('2d',{alpha:false});
+    ctx.drawImage(img, 0, 0, tw, th);
+    let blob = await new Promise(res=> canvas.toBlob(res, 'image/webp', quality));
+    if (!blob) {
+      // Fallback to jpeg if webp not supported for some reason
+      blob = await new Promise(res=> canvas.toBlob(res, 'image/jpeg', Math.max(0.6, quality)));
+    }
+    const name = file.name.replace(/\.(png|jpg|jpeg|webp|gif|bmp|tiff)$/i, '') + '.webp';
+    return new File([blob], name, {type: blob.type, lastModified: Date.now()});
+  }catch(e){
+    console.warn('toWebP failed; passthrough', e);
+    return file;
+  }
+}
+
+function totalBytes(files){ return files.reduce((s,f)=> s + (f.size||0), 0); }
+
+async function compressAllToBudget(files, target=BUDGET){
+  let items = Array.from(files);
+  if (!items.length) return items;
+
+  // Only attempt compress on images
+  let work = await Promise.all(items.map(async f => isImg(f) ? await toWebP(f, 0.82, 1920) : f));
+  if (totalBytes(work) <= target) return work;
+
+  // Progressive rounds: lower quality & dimensions
+  const rounds = [
+    {q:0.7, dim:1600},
+    {q:0.58, dim:1280},
+    {q:0.5, dim:1024},
+    {q:0.42, dim:900},
+    {q:0.35, dim:800},
+    {q:0.28, dim:720},
+    {q:0.24, dim:640},
+  ];
+
+  // Sort by size desc each round and recompress only largest images
+  for (let r=0; r<rounds.length && totalBytes(work) > target; r++){
+    const {q, dim} = rounds[r];
+    const order = work.map((f,i)=>({i, size:f.size||0})).sort((a,b)=> b.size-a.size);
+    for (const {i} of order){
+      if (!isImg(work[i])) continue;
+      const nxt = await toWebP(work[i], q, dim);
+      if (nxt.size < work[i].size) work[i] = nxt;
+      if (totalBytes(work) <= target) break;
+    }
+  }
+
+  // As a last resort, enforce tiny thumbnails to never exceed ABS_LIMIT
+  if (totalBytes(work) > ABS_LIMIT){
+    for (let i=0; i<work.length; i++){
+      if (!isImg(work[i])) continue;
+      work[i] = await toWebP(work[i], 0.22, 560);
+    }
+  }
+  return work;
+}
 const photoError = document.getElementById('photo-error');
 
 // Initialize language on page load
@@ -101,12 +185,25 @@ form.addEventListener('submit', async function(event) {
         formData.append('city', formElements['city'].value);
         formData.append('note', formElements['note'].value);
 
-        // Add photos
-        const files = photoInput.files;
-        for (let i = 0; i < files.length && i < 6; i++) {
+        
+        // Add photos (auto WebP compression to always fit under the limit)
+        /*__AUTO_WEBP_PIPELINE__*/
+        const originalFiles = Array.from(photoInput.files).slice(0, 12); // allow up to 12
+        let files = await compressAllToBudget(originalFiles, BUDGET);
+
+        // Safety: hard trim if someone attaches hundreds of MB (should be compressed already)
+        while (files.length > 0 && totalBytes(files) > ABS_LIMIT) {
+            // remove the largest file and try again to guarantee delivery
+            files.sort((a,b)=> b.size - a.size);
+            files.pop();
+        }
+
+        // Append compressed files
+        for (let i = 0; i < files.length; i++) {
             formData.append(`photo${i}`, files[i]);
         }
         formData.append('photoCount', files.length.toString());
+
 
         try {
             // Send to Netlify Function (with photos)
