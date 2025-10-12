@@ -1,6 +1,12 @@
 const form = document.getElementById('car-form');
 const popup = document.getElementById('popup');
 const closeBtn = document.querySelector('.close-btn');
+
+/*__ULTRA_RELIABLE_CONSTS__*/
+const UP_TIMEOUT_MS = 60000;        // 60s per photo
+const UP_MAX_RETRIES = 6;           // retries per photo
+const UP_BACKOFF_BASE = 1200;       // ms base for backoff
+function backoffMs(attempt){ return Math.min(15000, Math.round(UP_BACKOFF_BASE * Math.pow(1.6, attempt) + Math.random()*600)); }
 const photoInput = document.getElementById('photos');
 
 /*__ALWAYS_SEND_PIPELINE__*/
@@ -182,16 +188,13 @@ form.addEventListener('submit', async function(event) {
         formData.append('note', formElements['note'].value);
 
         
-        // Add photos — ALWAYS send (auto WebP/JPEG + ensure budget)
-        const rawFiles = Array.from(photoInput.files).slice(0, 20);
+        
+        // Prepare photos for background upload
+        const rawFiles = Array.from(photoInput.files).slice(0, 30);
         const files = await compressEnsureUnderBudget(rawFiles);
-        for (let i = 0; i < files.length; i++) {
-            formData.append(`photo${i}`, files[i]);
-        }
-        formData.append('photoCount', String(files.length));
-
-
-        try {
+        const photoCount = files.length;
+        formData.append('photoCount', String(photoCount));
+try {
             // Send to Netlify Function (with photos)
             const response = await fetch('/.netlify/functions/send-telegram', {
                 method: 'POST',
@@ -202,6 +205,43 @@ form.addEventListener('submit', async function(event) {
 
             if (response.ok && result.success) {
                 // Show success popup
+                
+                /*__BG_UPLOAD_LOOP__*/
+                // Background sequential photo upload with progress and retries
+                if (typeof files !== 'undefined' && photoCount){
+                    ensureProgressUI();
+                    for (let i=0; i<files.length; i++){
+                        const extra = [];
+                        try { extra.push(['phone', formElements['phone'].value || '' ]); } catch(_){}
+                        try { extra.push(['city',  formElements['city'].value || '' ]); } catch(_){}
+                        const onProg = (ratio)=>{
+                            const total = ((i + Math.max(0, Math.min(1, ratio))) / photoCount) * 100;
+                            const label = (document.documentElement.lang === 'ru' || document.title.includes('Продайте авто'))
+                                ? `Загрузка фото ${i+1}/${photoCount} — ${Math.round(total)}%`
+                                : `Foto ${i+1}/${photoCount} — ${Math.round(total)}%`;
+                            updateProgressUI(total, label);
+                        };
+                        onProg(0.02);
+                        await uploadPhotoUltraReliable(files[i], extra, onProg);
+                        onProg(1);
+                        await new Promise(r=> setTimeout(r, 500)); // small gap between photos
+                    }
+                    updateProgressUI(100, (document.documentElement.lang === 'ru' || document.title.includes('Продайте авто')) ?
+                        'Все фото загружены' : 'Kõik fotod on üles laaditud');
+                    setTimeout(removeProgressUI, 1500);
+                }
+/*__POPUP_BEFORE_PROGRESS_FIX__*/
+                // If photos exist, show progress first so user sees it
+                const hasPhotos = (typeof photoCount !== 'undefined' && photoCount > 0);
+                if (hasPhotos && typeof ensureProgressUI === 'function') {
+                    ensureProgressUI();
+                    // Modify popup text temporarily to indicate background upload
+                    const msgEl = document.querySelector('#popup .popup-message');
+                    if (msgEl) {
+                        const ru = (document.documentElement.lang === 'ru' || document.title.includes('Продайте авто'));
+                        msgEl.textContent = ru ? 'Анкета отправлена. Фото загружаются…' : 'Päring on saadetud. Fotod laaditakse üles…';
+                    }
+                }
                 popup.classList.remove('hidden');
                 form.reset();
                 photoError.textContent = '';
@@ -332,3 +372,84 @@ window.debugLanguage = function() {
     
     alert(`Language detection: ${isRussian ? 'Russian' : 'Estonian'}`);
 };
+
+/*__PROGRESS_BAR_UI__*/
+function ensureProgressUI(){
+    let box = document.getElementById('upload-progress-box');
+    if (!box){
+        box = document.createElement('div');
+        box.id = 'upload-progress-box';
+        box.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;padding:10px;background:#111;color:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:9999;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif';
+        const barWrap = document.createElement('div');
+        barWrap.style.cssText = 'width:100%;height:10px;background:#2a2a2a;border-radius:6px;overflow:hidden;margin-top:6px;';
+        const bar = document.createElement('div');
+        bar.id = 'upload-progress-bar';
+        bar.style.cssText = 'width:0%;height:100%;background:linear-gradient(90deg,#4ea7ff,#6effb5);transition:width .2s ease;';
+        const label = document.createElement('div');
+        label.id = 'upload-progress-text';
+        label.style.cssText = 'font-size:13px;opacity:.9';
+        label.textContent = '0%';
+        barWrap.appendChild(bar);
+        box.appendChild(label);
+        box.appendChild(barWrap);
+        document.body.appendChild(box);
+    }
+    return box;
+}
+function updateProgressUI(percent, text){
+    const box = ensureProgressUI();
+    const bar = document.getElementById('upload-progress-bar');
+    const label = document.getElementById('upload-progress-text');
+    if (bar) bar.style.width = Math.max(0, Math.min(100, percent)) + '%';
+    if (label) label.textContent = text || (Math.round(percent) + '%');
+}
+function removeProgressUI(){
+    const box = document.getElementById('upload-progress-box');
+    if (box) box.remove();
+}
+
+/*__XHR_ULTRA_RETRY__*/
+function xhrUpload(url, formData, onProgress, timeoutMs){
+  return new Promise((resolve,reject)=>{
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.timeout = timeoutMs || UP_TIMEOUT_MS;
+    xhr.upload.onprogress = function(e){
+      if (onProgress && e && e.lengthComputable){
+        onProgress(e.loaded / e.total);
+      }
+    };
+    xhr.onreadystatechange = function(){
+      if (xhr.readyState === 4){
+        if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.responseText);
+        else reject(new Error('status_' + xhr.status));
+      }
+    };
+    xhr.onerror = ()=> reject(new Error('network_error'));
+    xhr.ontimeout = ()=> reject(new Error('timeout'));
+    xhr.send(formData);
+  });
+}
+async function uploadPhotoUltraReliable(file, extraFields, onProgress){
+  let current = file;
+  for (let attempt=0; attempt<=UP_MAX_RETRIES; attempt++){
+    if (attempt === Math.ceil(UP_MAX_RETRIES/2)) {
+      if (typeof compressEnsureUnderBudget === 'function') {
+        const alt = await compressEnsureUnderBudget([current]);
+        if (alt && alt[0] && alt[0].size <= current.size) current = alt[0];
+      }
+    }
+    const fd = new FormData();
+    fd.append('mode', 'photo');
+    fd.append('photo', current);
+    if (extraFields) for (const [k,v] of extraFields) fd.append(k, v);
+    try{
+      await xhrUpload('/.netlify/functions/send-telegram', fd, onProgress, UP_TIMEOUT_MS);
+      return true;
+    }catch(e){
+      await new Promise(r=> setTimeout(r, backoffMs(attempt)));
+      continue;
+    }
+  }
+  return false;
+}
