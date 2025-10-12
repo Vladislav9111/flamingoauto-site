@@ -18,174 +18,154 @@ function renderPosts() {
     if (!container) return;
     const raw = localStorage.getItem(POSTS_KEY);
     let posts = [];
-    try { posts = raw ? JSON.parse(raw) : []; } catch (e) { posts = []; }
-    container.innerHTML = '';
-    // determine current page locale: 'et', 'ru', or null (show all)
-    const path = (location.pathname || '').toLowerCase();
-    let currentLocale = null;
-    // robust detection: check for explicit blog filenames or page language hints
-    if (path.includes('blog-et') || path.includes('index.html') || path.endsWith('/')) currentLocale = 'et';
-    else if (path.includes('blog-ru') || path.includes('ru.html')) currentLocale = 'ru';
-    // if currentLocale is null, we show all posts (generic blog page / admin preview)
-    if (currentLocale) {
-        posts = posts.filter(p => {
-            // posts with locale 'all' should be shown on any localized blog,
-            // posts specifically tagged 'et' shown on Estonian blog only, 'ru' on Russian only.
-            const locale = (p.locale || 'all').toLowerCase();
-            if (locale === 'all') return true;
-            return locale === currentLocale;
-        });
-    }
-    if (!posts || posts.length === 0) {
-        if (noPosts) noPosts.style.display = '';
-        return;
-    }
-    if (noPosts) noPosts.style.display = 'none';
-    posts.slice().reverse().forEach(post => {
-        const article = document.createElement('article');
-        article.className = 'blog-post';
-        article.style.background = '#fff';
-        article.style.padding = '1.25rem';
-        article.style.borderRadius = '8px';
-        // build gallery html if photos exist
-        const hasPhotos = post.photos && post.photos.length;
-        const galleryClass = hasPhotos && post.photos.length > 1 ? 'post-gallery multiple' : 'post-gallery';
-        const photosHtml = hasPhotos ? `<div class="${galleryClass}">${post.photos.slice(0,6).map((p, idx) => `<img src="${p}" alt="Post image ${idx+1}">`).join('')}</div>` : '';
-        article.innerHTML = `
-            <div class="post-grid">
-                <div class="post-text">
-                    <h2>${escapeHtml(post.title)}</h2>
-                    <p style="color:#444">${escapeHtml(post.excerpt)}</p>
-                    ${post.content ? `<div style="margin-top:0.75rem;color:#333">${sanitizeSimpleHtml(post.content)}</div>` : ''}
-                </div>
-                ${photosHtml || '<div class="post-gallery"></div>'}
-            </div>
-        `;
-        container.appendChild(article);
-    });
-}
-
-/**
- * Escape plain text to prevent injection for title/excerpt
- */
-function escapeHtml(str = '') {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
-
-/**
- * Very small sanitizer to allow a handful of inline tags in content (b, i, strong, em, br, p)
- * Keeps things simple for this demo admin.
- */
-function sanitizeSimpleHtml(input = '') {
-    // Remove script tags and event handlers
-    const tmp = document.createElement('div');
-    tmp.textContent = input;
-    let escaped = tmp.innerHTML;
-    // allow limited tags by replacing encoded tags back (after a whitelist)
-    // For a simple approach: allow <b>, <strong>, <i>, <em>, <br>, <p>
-    escaped = escaped
-        .replace(/&lt;(\/?(b|strong|i|em|br|p))&gt;/g, '<$1>');
-    return escaped;
-}
-
-// expose renderPosts for pages that load this script
-window.FlamingoBlog = {
-    renderPosts,
-    POSTS_KEY
-};
-
-// initialize posts render on pages where posts-container exists
-document.addEventListener('DOMContentLoaded', () => {
-    renderPosts();
-});
-
-function validatePhotos() {
-    photoError.textContent = '';
-    if (photoInput.files.length > 6) {
-        photoError.textContent = 'Saate üles laadida mitte rohkem kui 6 fotot.';
-        return false;
-    }
-    return true;
-}
-
-photoInput.addEventListener('change', validatePhotos);
-
-form.addEventListener('submit', async function(event) {
-    event.preventDefault();
-
-    const arePhotosValid = validatePhotos();
-    // Force validation UI to show on all fields
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
-    const isFormValid = form.checkValidity();
-
-    if (isFormValid && arePhotosValid) {
-        const submitButton = document.getElementById('submit-btn');
-        submitButton.disabled = true;
-        submitButton.textContent = 'Saatmine...';
-
-        const formElements = form.elements;
-        let message = '📩 Teile uus taotlus:\n\n';
-
-        const addField = (label, value) => {
-            if (value && value.trim()) {
-                message += `<b>${label}:</b> ${value.trim()}\n`;
-            }
-        };
-
-        addField('Reg nr', formElements['reg-number'].value);
-        addField('Mark', formElements['make'].value);
-        addField('Mudel', formElements['model'].value);
-        addField('Tootmisaasta', formElements['year'].value);
-        addField('Läbisõit', formElements['mileage'].value);
-        addField('Käigukast', formElements['transmission'].value);
-        addField('Mootor', formElements['engine'].value);
-        if (formElements['price'].value && formElements['price'].value.trim()) {
-            message += `<b>Soovitud hind (€):</b> ${formElements['price'].value.trim()} €\n`;
-        }
-        addField('Nimi', formElements['name'].value);
-        addField('E-post', formElements['email'].value);
-        addField('Telefon', formElements['phone'].value);
-        addField('Linn', formElements['city'].value);
-        addField('Lisainfo', formElements['note'].value);
-        
-        const files = photoInput.files;
-
+    
         try {
-            if (files.length > 0) {
-                // Sending photos with caption
+            // === Helper: progress UI ===
+            function ensureProgressUI(){
+                let box = document.getElementById('upload-progress-box');
+                if (!box){
+                    box = document.createElement('div');
+                    box.id = 'upload-progress-box';
+                    box.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;padding:10px;background:#111;color:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:9999;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif';
+                    const label = document.createElement('div');
+                    label.id = 'upload-progress-text';
+                    label.style.cssText = 'font-size:13px;opacity:.9';
+                    label.textContent = '0%';
+                    const barWrap = document.createElement('div');
+                    barWrap.style.cssText = 'width:100%;height:10px;background:#2a2a2a;border-radius:6px;overflow:hidden;margin-top:6px;';
+                    const bar = document.createElement('div');
+                    bar.id = 'upload-progress-bar';
+                    bar.style.cssText = 'width:0%;height:100%;background:linear-gradient(90deg,#4ea7ff,#6effb5);transition:width .2s ease;';
+                    barWrap.appendChild(bar); box.appendChild(label); box.appendChild(barWrap);
+                    document.body.appendChild(box);
+                }
+                return box;
+            }
+            function updateProgressUI(p,t){ ensureProgressUI(); 
+                const bar = document.getElementById('upload-progress-bar'); 
+                const label = document.getElementById('upload-progress-text');
+                if (bar) bar.style.width = Math.max(0,Math.min(100,p)) + '%';
+                if (label) label.textContent = t || (Math.round(p)+'%');
+            }
+            function removeProgressUI(){ const box = document.getElementById('upload-progress-box'); if (box) box.remove(); }
+
+            // === Compression helpers ===
+            const MB = 1024*1024;
+            const TARGET_SINGLE = 2.5*MB; // целевой размер одного файла
+            const MAX_DIM = 1920;
+            function isImg(f){ return /^image\\//i.test(f && f.type || '') }
+            function loadImg(file){
+                return new Promise((resolve,reject)=>{
+                    const url = URL.createObjectURL(file);
+                    const img = new Image();
+                    img.onload=()=>{ URL.revokeObjectURL(url); resolve(img); };
+                    img.onerror=e=>{ URL.revokeObjectURL(url); reject(e); };
+                    img.src = url;
+                });
+            }
+            function canvasToBlob(canvas, type, quality){
+                return new Promise(res=> canvas.toBlob(res, type, quality));
+            }
+            async function compressOne(file){
+                if (!isImg(file)) return file;
+                try{
+                    const img = await loadImg(file);
+                    const w = img.naturalWidth||img.width, h = img.naturalHeight||img.height;
+                    const scale = Math.min(1, MAX_DIM/Math.max(1,w), MAX_DIM/Math.max(1,h));
+                    const cw = Math.max(1, Math.round(w*scale)), ch = Math.max(1, Math.round(h*scale));
+                    const c = document.createElement('canvas'); c.width=cw; c.height=ch;
+                    c.getContext('2d',{alpha:false}).drawImage(img,0,0,cw,ch);
+                    let q = 0.82, blob = await canvasToBlob(c,'image/webp',q);
+                    const steps = [0.7,0.6,0.5,0.42,0.35,0.28,0.22,0.18,0.14];
+                    let si = 0;
+                    while (blob && blob.size > TARGET_SINGLE && si < steps.length){
+                        q = steps[si++];
+                        blob = await canvasToBlob(c,'image/webp',q);
+                    }
+                    if (!blob) blob = await canvasToBlob(c,'image/jpeg',0.8);
+                    if (!blob) return file;
+                    const name = (file.name||'image').replace(/\.(png|jpg|jpeg|webp|gif|bmp|tif|tiff|heic|heif)$/i,'') + (blob.type.includes('webp')?'.webp':'.jpg');
+                    return new File([blob], name, {type: blob.type, lastModified: Date.now()});
+                }catch(_){ return file; }
+            }
+
+            // === Build message as раньше ===
+            let message = '';
+            const formElements = form.elements;
+            const addField = (label, value) => {
+                if (value && value.trim()) {
+                    message += `<b>${label}:</b> ${value.trim()}\\n`;
+                }
+            };
+            addField('Reg nr', formElements['reg-number'].value);
+            addField('Mark', formElements['make'].value);
+            addField('Mudel', formElements['model'].value);
+            addField('Tootmisaasta', formElements['year'].value);
+            addField('Läbisõit', formElements['mileage'].value);
+            addField('Käigukast', formElements['transmission'].value);
+            addField('Mootor', formElements['engine'].value);
+            if (formElements['price'].value && formElements['price'].value.trim()) {
+                message += `<b>Soovitud hind (€):</b> ${formElements['price'].value.trim()} €\\n`;
+            }
+            addField('Nimi', formElements['name'].value);
+            addField('E-post', formElements['email'].value);
+            addField('Telefon', formElements['phone'].value);
+            addField('Linn', formElements['city'].value);
+            addField('Lisainfo', formElements['note'].value);
+
+            const files = photoInput && photoInput.files ? Array.from(photoInput.files).slice(0,10) : [];
+
+            // Compress photos one-by-one
+            const compressed = [];
+            for (let i=0;i<files.length;i++){
+                updateProgressUI((i*100)/(files.length+1), (document.documentElement.lang==='ru'?'Сжатие…':'Tihendamine…'));
+                compressed.push(await compressOne(files[i]));
+            }
+
+            if (compressed.length > 0){
+                // send album with XHR to show upload progress
                 const formData = new FormData();
                 formData.append('chat_id', CHAT_ID);
-
                 const media = [];
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    const photoKey = `photo${i}`;
-                    formData.append(photoKey, file, file.name);
-                    const mediaInfo = { type: 'photo', media: `attach://${photoKey}` };
-                    if (i === 0) {
-                        mediaInfo.caption = message;
-                        mediaInfo.parse_mode = 'HTML';
-                    }
+                compressed.forEach((file, i)=>{
+                    const key = `photo${i}`;
+                    formData.append(key, file, file.name);
+                    const mediaInfo = { type: 'photo', media: `attach://${key}` };
+                    if (i === 0) { mediaInfo.caption = message; mediaInfo.parse_mode = 'HTML'; }
                     media.push(mediaInfo);
-                }
+                });
                 formData.append('media', JSON.stringify(media));
 
-                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup`, {
-                    method: 'POST',
-                    body: formData
+                ensureProgressUI();
+                updateProgressUI(1, (document.documentElement.lang==='ru' ? 'Подготовка…' : 'Ettevalmistamine…'));
+
+                await new Promise((resolve, reject)=>{
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', `https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup`, true);
+                    xhr.timeout = 120000;
+                    xhr.upload.onprogress = (e)=>{
+                        if (e && e.lengthComputable){
+                            const p = (e.loaded / e.total) * 100;
+                            const label = (document.documentElement.lang==='ru')
+                                ? `Загрузка… ${Math.round(p)}%` : `Üleslaadimine… ${Math.round(p)}%`;
+                            updateProgressUI(p, label);
+                        } else {
+                            updateProgressUI(5, (document.documentElement.lang==='ru')?'Подготовка…':'Ettevalmistamine…');
+                        }
+                    };
+                    xhr.onreadystatechange = ()=>{
+                        if (xhr.readyState === 4){
+                            if (xhr.status>=200 && xhr.status<300) resolve();
+                            else reject(new Error('status_'+xhr.status));
+                        }
+                    };
+                    xhr.onerror = ()=> reject(new Error('network_error'));
+                    xhr.ontimeout = ()=> reject(new Error('timeout'));
+                    xhr.send(formData);
                 });
-                if (!response.ok) throw new Error('Failed to send photos to Telegram');
 
             } else {
-                // Sending text only
+                // Text only
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -196,15 +176,14 @@ form.addEventListener('submit', async function(event) {
                     })
                 });
             }
-            
-            popup.classList.remove('hidden');
+
+            // Success UI
+            const popup = document.getElementById('popup');
+            if (popup) popup.classList.remove('hidden');
+            if (typeof removeProgressUI === 'function') setTimeout(removeProgressUI, 1200);
             form.reset();
             photoError.textContent = '';
-
-        } catch (error) {
-            console.error('Telegram API Error:', error);
-            alert('Küsimustikku ei õnnestunud saata. Palun proovige uuesti.');
-        } finally {
+} finally {
             submitButton.disabled = false;
             submitButton.textContent = 'Saada päring';
         }
