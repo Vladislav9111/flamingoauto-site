@@ -1,43 +1,23 @@
-// Netlify Function для безопасного получения конфигурации
-exports.handler = async (event, context) => {
-  // Проверяем метод запроса
+// netlify/functions/get-config.js
+exports.handler = async (event) => {
   if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
 
-  try {
-    // Возвращаем только необходимые переменные окружения
-    const config = {
-      GITHUB_TOKEN: process.env.GITHUB_TOKEN,
-      // НЕ возвращаем Telegram токены в браузер для безопасности
-      hasGithubToken: !!process.env.GITHUB_TOKEN
-    };
-
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify(config)
-    };
-  } catch (error) {
-    console.error('Config error:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
-    };
-  }
-};
-return {
-  statusCode: 200,
-  headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-  body: JSON.stringify({
+  // НИЧЕГО секретного не выдаём
+  const body = {
     hasGithubToken: !!process.env.GITHUB_TOKEN,
     repoOwner: process.env.GITHUB_REPO_OWNER || null,
     repoName: process.env.GITHUB_REPO_NAME || null
-  })
+  };
+
+  return {
+    statusCode: 200,
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    body: JSON.stringify(body)
+  };
 };
