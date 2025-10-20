@@ -32,3 +32,12 @@ exports.handler = async (event, context) => {
     };
   }
 };
+return {
+  statusCode: 200,
+  headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+  body: JSON.stringify({
+    hasGithubToken: !!process.env.GITHUB_TOKEN,
+    repoOwner: process.env.GITHUB_REPO_OWNER || null,
+    repoName: process.env.GITHUB_REPO_NAME || null
+  })
+};
