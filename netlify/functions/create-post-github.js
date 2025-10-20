@@ -12,7 +12,18 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    const owner = process.env.GITHUB_REPO_OWNER || 'Vladislav9111';
+    const repo = process.env.GITHUB_REPO_NAME || 'flamingoauto-site';
     // Проверяем авторизацию
+    const githubToken = process.env.GITHUB_TOKEN;
+    if (!githubToken) {
+      return {
+        statusCode: 401,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ error: 'Missing GITHUB_TOKEN on server. Set it in Netlify > Site settings > Build & deploy > Environment.', code: 'MISSING_TOKEN' })
+      };
+    }
+
     const authHeader = event.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return {
@@ -65,10 +76,12 @@ ${content}`;
     const encodedContent = Buffer.from(markdownContent, 'utf8').toString('base64');
 
     // Отправляем в GitHub API
-    const githubResponse = await fetch(`https://api.github.com/repos/Vladislav9111/flamingoauto-site/contents/content/blog/${filename}`, {
+    const githubResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/content/blog/${filename}`, {
       method: 'PUT',
       headers: {
-        'Authorization': `token ${process.env.GITHUB_TOKEN || 'no-token'}`,
+        'Authorization': `Bearer ${githubToken}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
         'Content-Type': 'application/json',
         'Accept': 'application/vnd.github.v3+json',
         'User-Agent': 'Flamingo-Auto-Blog'

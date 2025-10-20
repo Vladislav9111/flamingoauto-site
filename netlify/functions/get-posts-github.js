@@ -2,6 +2,10 @@
 exports.handler = async (event, context) => {
   try {
     console.log('🔄 Загружаем посты через GitHub API...');
+    const githubToken = process.env.GITHUB_TOKEN;
+    if (!githubToken) {
+      console.warn('Нет GITHUB_TOKEN: загрузим публично, без приватных репо');
+    }
     
     const owner = 'Vladislav9111';
     const repo = 'flamingoauto-site';
