@@ -1,55 +1,80 @@
-// HEIC robust patch
+// HEIC/HEIF safe convert; never block submit with alerts
 (function(){
   window.__heicPatchActive=true;
-  var JPEG_QUALITY=0.86, MAX_FILES=15;
-  function isHeic(f){var n=(f.name||'').toLowerCase(),t=(f.type||'').toLowerCase();return t.includes('heic')||t.includes('heif')||/\.hei[cf]$/i.test(n);}
-  async function heicToJpeg(f){
-    if(!isHeic(f)) return f;
-    if(typeof heic2any!=='function') return f;
-    try{
-      var out=await heic2any({blob:f,toType:'image/jpeg',quality:JPEG_QUALITY});
-      return new File([out], (f.name||'photo').replace(/\.(heic|heif)$/i,'')+'.jpg', {type:'image/jpeg'});
-    }catch(e){ console.warn('heic2any failed',e); return f; }
+  var MAX_FILES=15, JPEG_QUALITY=0.86;
+
+  function byExt(name){ return (name||'').toLowerCase().match(/\.(jpe?g|png|heic|heif)$/); }
+  function isImage(file){
+    var t=(file.type||'').toLowerCase();
+    return t.startsWith('image/') || byExt(file.name);
   }
-  async function pngToJpeg(f){
-    if((f.type||'').toLowerCase()!=='image/png') return f;
+  function isHeic(file){
+    var t=(file.type||'').toLowerCase(), n=(file.name||'').toLowerCase();
+    return t.indexOf('heic')>=0 || t.indexOf('heif')>=0 || /\.hei[cf]$/.test(n);
+  }
+
+  async function convertHeic(file){
+    if(typeof window.heic2any!=='function') return null;
     try{
-      var buf=await f.arrayBuffer();
+      var blob = await window.heic2any({ blob:file, toType:'image/jpeg', quality: JPEG_QUALITY });
+      var name=(file.name||'photo').replace(/\.(heic|heif)$/i,'')+'.jpg';
+      return new File([blob], name, { type:'image/jpeg' });
+    }catch(e){ console.warn('heic2any failed', e); return null; }
+  }
+  async function convertPng(file){
+    try{
+      var buf=await file.arrayBuffer();
       var img=await createImageBitmap(new Blob([buf],{type:'image/png'}));
       var c=document.createElement('canvas'); c.width=img.width; c.height=img.height;
       c.getContext('2d').drawImage(img,0,0);
       var blob=await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('toBlob fail')),'image/jpeg',JPEG_QUALITY));
-      return new File([blob], (f.name||'photo').replace(/\.png$/i,'')+'.jpg', {type:'image/jpeg'});
-    }catch(e){ console.warn('png→jpeg failed',e); return f; }
+      return new File([blob], (file.name||'photo').replace(/\.png$/i,'')+'.jpg', {type:'image/jpeg'});
+    }catch(e){ console.warn('png->jpeg failed', e); return null; }
   }
-  async function normalize(input){
-    let files=Array.from(input?.files||[]);
-    if(!files.length) return [];
-    if(files.length>MAX_FILES) files.length=MAX_FILES;
-    for(let i=0;i<files.length;i++) files[i]=await heicToJpeg(files[i]);
-    for(let i=0;i<files.length;i++) files[i]=await pngToJpeg(files[i]);
-    let finals=files.filter(f=>/image\/jpeg|image\/png/i.test(f.type||'')||/\.(jpe?g|png)$/i.test(f.name||''));
-    if(!finals.length) finals=files; // отправим исходники, если конверсия не удалась
-    return finals;
+
+  async function prepareFiles(input){
+    var list = Array.from(input?.files||[]).filter(isImage);
+    if(list.length>MAX_FILES) list.length=MAX_FILES;
+    var out = [];
+    for(let f of list){
+      if(isHeic(f)){
+        let conv = await convertHeic(f);
+        out.push(conv || f); // если не получилось — отправим исходник
+      }else if((f.type||'').toLowerCase()==='image/png'){
+        // PNG допускаем как есть, если конверсия не удалась
+        let conv = await convertPng(f);
+        out.push(conv || f);
+      }else{
+        out.push(f); // JPEG, WEBP (если вдруг), и т.д. — как есть
+      }
+    }
+    return out;
   }
-  function showErr(m){ alert(m||'Ошибка при подготовке файлов. Разрешены JPG/PNG/HEIC/HEIF.'); }
+
   document.addEventListener('DOMContentLoaded', function(){
-    const form=document.querySelector('form'); const input=document.querySelector('input[type="file"]');
-    if(!form||!input) return;
+    var form = document.querySelector('form');
+    var input = document.querySelector('input[type=\"file\"]');
+    if(!form || !input) return;
+
     form.addEventListener('submit', async function(e){
-      if(!input.files||!input.files.length) return;
+      if(!input.files || !input.files.length) return; // без файлов — идём по старой логике
       e.preventDefault();
       try{
-        const files=await normalize(input); if(!files.length) return;
-        const fd=new FormData(form);
-        ['photos','photos[]','images','images[]','file','files[]'].forEach(k=>fd.delete(k));
+        var files = await prepareFiles(input);
+        if(files.length===0){ alert('Выберите изображения (JPG/PNG/HEIC).'); return; }
+        var fd = new FormData(form);
+        ['photos','photos[]','images','images[]','file','files[]','photo','photo[]'].forEach(k=>fd.delete(k));
         files.forEach(f=>fd.append('photos[]', f, f.name));
-        const action=form.getAttribute('action')||form.action||location.href;
-        const method=(form.getAttribute('method')||form.method||'POST').toUpperCase();
-        const r=await fetch(action,{method,body:fd});
-        if(!r.ok) throw new Error('Upload failed '+r.status);
-        form.reset(); alert('Заявка отправлена!');
-      }catch(err){ console.error(err); showErr(); }
+        var action = form.getAttribute('action') || form.action || location.href;
+        var method = (form.getAttribute('method') || form.method || 'POST').toUpperCase();
+        var resp = await fetch(action, { method, body: fd });
+        if(!resp.ok) throw new Error('Upload failed '+resp.status);
+        form.reset();
+        try{ alert('Teie ankeet on saadetud'); }catch(_){}
+      }catch(err){
+        console.error('submit failed', err);
+        alert('Не удалось отправить форму. Попробуйте ещё раз.');
+      }
     });
   });
 })();
