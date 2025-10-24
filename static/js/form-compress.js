@@ -1,39 +1,10 @@
-
-  async function normalizeHeic(file) {
-    try {
-      const name = (file.name || '').toLowerCase();
-      const type = (file.type || '').toLowerCase();
-      const isHeic = type.includes('heic') || type.includes('heif') || name.endsWith('.heic') || name.endsWith('.heif');
-      if (!isHeic) return file;
-      if (!window.heic2any) return file;
-      const jpegBlob = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
-      const outName = (file.name || 'photo').replace(/\.(heic|heif)$/i, '') + '.jpg';
-      return new File([jpegBlob], outName, { type: 'image/jpeg' });
-    } catch(e){ console.warn('HEIC normalize failed', e); return file; }
-  }
 // static/js/form-compress.js
 (() => {
-  async function normalizeHeic(file) {
-    try {
-      const name = (file.name || '').toLowerCase();
-      const type = (file.type || '').toLowerCase();
-      const isHeic = type.includes('heic') || type.includes('heif') || name.endsWith('.heic') || name.endsWith('.heif');
-      if (!isHeic) return file;
-      if (!window.heic2any) return file;
-      const jpegBlob = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
-      const outName = (file.name || 'photo').replace(/\.(heic|heif)$/i, '') + '.jpg';
-      return new File([jpegBlob], outName, { type: 'image/jpeg' });
-    } catch(e){ console.warn('HEIC normalize failed', e); return file; }
-  }
-
   const MAX_TOTAL = 5 * 1024 * 1024; // 5 MB
   const MAX_FILES = 15;
-  const ALLOWED_TYPES = ['image/jpeg','image/png','image/heic','image/heif'];
 
   function $(sel, root = document) { return root.querySelector(sel); }
   function showError(box, msg) { if (box) { box.textContent = msg; box.style.display = 'block'; } }
-  function filterUnsupported(files){ return files.filter(f=> ALLOWED_TYPES.includes((f.type||'').toLowerCase()) || /\.(jpe?g|png|heic|heif)$/i.test(f.name||'')); }
-
   function clearError(box) { if (box) { box.textContent = ''; box.style.display = 'none'; } }
 
   async function fileToImage(file) {
@@ -52,7 +23,7 @@
     return c;
   }
   function canvasToBlob(canvas, mime, quality) {
-    return new Promise(res => canvas.toBlob(res, 'image/jpeg', quality));
+    return new Promise(res => canvas.toBlob(res, mime, quality));
   }
 
   async function compressImagesToBudget(files, budgetBytes) {
@@ -71,7 +42,7 @@
         out.push(f); used += f.size; continue;
       }
       const img = await fileToImage(f);
-      const targetMime = 'image/jpeg';
+      const targetMime = ('toBlob' in HTMLCanvasElement.prototype) ? 'image/webp' : 'image/jpeg';
 
       let best = null;
       for (const s of steps) {
@@ -105,7 +76,6 @@
     if (!fileInput) return;
 
     const files = Array.from(fileInput.files || []);
-      for (let i=0;i<files.length;i++) { files[i] = await normalizeHeic(files[i]); }
     if (files.length > MAX_FILES) {
       e.preventDefault();
       showError(errBox, `Слишком много файлов (${files.length}). Допустимо до ${MAX_FILES}.`);
