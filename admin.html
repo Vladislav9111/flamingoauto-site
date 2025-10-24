@@ -34,8 +34,6 @@
         .error-message { color: #dc3545; margin-top: 0.5rem; }
         .success-message { color: #28a745; margin-top: 0.5rem; }
     </style>
-
-<script src="https://unpkg.com/heic2any/dist/heic2any.min.js"></script>
 </head>
 <body>
     <main class="container admin-panel">
@@ -77,7 +75,7 @@
             <textarea id="post-content" rows="8" placeholder="Полный текст записи (HTML ограничен)"></textarea>
 
             <label for="post-photos">Фотографии (до 6)</label>
-            <input id="post-photos" type="file" accept="image/*,.heic,.heif,image/heic,image/heif" multiple />
+            <input id="post-photos" type="file" accept="image/*" multiple />
             <small class="muted">Вы можете добавить до 6 изображений. Они будут отображаться в карточке записи.</small>
 
             <label for="post-locale" style="margin-top:0.75rem;">Публиковать в</label>
@@ -121,8 +119,7 @@
         </div>
     </main>
 
-    <script type="module" src="script.js?v=20251024173215"></script>
-<script src="/heic-patch.js?v=20251024173215"></script>
+    <script type="module" src="script.js"></script>
     <script type="module">
         // Пароль админа
         let ADMIN_PASSWORD = 'HDoSf4qGf2aV4Yp';
