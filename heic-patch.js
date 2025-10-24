@@ -1,70 +1,48 @@
-// HEIC/HEIF → WebP (and large JPG/PNG → WebP). Non-blocking submit.
+// Universal conversion to WEBP + resize; HEIC/HEIF via heic2any
 (function(){
-  window.__heicPatchWebp = true;
+  window.__heicPatchWebp="force";
+  var MAX_FILES=15, MAX_DIM=2560, WEBP_QUALITY=0.88;
 
-  var MAX_FILES = 15;
-  var TARGET_MAX_DIM = 2560; // downscale if larger (keeps aspect)
-  var WEBP_QUALITY = 0.86;
+  function isHeic(f){var n=(f.name||'').toLowerCase(),t=(f.type||'').toLowerCase();return t.includes('heic')||t.includes('heif')||/\.hei[cf]$/i.test(n);}
+  function isImage(f){var t=(f.type||'').toLowerCase(); return t.startsWith('image/');}
 
-  function isHeic(f){
-    var n=(f.name||'').toLowerCase(), t=(f.type||'').toLowerCase();
-    return t.includes('heic')||t.includes('heif')||/\.hei[cf]$/i.test(n);
+  function scale(w,h){
+    if(Math.max(w,h)<=MAX_DIM) return [w,h];
+    if(w>=h){ return [MAX_DIM, Math.round(h*MAX_DIM/w)];}
+    else{ return [Math.round(w*MAX_DIM/h), MAX_DIM];}
   }
-  function isRaster(f){
-    var t=(f.type||'').toLowerCase();
-    return t.startsWith('image/');
-  }
-  function needResize(w,h){
-    return Math.max(w,h) > TARGET_MAX_DIM;
-  }
-  async function drawToCanvas(blob, type){
-    const bmp = await createImageBitmap(blob);
-    let w=bmp.width, h=bmp.height;
-    if (needResize(w,h)){
-      if (w>=h){ h = Math.round(h * TARGET_MAX_DIM / w); w = TARGET_MAX_DIM; }
-      else     { w = Math.round(w * TARGET_MAX_DIM / h); h = TARGET_MAX_DIM; }
-    }
+
+  async function drawToWebp(blob){
+    const bmp=await createImageBitmap(blob);
+    const [w,h]=scale(bmp.width,bmp.height);
     const c=document.createElement('canvas'); c.width=w; c.height=h;
-    const g=c.getContext('2d');
-    g.drawImage(bmp,0,0,w,h);
-    const out = await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('toBlob fail')),'image/webp',WEBP_QUALITY));
+    const g=c.getContext('2d'); g.drawImage(bmp,0,0,w,h);
+    const out=await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('toBlob fail')),'image/webp',WEBP_QUALITY));
     return out;
   }
 
   async function heicToWebp(f){
-    if (typeof window.heic2any!=='function') return null;
+    if(typeof heic2any!=='function') return null;
     try{
-      const webp = await window.heic2any({ blob:f, toType:'image/webp', quality: WEBP_QUALITY });
-      return new File([webp], (f.name||'photo').replace(/\.(heic|heif)$/i,'')+'.webp', {type:'image/webp'});
-    }catch(e){ console.warn('heic->webp failed', e); return null; }
+      const webp=await heic2any({blob:f,toType:'image/webp',quality:WEBP_QUALITY});
+      return new File([webp], (f.name||'photo').replace(/\.(heic|heif)$/i,'')+'.webp',{type:'image/webp'});
+    }catch(e){ console.warn('heic->webp',e); return null;}
   }
-  async function anyToWebpViaCanvas(f){
+  async function anyToWebp(f){
     try{
-      const blob = await f.arrayBuffer();
-      const out = await drawToCanvas(new Blob([blob],{type:f.type||'image/*'}), f.type);
-      return new File([out], (f.name||'photo').replace(/\.(jpe?g|png)$/i,'')+'.webp', {type:'image/webp'});
-    }catch(e){ console.warn('canvas->webp failed', e); return null; }
+      const buf=await f.arrayBuffer();
+      const out=await drawToWebp(new Blob([buf],{type:f.type||'image/*'}));
+      return new File([out], (f.name||'photo').replace(/\.(jpe?g|png|webp)$/i,'')+'.webp',{type:'image/webp'});
+    }catch(e){ console.warn('any->webp',e); return null;}
   }
 
   async function normalize(input){
-    const files = Array.from(input?.files||[]).filter(isRaster).slice(0, MAX_FILES);
-    const out = [];
-    for (let f of files){
-      let nf = f;
-      if (isHeic(f)){
-        nf = await heicToWebp(f) || f;
-      } else {
-        // for JPEG/PNG, convert to webp only if very large (or already webp leave as is)
-        const t=(f.type||'').toLowerCase();
-        if (t==='image/jpeg' || t==='image/png'){
-          try{
-            const bmp = await createImageBitmap(f);
-            if (bmp && (Math.max(bmp.width, bmp.height) > TARGET_MAX_DIM)){
-              nf = await anyToWebpViaCanvas(f) || f;
-            }
-          }catch(e){ console.warn('probe size failed', e); }
-        }
-      }
+    const src=Array.from(input?.files||[]).filter(isImage).slice(0,MAX_FILES);
+    const out=[];
+    for(const f of src){
+      let nf=f;
+      if(isHeic(f)) nf = await heicToWebp(f) || f;
+      else nf = await anyToWebp(f) || f;
       out.push(nf);
     }
     return out;
@@ -73,26 +51,22 @@
   document.addEventListener('DOMContentLoaded', function(){
     const form=document.querySelector('form');
     const input=document.querySelector('input[type=\"file\"]');
-    if(!form || !input) return;
+    if(!form||!input) return;
     form.addEventListener('submit', async function(e){
-      if(!input.files || !input.files.length) return;
+      if(!input.files||!input.files.length) return;
       e.preventDefault();
       try{
-        const files = await normalize(input);
-        if (!files.length){ alert('Выберите изображения'); return; }
+        const files=await normalize(input);
         const fd=new FormData(form);
         ['photos','photos[]','images','images[]','file','files[]','photo','photo[]'].forEach(k=>fd.delete(k));
-        files.forEach(f=>fd.append('photos[]', f, f.name));
+        // append under both names to match backend expectations
+        files.forEach(f=>{ fd.append('photos[]',f,f.name); fd.append('photo[]',f,f.name); });
         const action=form.getAttribute('action')||form.action||location.href;
         const method=(form.getAttribute('method')||form.method||'POST').toUpperCase();
         const resp=await fetch(action,{method,body:fd});
-        if(!resp.ok) throw new Error('Upload failed '+resp.status);
-        form.reset();
-        alert('Teie ankeet on saadetud');
-      }catch(err){
-        console.error(err);
-        alert('Не удалось отправить форму. Попробуйте ещё раз.');
-      }
+        if(!resp.ok){ console.error('resp',resp.status); throw new Error('Upload failed '+resp.status); }
+        form.reset(); alert('Teie ankeet on saadetud');
+      }catch(err){ console.error('submit fail',err); alert('Не удалось отправить форму. Попробуйте ещё раз.'); }
     });
   });
 })();
