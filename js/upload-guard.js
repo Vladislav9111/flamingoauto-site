@@ -7,6 +7,25 @@
  *   <form data-upload-guard="on"> ... <input type="file" multiple> ... </form>
  */
 (function () {
+  async function normalizeHeic(file) {
+    const name = (file.name || '').toLowerCase();
+    const type = (file.type || '').toLowerCase();
+    const isHeic = type.includes('heic') || type.includes('heif') || name.endsWith('.heic') || name.endsWith('.heif');
+    if (!isHeic) return file;
+    if (typeof window.heic2any !== 'function') {
+      console.warn('heic2any not loaded; keeping original file');
+      return file;
+    }
+    try {
+      const jpegBlob = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.86 });
+      const fname = (file.name || 'photo').replace(/\.(heic|heif)$/i, '') + '.jpg';
+      return new File([jpegBlob], fname, { type: 'image/jpeg' });
+    } catch (e) {
+      console.error('HEIC→JPEG convert failed', e);
+      return file; // не блокируем
+    }
+  }
+
   const BYTES_MB = 1024 * 1024;
   const LIMIT_MB = 5;           // hard limit to target
   const SOFT_LIMIT = 4.8 * BYTES_MB; // try to compress to under this

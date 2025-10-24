@@ -16,8 +16,6 @@
         .admin-actions { margin-top:1rem; display:flex; gap:0.75rem; flex-wrap:wrap; }
         .muted { color:#666; font-size:0.95rem; }
     </style>
-
-<script src="https://unpkg.com/heic2any/dist/heic2any.min.js"></script>
 </head>
 <body>
     <main class="container admin-panel">
@@ -52,7 +50,7 @@
             <textarea id="post-content" rows="6" placeholder="Полный текст записи (HTML ограничен)"></textarea>
 
             <label for="post-photos">Фотографии (до 6)</label>
-            <input id="post-photos" type="file" accept="image/*,.heic,.heif,image/heic,image/heif" multiple />
+            <input id="post-photos" type="file" accept="image/*" multiple />
             <small class="muted">Вы можете добавить до 6 изображений. Они будут отображаться в карточке записи.(рекомендуется не более 1 фото, если больше 1 фото я это тоже адаптировал) </small>
 
             <!-- Locale selector: choose target blog language -->
@@ -74,7 +72,7 @@
 
     </main>
 
-    <script type="module" src="script.js?v=20251024141139"></script>
+    <script type="module" src="script.js"></script>
     <script type="module">
         import { ADMIN_PASS } from './config.js';
 
