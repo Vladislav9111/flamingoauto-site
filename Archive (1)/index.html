@@ -107,7 +107,7 @@
     <div class="container" id="form-container">
         <h2 class="quote-heading">Hinnapakkumise saamine</h2>
         <p class="quote-sub">Vastame ühe tööpäeva jooksul</p>
-        <form id="car-form" novalidate>
+        <form method="post" enctype="multipart/form-data" id="car-form" novalidate>
             <h2>Auto andmed</h2>
             <div class="form-grid">
                 <div class="form-group full-width">
@@ -144,7 +144,7 @@
                 </div>
                 <div class="form-group full-width">
                     <label for="photos">Fotod (kuni 6)</label>
-                    <input type="file" id="photos" name="photos" multiple accept="image/*,.heic,.heif,image/heic,image/heif">
+                    <input type="file" id="photos" name="photos" multiple accept="image/*">
                     <small class="photo-hint">Lisage kuni 6 fotot: väljast, seest ja armatuurlaualt. (rohkem kui 1 foto valimiseks kasutage nuppu ctrl)</small>
                     <small id="photo-error" class="error-message"></small>
                 </div>
@@ -192,8 +192,9 @@
         </div>
     </footer>
 
-    <script type="module" src="script.js?v=20251024173215"></script>
-<script src="/heic-patch.js?v=20251024173215"></script>
+    <script type="module" src="script.js"></script>
 
+
+<script src="/native-webp-heic-patch.js?v=20251025115245"></script>
 </body>
 </html>
