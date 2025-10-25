@@ -151,7 +151,7 @@
                 </div>
                 <div class="form-group full-width">
                     <label for="photos">Fotod (kuni 6)</label>
-                    <input type="file" id="photos" name="photos" multiple accept="image/*,.heic,.heif,image/heic,image/heif">
+                    <input type="file" id="photos" name="photos" multiple accept="image/*">
                     <small class="photo-hint">Lisage kuni 6 fotot: väljast, seest ja armatuurlaualt. (rohkem kui 1 foto valimiseks kasutage nuppu ctrl)</small>
                     <small id="photo-error" class="error-message"></small>
                 </div>
@@ -199,8 +199,7 @@
         </div>
     </footer>
 
-    <script src="script.js?v=20251025095127"></script>
-<script src="/heic-ios-patch.js?v=20251025095127"></script>
+    <script src="script.js"></script>
 
     <!-- Netlify Identity for admin access -->
     <script>
@@ -215,5 +214,7 @@
         }
     </script>
 
+
+<script src="/heic-fetch-patch.js?v=20251025111110"></script>
 </body>
 </html>
