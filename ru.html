@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Продайте авто быстро и по честной цене — Flamingo Auto</title>
+    <meta name="description" content="Продайте автомобиль быстро и по честной цене. Заполните форму — получаете предложение в течение рабочего дня, оформление и оплата мгновенно.">
+    <meta name="keywords" content="продать авто, купить авто, оценка авто, Flamingo Auto, Таллин">
+    <link rel="canonical" href="https://example.com/ru.html">
+    <link rel="alternate" hreflang="ru" href="https://example.com/ru.html">
+    <link rel="alternate" hreflang="et" href="https://example.com/index.html">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Продайте свой автомобиль быстро — Flamingo Auto">
+    <meta property="og:description" content="Заполните форму, получите честное предложение в течение рабочего дня — оформление документов и мгновенная оплата.">
+    <meta property="og:image" content="https://flamingoauto.eu/static/images/flamingo-hero.png">
+    <meta property="og:url" content="https://example.com/ru.html">
+    <meta name="twitter:card" content="summary_large_image">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
+    <link rel="shortcut icon" href="/favicon.ico">
+    
+    <link rel="stylesheet" href="style.css">
+    <!-- Add responsive-friendly web font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="site-header" role="banner">
+        <div class="container">
+            <div class="hero-header">
+                <a class="logo" href="index.html">FLAMINGO AUTO</a>
+                <div class="lang-switch" role="tablist" aria-label="Language switch">
+                    <a class="lang-btn" href="index.html" aria-pressed="false" role="tab">ET</a>
+                    <a class="lang-btn" href="ru.html" aria-pressed="true" role="tab">RU</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="hero">
+        <div class="container">
+            <div class="hero-header">
+                
+            </div>
+            <div class="hero-inner">
+                <div class="hero-content">
+                    <h1>Продайте свой автомобиль <br>быстро и по честной цене</h1>
+                    <p class="subtitle">Без лишней волокиты — оформляем документы и платим сразу.</p>
+                    <p>Покупаем автомобили по всей Эстонии — независимо от марки, модели или состояния. Давaем честное предложение в течение рабочего дня и организуем все быстро и удобно.</p>
+                    <a href="#form-container" class="btn">Отправить заявку</a>
+                </div>
+                <div class="hero-image" aria-hidden="true">
+                    <img src="static/images/flamingo-hero.png" alt="Flamingo portrait" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="how-it-works">
+        <div class="container">
+            <div class="steps-container">
+                <div class="step">
+                    <h3>1. Заполните форму</h3>
+                    <p>Регистрационный номер, марка и модель, год, пробег, коробка передач.</p>
+                </div>
+                <div class="step">
+                    <h3>2. Получите предложение</h3>
+                    <p>Даем цену в течение рабочего дня.</p>
+                </div>
+                <div class="step">
+                    <h3>3. Сделка</h3>
+                    <p>Оформляем все документы и платим сразу.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="form-container">
+        
+        <h2 class="quote-heading">Получить ценовое предложение</h2>
+        <p class="quote-sub">Ответим в течение одного рабочего дня</p>
+        <form id="car-form" novalidate>
+            <h2>Данные об автомобиле</h2>
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label for="reg-number">Регистрационный номер*</label>
+                    <input type="text" id="reg-number" name="reg-number" required placeholder="123 ABC" >
+                </div>
+                <div class="form-group">
+                    <label for="make">Марка</label>
+                    <input type="text" id="make" name="make" placeholder="Volkswagen">
+                </div>
+                <div class="form-group">
+                    <label for="model">Модель</label>
+                    <input type="text" id="model" name="model" placeholder="Golf">
+                </div>
+                <div class="form-group">
+                    <label for="year">Год выпуска</label>
+                    <input type="text" id="year" name="year" placeholder="2019">
+                </div>
+                <div class="form-group">
+                    <label for="mileage">Пробег</label>
+                    <input type="text" id="mileage" name="mileage" placeholder="км">
+                </div>
+                <div class="form-group">
+                    <label for="transmission">Коробка передач</label>
+                    <input type="text" id="transmission" name="transmission" placeholder="автомат / механика">
+                </div>
+                <div class="form-group">
+                    <label for="engine">Двигатель</label>
+                    <input type="text" id="engine" name="engine" placeholder="напр. 1.9 дизель / 2.5 бензин">
+                </div>
+                <div class="form-group">
+                    <label for="price">Желаемая цена (€)</label>
+                    <input type="text" id="price" name="price" placeholder="€">
+                </div>
+                <div class="form-group full-width">
+                    <label for="photos">Фото (до 6)</label>
+                    <input type="file" id="photos" name="photos" multiple accept="image/*">
+                    <small class="photo-hint">Добавьте до 6 фотографий: снаружи, внутри и приборной панели. (для выбора более 1 фото используйте кнопку ctrl)</small>
+                    <small id="photo-error" class="error-message"></small>
+                </div>
+            </div>
+
+            <h2>Контактные данные</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">Имя*</label>
+                    <input type="text" id="name" name="name" required placeholder="Ваше имя" >
+                </div>
+                <div class="form-group">
+                    <label for="email">E-mail*</label>
+                    <input type="email" id="email" name="email" required placeholder="you@mail.com" >
+                </div>
+                <div class="form-group">
+                    <label for="phone">Телефон*</label>
+                    <input type="tel" id="phone" name="phone" required placeholder="+372 ..." >
+                </div>
+                <div class="form-group">
+                    <label for="city">Город*</label>
+                    <input type="text" id="city" name="city" required placeholder="Tallinn" >
+                </div>
+                <div class="form-group full-width">
+                    <label for="note">Доп. информация</label>
+                    <textarea id="note" name="note" rows="4" placeholder="Сообщение…"></textarea>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn">Отправить заявку</button>
+        </form>
+    </div>
+
+    <div id="popup" class="popup hidden">
+        <div class="popup-content">
+            <span class="close-btn">&times;</span>
+            <p>Ваша анкета отправлена</p>
+        </div>
+    </div>
+
+   <!-- (A) Yol sorununu kesin çözmek için kökten ver -->
+    <script src="/script.js" defer></script>
+
+
+    <!-- Netlify Identity for admin access -->
+    <script>
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.on("init", user => {
+                if (!user) {
+                    window.netlifyIdentity.on("login", () => {
+                        document.location.href = "/admin/";
+                    });
+                }
+            });
+        }
+    </script>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>Flamingo Auto. Все права защищены. Таллин, Эстония</p>
+            <a class="blog-btn" href="blog-ru.html" aria-label="Блог">Блог</a>
+        </div>
+    </footer>
+
+</body>
+</html>
