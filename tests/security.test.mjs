@@ -2,13 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomBytes, scryptSync } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
-import lead, { config as leadConfig } from '../netlify/functions/send-telegram.mjs';
-import session from '../netlify/functions/admin-session.mjs';
+import { createHandler as createLead, config as leadConfig } from '../netlify/functions/send-telegram.mjs';
+import { createHandler as createSession } from '../netlify/functions/admin-session.mjs';
 import posts from '../netlify/functions/admin-posts.mjs';
 import publicConfig from '../netlify/functions/form-config.mjs';
 import { authenticated, sessionCookie } from '../netlify/lib/security.mjs';
 
 const origin = 'https://flamingoauto.eu';
+const lead = createLead({ limit: async () => null });
+const session = createSession({ limit: async () => null });
 const testPassword = 'local-test-password-never-used-in-production';
 const salt = randomBytes(16);
 process.env.FLAMINGO_ALLOWED_ORIGINS = origin;

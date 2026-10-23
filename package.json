@@ -7,14 +7,11 @@
     "build": "node scripts/build-blog.mjs && node scripts/verify-seo.mjs && node scripts/publish-site.mjs && node scripts/scan-secrets.mjs",
     "verify": "node scripts/verify-seo.mjs",
     "build:preview": "node scripts/build-blog.mjs && node scripts/verify-seo.mjs && node scripts/publish-site.mjs --preview && node scripts/scan-secrets.mjs",
-    "test:security": "node --test --test-concurrency=1 tests/security.test.mjs",
+    "test:security": "node --test --test-concurrency=1 tests/*.test.mjs",
     "scan:secrets": "node scripts/scan-secrets.mjs"
   },
   "dependencies": {
-    "@octokit/rest": "^19.0.0",
-    "bcryptjs": "^3.0.2",
-    "form-data": "^4.0.0",
-    "gray-matter": "^4.0.3"
+    "@netlify/blobs": "11.1.6"
   },
   "author": "Flamingo Auto",
   "license": "MIT",

@@ -1,3 +1,4 @@
+import { enforceRateLimit } from '../lib/rate-limit.mjs';
 import { json, limitedBody, sameOrigin } from '../lib/security.mjs';
 
 const botUsername = 'flamingoauto_bot';
@@ -23,8 +24,11 @@ async function telegram(method, body, multipart = false) {
   if (!response.ok || result.ok !== true) throw new Error('TELEGRAM_UNAVAILABLE');
   return result.result;
 }
-export default async function handler(request) {
+export function createHandler({ limit = enforceRateLimit } = {}) {
+return async function handler(request, context) {
   if (new URL(request.url).pathname !== '/api/lead') return json(404, { error: 'Not found' });
+  const refusal = await limit(request, context, 'lead');
+  if (refusal) return refusal;
   if (request.method !== 'POST') return json(405, { error: 'Method not allowed' }, { Allow: 'POST' });
   if (!sameOrigin(request)) return json(403, { error: 'Origin rejected' });
   const contentType = request.headers.get('content-type') || '';
@@ -99,7 +103,9 @@ export default async function handler(request) {
     // Never log request bodies, token-bearing URLs, Telegram responses or stack traces.
     return json(503, { error: 'Could not send the request; please try again later' });
   }
+};
 }
+export default createHandler();
 export const config = { path: '/api/lead', rateLimit: {
   windowLimit: 5, windowSize: 60, aggregateBy: ['ip', 'domain']
 } };
