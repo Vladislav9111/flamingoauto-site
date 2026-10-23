@@ -20,7 +20,7 @@ process.env.FLAMINGO_TURNSTILE_SECRET_KEY = 'local-test-challenge-secret';
 process.env.FLAMINGO_GITHUB_TOKEN = 'local-test-repository-key';
 const originalFetch = globalThis.fetch;
 function request(path, method = 'GET', body, cookie, requestOrigin = origin) {
-  return new Request(origin + '/.netlify/functions/' + path, { method,
+  return new Request(origin + ({'send-telegram':'/api/lead','admin-session':'/api/admin/session','admin-posts':'/api/admin/posts','form-config':'/api/form-config'}[path] || '/api/' + path), { method,
     headers: { origin: requestOrigin, ...(body ? { 'Content-Type': 'application/json' } : {}), ...(cookie ? { cookie } : {}) },
     ...(body ? { body: JSON.stringify(body) } : {}) });
 }
@@ -30,7 +30,7 @@ function leadRequest(overrides = {}, photos = [], requestOrigin = origin) {
     email: 'qa@example.invalid', phone: '+3720000000', city: 'Test city', note: '<b>plain text</b>',
     startedAt: String(Date.now() - 10000), turnstileToken: 'local-test-challenge', ...overrides })) data.set(key, value);
   photos.forEach((photo, i) => data.append('photo' + i, photo, 'synthetic.png'));
-  return new Request(origin + '/.netlify/functions/send-telegram', { method: 'POST', headers: { origin: requestOrigin }, body: data });
+  return new Request(origin + '/api/lead', { method: 'POST', headers: { origin: requestOrigin }, body: data });
 }
 function mockServices({ bot = 'Flamingoauto_bot', challenge = true, hostname = 'flamingoauto.eu', action = 'flamingo-lead', photoFailure = false, messageFailure = false } = {}) {
   const calls = [];
@@ -61,7 +61,7 @@ test('File count, signature and total request size are enforced server-side', as
   assert.equal((await lead(leadRequest({}, [fake]))).status, 400);
   const png = new Blob([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0])], { type: 'image/png' });
   assert.equal((await lead(leadRequest({}, Array(7).fill(png)))).status, 400);
-  const oversized = new Request(origin, { method: 'POST', headers: { origin, 'Content-Type': 'multipart/form-data; boundary=test' }, body: 'x'.repeat(6 * 1024 * 1024) });
+  const oversized = new Request(origin + '/api/lead', { method: 'POST', headers: { origin, 'Content-Type': 'multipart/form-data; boundary=test' }, body: 'x'.repeat(6 * 1024 * 1024) });
   assert.equal((await lead(oversized)).status, 413);
   assert.equal(calls.length, 0);
 });
@@ -126,11 +126,11 @@ test('Login checks server hash, issues secure short sessions, rejects tampering 
 });
 test('Forged old bearer token and cross-site admin mutations are denied before any API request', async () => {
   const calls = mockServices();
-  const fakeAuth = new Request(origin, { headers: { Authorization: 'Bearer arbitrary-client-string' } });
+  const fakeAuth = new Request(origin + '/api/admin/posts', { headers: { Authorization: 'Bearer arbitrary-client-string' } });
   assert.equal((await posts(fakeAuth)).status, 401);
   const cookie = sessionCookie().split(';')[0];
   assert.equal((await posts(request('admin-posts', 'POST', {}, cookie, 'https://example.invalid'))).status, 403);
-  assert.equal((await posts(new Request(origin + '?id=../other-repo', { headers: { cookie } }))).status, 400);
+  assert.equal((await posts(new Request(origin + '/api/admin/posts?id=../other-repo', { headers: { cookie } }))).status, 400);
   assert.equal(calls.length, 0);
 });
 test('Article edits preserve original photos, dates and metadata and fix repository scope', async () => {
@@ -161,7 +161,7 @@ test('All retired endpoints return 410 without side effects, including password 
   assert.equal(calls.length, 0);
 });
 test('Distributed platform rate-limit declarations cover lead and login endpoints', async () => {
-  assert(leadConfig.path.includes('send-telegram'));
+  assert.equal(leadConfig.path, '/api/lead');
   assert(leadConfig.rateLimit.windowLimit <= 5);
   const { config } = await import('../netlify/functions/admin-session.mjs');
   assert(config.rateLimit.aggregateBy.includes('ip'));
@@ -184,4 +184,12 @@ test('Signed sessions expire and an unconfigured admin never accepts a legacy pa
   delete process.env.FLAMINGO_ADMIN_PASSWORD_HASH;
   assert.equal((await session(request('admin-session', 'POST', { password: testPassword }))).status, 503);
   process.env.FLAMINGO_ADMIN_PASSWORD_HASH = saved;
+});
+test('Default function aliases cannot bypass the protected custom API routes', async () => {
+  const calls = mockServices();
+  for (const [name, handler] of [['send-telegram', lead], ['admin-session', session], ['admin-posts', posts], ['form-config', publicConfig]]) {
+    const response = await handler(new Request(origin + '/.netlify/functions/' + name));
+    assert.equal(response.status, 404);
+  }
+  assert.equal(calls.length, 0);
 });

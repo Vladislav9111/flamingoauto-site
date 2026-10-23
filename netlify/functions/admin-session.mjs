@@ -1,6 +1,7 @@
 import { adminConfigured, authenticated, json, limitedBody, sameOrigin, sessionCookie, verifyPassword } from '../lib/security.mjs';
 
 export default async function handler(request) {
+  if (new URL(request.url).pathname !== '/api/admin/session') return json(404, { error: 'Not found' });
   if (request.method === 'GET') return json(authenticated(request) ? 200 : 401, { authenticated: authenticated(request) });
   if (!['POST', 'DELETE'].includes(request.method)) return json(405, { error: 'Method not allowed' }, { Allow: 'GET, POST, DELETE' });
   if (!sameOrigin(request)) return json(403, { error: 'Origin rejected' });
@@ -13,6 +14,6 @@ export default async function handler(request) {
     return json(200, { authenticated: true }, { 'Set-Cookie': sessionCookie() });
   } catch { return json(400, { error: 'Invalid request' }); }
 }
-export const config = { path: '/.netlify/functions/admin-session', rateLimit: {
+export const config = { path: '/api/admin/session', rateLimit: {
   windowLimit: 5, windowSize: 60, aggregateBy: ['ip', 'domain']
 } };

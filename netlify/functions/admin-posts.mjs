@@ -21,6 +21,7 @@ function summary(id, record) {
   return { id, title, content, locale, excerpt, created, author, published, sha: record.sha };
 }
 export default async function handler(request) {
+  if (new URL(request.url).pathname !== '/api/admin/posts') return json(404, { error: 'Not found' });
   const denial = adminGuard(request);
   if (denial) return denial;
   if (!['GET', 'POST', 'PUT'].includes(request.method)) return json(405, { error: 'Method not allowed' }, { Allow: 'GET, POST, PUT' });
@@ -67,6 +68,6 @@ export default async function handler(request) {
     return json(200, { success: true, id, sha: result.content.sha });
   } catch { return json(503, { error: 'Article service unavailable' }); }
 }
-export const config = { path: '/.netlify/functions/admin-posts', rateLimit: {
+export const config = { path: '/api/admin/posts', rateLimit: {
   windowLimit: 30, windowSize: 60, aggregateBy: ['ip', 'domain']
 } };

@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const setStatus = message => { status.textContent = message; };
   async function setupVerification() {
     try {
-      const response = await fetch('/.netlify/functions/form-config');
+      const response = await fetch('/api/form-config');
       if (!response.ok) throw new Error('UNAVAILABLE');
       const config = await response.json();
       await new Promise((resolve, reject) => {
@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (totalBytes(files) > TRIGGER_BYTES) files = await compressToTarget(files, FINAL_TARGET);
       if (totalBytes(files) > SERVER_HARD_LIMIT) throw new Error('PHOTO_LIMIT');
       files.forEach((file, index) => data.append(`photo${index}`, file));
-      const response = await fetch('/.netlify/functions/send-telegram', { method: 'POST', body: data });
+      const response = await fetch('/api/lead', { method: 'POST', body: data });
       const result = await response.json();
       if (!response.ok || result.success !== true) {
         setStatus(response.status === 429 ? text.rate : text.error);

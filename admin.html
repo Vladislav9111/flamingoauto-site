@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="/style.css"><script src="/admin-secure.js" defer></script></head>
 <body><main class="container article-content"><h1>Flamingo Auto — управление</h1>
 <p id="admin-status" role="status" aria-live="polite"></p>
-<form id="admin-login" method="post" action="/.netlify/functions/admin-session">
+<form id="admin-login" method="post" action="/api/admin/session">
 <label for="admin-password">Пароль администратора</label>
 <input id="admin-password" name="password" type="password" autocomplete="current-password" required minlength="16" maxlength="256">
 <button type="submit">Войти</button></form>

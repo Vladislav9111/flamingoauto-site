@@ -31,6 +31,8 @@ For the new admin password, run `node scripts/create-admin-settings.mjs /absolut
 
 The owner must enter and submit new credentials personally. The old browser password is no longer accepted by this implementation. If it was reused elsewhere, address those accounts separately without changing unrelated project credentials here.
 
+The active routes are `/api/lead`, `/api/form-config`, `/api/admin/session` and `/api/admin/posts`. Direct function aliases are rejected by the handlers to prevent bypassing route-level controls.
+
 ## Form protection
 
 The lead function permits same-origin multipart POST requests only, validates required fields and bounded text lengths, and limits total payload size, photo count, type and magic bytes. A honeypot and minimum elapsed time are additional heuristics. Turnstile is mandatory and verified on the server with the expected hostname and action. Failures do not contact Telegram.

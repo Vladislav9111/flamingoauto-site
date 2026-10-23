@@ -6,7 +6,7 @@ let current = null;
 const status = value => { message.textContent = value; };
 
 async function api(endpoint, options = {}) {
-  const response = await fetch('/.netlify/functions/' + endpoint, { credentials: 'same-origin', ...options });
+  const response = await fetch('/api/admin/' + endpoint.replace('admin-', ''), { credentials: 'same-origin', ...options });
   if (response.status === 401) { login.hidden = false; editor.hidden = true; throw new Error('Войдите в админку.'); }
   if (!response.ok) throw new Error(response.status === 429 ? 'Слишком много запросов. Подождите минуту.' : 'Сервис недоступен. Проверьте настройки или попробуйте позже.');
   return response.json();

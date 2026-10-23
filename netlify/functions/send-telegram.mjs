@@ -24,6 +24,7 @@ async function telegram(method, body, multipart = false) {
   return result.result;
 }
 export default async function handler(request) {
+  if (new URL(request.url).pathname !== '/api/lead') return json(404, { error: 'Not found' });
   if (request.method !== 'POST') return json(405, { error: 'Method not allowed' }, { Allow: 'POST' });
   if (!sameOrigin(request)) return json(403, { error: 'Origin rejected' });
   const contentType = request.headers.get('content-type') || '';
@@ -99,6 +100,6 @@ export default async function handler(request) {
     return json(503, { error: 'Could not send the request; please try again later' });
   }
 }
-export const config = { path: '/.netlify/functions/send-telegram', rateLimit: {
+export const config = { path: '/api/lead', rateLimit: {
   windowLimit: 5, windowSize: 60, aggregateBy: ['ip', 'domain']
 } };
