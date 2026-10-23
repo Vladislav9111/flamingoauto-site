@@ -108,7 +108,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        currentPassword: 'flamingo2024',
+                        currentPassword: '[REMOVED_LEGACY_CREDENTIAL]',
                         newPassword: 'test123456'
                     })
                 });
@@ -259,7 +259,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        currentPassword: 'flamingo2024',
+                        currentPassword: '[REMOVED_LEGACY_CREDENTIAL]',
                         newPassword: 'test123456'
                     })
                 });
@@ -376,7 +376,7 @@
         }
 
         async function resetAdminPassword() {
-            if (!confirm('⚠️ ВНИМАНИЕ!\n\nВы действительно хотите сбросить пароль администратора к значению по умолчанию "flamingo2024"?\n\nЭто действие нельзя отменить!')) {
+            if (!confirm('⚠️ ВНИМАНИЕ!\n\nВы действительно хотите сбросить пароль администратора к значению по умолчанию "[REMOVED_LEGACY_CREDENTIAL]"?\n\nЭто действие нельзя отменить!')) {
                 return;
             }
 

@@ -24,7 +24,7 @@
 ### 1. **Вход в админку:**
 ```
 https://flamingoauto.eu/admin.html
-Пароль: flamingo2024
+Пароль: [REMOVED_LEGACY_CREDENTIAL]
 ```
 
 ### 2. **Создание нового поста:**

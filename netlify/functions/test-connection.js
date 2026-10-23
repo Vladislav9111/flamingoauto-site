@@ -1,33 +1,6 @@
-// Простая тестовая функция для проверки работы Netlify Functions
-exports.handler = async (event, context) => {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
-  };
-
-  // Handle preflight requests
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
-  }
-
-  console.log('Test connection function called');
-  console.log('Method:', event.httpMethod);
-  console.log('Headers:', event.headers);
-
-  return {
-    statusCode: 200,
-    headers,
-    body: JSON.stringify({
-      success: true,
-      message: 'Netlify Functions работают!',
-      timestamp: new Date().toISOString(),
-      method: event.httpMethod
-    })
-  };
-};
+// Retired insecure legacy endpoint. No credentials, environment details or data writes.
+exports.handler = async () => ({
+  statusCode: 410,
+  headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' },
+  body: JSON.stringify({ error: 'This endpoint has been retired' })
+});

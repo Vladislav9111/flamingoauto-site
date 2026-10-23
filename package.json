@@ -4,7 +4,11 @@
   "description": "Flamingo Auto website with blog functionality",
   "main": "index.js",
   "scripts": {
-    "build": "echo 'Static site - no build required'"
+    "build": "node scripts/build-blog.mjs && node scripts/verify-seo.mjs && node scripts/publish-site.mjs && node scripts/scan-secrets.mjs",
+    "verify": "node scripts/verify-seo.mjs",
+    "build:preview": "node scripts/build-blog.mjs && node scripts/verify-seo.mjs && node scripts/publish-site.mjs --preview && node scripts/scan-secrets.mjs",
+    "test:security": "node --test --test-concurrency=1 tests/security.test.mjs",
+    "scan:secrets": "node scripts/scan-secrets.mjs"
   },
   "dependencies": {
     "@octokit/rest": "^19.0.0",
@@ -13,5 +17,8 @@
     "gray-matter": "^4.0.3"
   },
   "author": "Flamingo Auto",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=24 <25"
+  }
 }

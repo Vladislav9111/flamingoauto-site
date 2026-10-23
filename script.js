@@ -72,7 +72,6 @@ async function fileToImage(file){
         return {img, mime: 'image/jpeg'};
       } finally { URL.revokeObjectURL(url); }
     } catch(e){
-      console.warn('heic2any başarısız; doğrudan decode denenecek', e);
     }
   }
   // Normal yol (iOS HEIC’i decode edebilirse buradan da çalışır)
@@ -101,7 +100,6 @@ async function toWebP(file, quality=0.82, maxDim=1920){
     const name = (file.name||'image').replace(/\.(png|jpe?g|webp|gif|bmp|tiff|heic|heif)$/i,'') + ext;
     return new File([blob], name, {type: blob.type, lastModified: Date.now()});
   }catch(e){
-    console.warn('toWebP başarısız; orijinali döndürüyorum', e);
     return file;
   }
 }
@@ -226,247 +224,102 @@ async function compressToTarget(files, targetBytes){
   return work;
 }
 
-/* ==================== SAYFA YÜKLENİNCE DİL ==================== */
-document.addEventListener('DOMContentLoaded', function() {
-  const isRussian = window.location.pathname.includes('ru.html') || 
-                   window.location.pathname.includes('/ru.html') ||
-                   window.location.pathname.endsWith('ru') ||
-                   document.documentElement.lang === 'ru' ||
-                   document.querySelector('html[lang="ru"]') !== null ||
-                   document.title.includes('Продайте авто');
-  
-  const submitBtn = document.getElementById('submit-btn');
-  const heroBtn = document.querySelector('.btn');
-  const popupMessage = document.querySelector('#popup p');
-  
-  if (isRussian) {
-    if (submitBtn) submitBtn.textContent = 'Отправить заявку';
-    if (heroBtn) heroBtn.textContent = 'Отправить заявку';
-    if (popupMessage) popupMessage.textContent = 'Ваша заявка отправлена';
-  } else {
-    if (submitBtn) submitBtn.textContent = 'Saada päring';
-    if (heroBtn) heroBtn.textContent = 'Saada päring';
-    if (popupMessage) popupMessage.textContent = 'Teie ankeet on saadetud';
+document.addEventListener('DOMContentLoaded', () => {
+  const russian = document.documentElement.lang === 'ru';
+  const submit = document.getElementById('submit-btn');
+  const status = document.getElementById('form-status');
+  const text = russian ? {
+    unavailable: 'Форма временно недоступна. Пожалуйста, попробуйте позже.',
+    verify: 'Подтвердите проверку перед отправкой.', sending: 'Отправка…', send: 'Отправить заявку',
+    error: 'Не удалось отправить заявку. Попробуйте позже.', rate: 'Слишком много запросов. Подождите минуту.',
+    photos: 'Можно загрузить до шести фотографий.', sent: 'Ваша заявка отправлена.',
+    partial: 'Заявка отправлена, но фотографии доставить не удалось. Мы уточним детали при связи с вами.'
+  } : {
+    unavailable: 'Vorm on ajutiselt kättesaamatu. Palun proovige hiljem uuesti.',
+    verify: 'Enne saatmist läbige kontroll.', sending: 'Saatmine…', send: 'Saada päring',
+    error: 'Päringut ei õnnestunud saata. Palun proovige hiljem uuesti.', rate: 'Liiga palju päringuid. Palun oodake minut.',
+    photos: 'Saate lisada kuni kuus fotot.', sent: 'Teie päring on saadetud.',
+    partial: 'Päring saadeti, kuid fotosid ei õnnestunud edastada. Täpsustame üksikasju ühendust võttes.'
+  };
+  let challenge = '';
+  let widget;
+  let startedAt = Date.now();
+  submit.disabled = true;
+  const setStatus = message => { status.textContent = message; };
+  async function setupVerification() {
+    try {
+      const response = await fetch('/.netlify/functions/form-config');
+      if (!response.ok) throw new Error('UNAVAILABLE');
+      const config = await response.json();
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+        script.async = true;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      widget = window.turnstile.render('#form-verification', {
+        sitekey: config.turnstileSiteKey, action: 'flamingo-lead', size: 'compact', language: russian ? 'ru' : 'et',
+        callback: token => { challenge = token; submit.disabled = false; setStatus(''); },
+        'expired-callback': () => { challenge = ''; submit.disabled = true; setStatus(text.verify); },
+        'error-callback': () => { challenge = ''; submit.disabled = true; setStatus(text.unavailable); }
+      });
+    } catch { setStatus(text.unavailable); }
   }
-});
-
-/* ==================== FOTO DOĞRULAMA ==================== */
-function validatePhotos() {
-  photoError.textContent = '';
-  if (photoInput.files.length > MAX_FILES) {
-    const isRussian = window.location.pathname.includes('ru.html') || 
-                     window.location.pathname.includes('/ru.html') ||
-                     window.location.pathname.endsWith('ru') ||
-                     document.documentElement.lang === 'ru' ||
-                     document.title.includes('Продайте авто');
-    photoError.textContent = isRussian 
-      ? `Можно загрузить не более ${MAX_FILES} fotografий.`
-      : `Saate üles laadida mitte rohkem kui ${MAX_FILES} fotot.`;
-    return false;
+  function validatePhotos() {
+    const valid = photoInput.files.length <= MAX_FILES && Array.from(photoInput.files).every(isImg);
+    photoError.textContent = valid ? '' : text.photos;
+    return valid;
   }
-  return true;
-}
-
-photoInput.addEventListener('change', validatePhotos);
-
-/* ==================== FORM GÖNDERME ==================== */
-form.addEventListener('submit', async function(event) {
-  event.preventDefault();
-
-  const arePhotosValid = validatePhotos();
-  if (!form.checkValidity()) {
-    form.reportValidity();
-    return;
-  }
-  const isFormValid = form.checkValidity();
-  if (!(isFormValid && arePhotosValid)) {
-    console.log('Form submission failed validation.');
-    if(!isFormValid) form.reportValidity();
-    return;
-  }
-
-  const submitButton = document.getElementById('submit-btn');
-  const isRussian = window.location.pathname.includes('ru.html') || 
-                   window.location.pathname.includes('/ru.html') ||
-                   window.location.pathname.endsWith('ru') ||
-                   document.documentElement.lang === 'ru' ||
-                   document.title.includes('Продайте авто');
-
-  submitButton.disabled = true;
-  submitButton.textContent = isRussian ? 'Отправка...' : 'Saatmine...';
-
-  const formElements = form.elements;
-  const formData = new FormData();
-
-  // Metin alanları
-  formData.append('regNumber', formElements['reg-number'].value);
-  formData.append('make', formElements['make'].value);
-  formData.append('model', formElements['model'].value);
-  formData.append('year', formElements['year'].value);
-  formData.append('mileage', formElements['mileage'].value);
-  formData.append('transmission', formElements['transmission'].value);
-  formData.append('engine', formElements['engine'].value);
-  formData.append('price', formElements['price'].value);
-  formData.append('name', formElements['name'].value);
-  formData.append('email', formElements['email'].value);
-  formData.append('phone', formElements['phone'].value);
-  formData.append('city', formElements['city'].value);
-  formData.append('note', formElements['note'].value);
-
-  // Fotoğraflar — kural: 6 adete kadar, toplam asla > 5 MB olmaz.
-  const originalFiles = Array.from(photoInput.files).slice(0, MAX_FILES);
-
-  // 1) Orta kalite ilk dönüşüm
-  let files = await initialConvert(originalFiles);
-  let sum = totalBytes(files);
-
-  // 2) Toplam > 4 MB ise 2 MB hedefine indir
-  if (sum > TRIGGER_BYTES){
-    files = await compressToTarget(files, FINAL_TARGET);
-    sum = totalBytes(files);
-  }
-
-  // 3) Ek güvenlik: 5 MB altı garantisi
-  if (sum > SERVER_HARD_LIMIT){
-    files = await compressToTarget(files, Math.min(FINAL_TARGET, SERVER_HARD_LIMIT - 50*1024)); // küçük pay
-    sum = totalBytes(files);
-  }
-
-  // 4) Hâlâ teorik olarak > 5 MB olursa (çok düşük ihtimal) min thumb
-  if (sum > SERVER_HARD_LIMIT){
-    for (let i=0;i<files.length;i++){
-      if (!isImg(files[i])) continue;
-      files[i] = await toWebP(files[i], 0.16, 280);
-    }
-    sum = totalBytes(files);
-  }
-
-  // Dosyaları ekle
-  for (let i=0;i<files.length;i++){
-    formData.append(`photo${i}`, files[i]);
-  }
-  formData.append('photoCount', String(files.length));
-  formData.append('totalBytes', String(sum));
-
-  try {
-    // Netlify Function’a gönder
-    const response = await fetch('/.netlify/functions/send-telegram', {
-      method: 'POST',
-      body: formData // FormData => Content-Type otomatik atanır
-    });
-    const result = await response.json();
-
-    if (response.ok && result.success) {
+  photoInput.addEventListener('change', validatePhotos);
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!validatePhotos() || !form.checkValidity()) { form.reportValidity(); return; }
+    if (!challenge) { setStatus(text.verify); return; }
+    submit.disabled = true;
+    submit.textContent = text.sending;
+    setStatus('');
+    try {
+      const data = new FormData();
+      for (const key of ['make', 'model', 'year', 'mileage', 'transmission', 'engine', 'price', 'name', 'email', 'phone', 'city', 'note']) {
+        data.set(key, form.elements[key].value);
+      }
+      data.set('regNumber', form.elements['reg-number'].value);
+      data.set('website', form.elements['website'].value);
+      data.set('startedAt', String(startedAt));
+      data.set('turnstileToken', challenge);
+      let files = await initialConvert(Array.from(photoInput.files));
+      if (totalBytes(files) > TRIGGER_BYTES) files = await compressToTarget(files, FINAL_TARGET);
+      if (totalBytes(files) > SERVER_HARD_LIMIT) throw new Error('PHOTO_LIMIT');
+      files.forEach((file, index) => data.append(`photo${index}`, file));
+      const response = await fetch('/.netlify/functions/send-telegram', { method: 'POST', body: data });
+      const result = await response.json();
+      if (!response.ok || result.success !== true) {
+        setStatus(response.status === 429 ? text.rate : text.error);
+        return;
+      }
+      document.querySelector('#popup p').textContent = result.photosSent === false ? text.partial : text.sent;
       popup.classList.remove('hidden');
       form.reset();
       photoError.textContent = '';
-    } else {
-      throw new Error(result.error || 'Unknown error');
+      startedAt = Date.now();
+    } catch { setStatus(text.error); }
+    finally {
+      challenge = '';
+      submit.textContent = text.send;
+      submit.disabled = true;
+      if (widget !== undefined) window.turnstile.reset(widget);
     }
-  } catch (error) {
-    console.error('Form submission error:', error);
-    const errorMessage = isRussian 
-      ? 'Не удалось отправить заявку. Пожалуйста, попробуйте еще раз.'
-      : 'Küsimustikku ei õnnestunud saata. Palun proovige uuesti.';
-    alert(errorMessage);
-  } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = isRussian ? 'Отправить заявку' : 'Saada päring';
-  }
-});
-
-/* ==================== POPUP ==================== */
-function closePopup() { popup.classList.add('hidden'); }
-closeBtn.addEventListener('click', closePopup);
-popup.addEventListener('click', function(event) {
-  if (event.target === popup) { closePopup(); }
-});
-
-/* ==================== FOOTER YILI ==================== */
-(function setFooterYear() {
-  const year = new Date().getFullYear();
-  const elEt = document.getElementById('year-et');
-  const elRu = document.getElementById('year-ru');
-  if (elEt) elEt.textContent = year;
-  if (elRu) elRu.textContent = year;
-})();
-
-/* ==================== DİL SWITCH A11Y ==================== */
-(function initLangSwitch() {
-  const switchContainer = document.querySelector('.lang-switch');
-  if (!switchContainer) return;
-
-  const buttons = switchContainer.querySelectorAll('.lang-btn');
-  buttons.forEach(btn => {
-    // Klavye erişilebilirliği
-    btn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
-    });
-
-    // aria-pressed
-    try {
-      const href = new URL(btn.href, location.href).pathname.split('/').pop();
-      const current = location.pathname.split('/').pop() || 'index.html';
-      btn.setAttribute('aria-pressed', href === current ? 'true' : 'false');
-      if (href === current) btn.classList.add('active');
-    } catch (e) { /* ignore */ }
   });
-})();
-
-/* ==================== DEBUG: TELEGRAM ==================== */
-window.testTelegramFunction = async function() {
-  console.log('🧪 Testing Telegram function...');
-
-  const testData = {
-    name: 'Test User',
-    email: 'test@example.com',
-    phone: '+372 12345678',
-    regNumber: '123 ABC',
-    make: 'Volkswagen',
-    model: 'Golf',
-    city: 'Tallinn',
-    note: 'Test message from debug function'
-  };
-
-  try {
-    const response = await fetch('/.netlify/functions/send-telegram', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(testData)
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      console.log('✅ Telegram test SUCCESS:', result);
-      alert('✅ Telegram test successful! Check console for details.');
-    } else {
-      console.error('❌ Telegram test FAILED:', result);
-      alert('❌ Telegram test failed: ' + (result.error || 'Unknown error'));
-    }
-  } catch (error) {
-    console.error('❌ Network error:', error);
-    alert('❌ Network error: ' + error.message);
-  }
-};
-
-/* ==================== DEBUG: DİL TESPİT ==================== */
-window.debugLanguage = function() {
-  const isRussian = window.location.pathname.includes('ru.html') || 
-                   window.location.pathname.includes('/ru.html') ||
-                   window.location.pathname.endsWith('ru') ||
-                   document.documentElement.lang === 'ru' ||
-                   document.title.includes('Продайте авто');
-  
-  console.log('🔍 Language Debug Info:');
-  console.log('- Current path:', window.location.pathname);
-  console.log('- HTML lang:', document.documentElement.lang);
-  console.log('- Document title:', document.title);
-  console.log('- Includes ru.html:', window.location.pathname.includes('ru.html'));
-  console.log('- Includes /ru.html:', window.location.pathname.includes('/ru.html'));
-  console.log('- Ends with ru:', window.location.pathname.endsWith('ru'));
-  console.log('- Title includes Продайте авто:', document.title.includes('Продайте авто'));
-  console.log('- Final isRussian:', isRussian);
-  
-  alert(`Language detection: ${isRussian ? 'Russian' : 'Estonian'}`);
-};
+  closeBtn.addEventListener('click', () => popup.classList.add('hidden'));
+  popup.addEventListener('click', event => { if (event.target === popup) popup.classList.add('hidden'); });
+  const normalize = value => value.replace(/\/index\.html$/, '/').replace(/\.html$/, '').replace(/\/$/, '') || '/';
+  document.querySelectorAll('.lang-btn').forEach(button => {
+    const active = normalize(new URL(button.href).pathname) === normalize(location.pathname);
+    button.setAttribute('aria-pressed', String(active));
+    if (active) button.setAttribute('aria-current', 'page');
+    button.classList.toggle('active', active);
+  });
+  setupVerification();
+});
