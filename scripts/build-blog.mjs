@@ -3,16 +3,17 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { escape, renderArticleText, referenceLink } from './article-text.mjs';
+import { postAliases } from './post-aliases.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const site = 'https://flamingoauto.eu';
 const copy = {
   et: { blog: 'Auto müügi nõuanded', read: 'Loe artiklit', back: 'Tagasi blogisse',
     cta: 'Saada auto andmed', home: '/', empty: 'Artikleid pole veel avaldatud.',
-    updated: 'Uuendatud', related: 'Loe ka', references: 'Ametlik lisainfo', homeLabel: 'Avaleht', language: 'Keele valik' },
+    updated: 'Uuendatud', related: 'Loe ka', references: 'Ametlik lisainfo', homeLabel: 'Avaleht', language: 'Keele valik', privacy: 'Privaatsusteave', terms: 'Kasutustingimused', privacyPath: '/privacy', termsPath: '/terms' },
   ru: { blog: 'Советы по продаже автомобиля', read: 'Читать статью', back: 'Вернуться в блог',
     cta: 'Отправить данные автомобиля', home: '/ru', empty: 'Пока нет опубликованных статей.',
-    updated: 'Обновлено', related: 'Читайте также', references: 'Официальная информация', homeLabel: 'Главная', language: 'Выбор языка' }
+    updated: 'Обновлено', related: 'Читайте также', references: 'Официальная информация', homeLabel: 'Главная', language: 'Выбор языка', privacy: 'Обработка заявок', terms: 'Условия использования', privacyPath: '/privacy-ru', termsPath: '/terms-ru' }
 };
 
 // Source JSON is retained, including duplicate and unpublished records.
@@ -21,6 +22,7 @@ const records = [];
 const seen = new Set();
 for (const file of (await readdir(path.join(root, 'content/posts'))).sort()) {
   if (!/^\d+\.json$/.test(file)) continue;
+  if (postAliases.has(file.replace('.json', ''))) continue;
   const post = JSON.parse(await readFile(path.join(root, 'content/posts', file), 'utf8'));
   if (post.published === false) continue;
   if (!copy[post.locale] || typeof post.content !== 'string' || !post.title) {
@@ -105,6 +107,7 @@ ${languageLinks}
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preload" href="/static/fonts/noto-sans-v42-latin-afc7a910.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/reader.css">
 </head>
 <body>
   <header class="site-header"><div class="container"><div class="article-header"><a class="logo" href="${t.home}">FLAMINGO AUTO</a>${translation ? `<nav aria-label="${t.language}"><a href="${articleUrl(translation)}" lang="${translation.locale}" hreflang="${translation.locale}">${translation.locale.toUpperCase()}</a></nav>` : ''}</div></div></header>
@@ -115,7 +118,7 @@ ${languageLinks}
     ${relatedHtml}
     <p class="article-cta"><a class="btn" href="${t.home}#form-container">${t.cta}</a></p>
   </main>
-  <footer class="site-footer"><div class="container">Flamingo Auto · <a href="/blog-${locale}">${t.blog}</a> · <a href="mailto:lv.tallinn@gmail.com">lv.tallinn@gmail.com</a></div></footer>
+  <footer class="site-footer"><div class="container">Flamingo Auto · <a href="/blog-${locale}">${t.blog}</a> · <a href="${t.privacyPath}">${t.privacy}</a> · <a href="${t.termsPath}">${t.terms}</a> · <a href="mailto:lv.tallinn@gmail.com">lv.tallinn@gmail.com</a></div></footer>
 </body>
 </html>
 `;
@@ -124,7 +127,7 @@ ${languageLinks}
   }
 }
 
-const urls = ['/', '/ru', '/blog-et', '/blog-ru', ...generated.sort()];
+const urls = ['/', '/ru', '/blog-et', '/blog-ru', '/privacy', '/privacy-ru', '/terms', '/terms-ru', ...generated.sort()];
 await writeFile(path.join(root, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(url => `  <url><loc>${site}${url}</loc></url>`).join('\n')}

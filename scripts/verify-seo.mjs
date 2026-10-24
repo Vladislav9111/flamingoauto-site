@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { postAliases } from './post-aliases.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const site = 'https://flamingoauto.eu';
@@ -59,7 +60,7 @@ for (const url of urls) {
 }
 const sourceRecords = await Promise.all((await readdir(path.join(root, 'content/posts')))
   .filter(file => /^\d+\.json$/.test(file)).map(async file => JSON.parse(await readFile(path.join(root, 'content/posts', file), 'utf8'))));
-const uniquePublished = new Set(sourceRecords.filter(post => post.published !== false)
+const uniquePublished = new Set(sourceRecords.filter(post => post.published !== false && !postAliases.has(String(post.id)))
   .map(post => JSON.stringify([post.locale, post.title, post.content])));
 assert.equal(urls.filter(url => url.includes('/artiklid/')).length, uniquePublished.size, 'One URL per unique published source article');
 const sourceById = new Map(sourceRecords.map(post => [String(post.id), post]));
