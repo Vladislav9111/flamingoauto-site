@@ -62,4 +62,28 @@ const sourceRecords = await Promise.all((await readdir(path.join(root, 'content/
 const uniquePublished = new Set(sourceRecords.filter(post => post.published !== false)
   .map(post => JSON.stringify([post.locale, post.title, post.content])));
 assert.equal(urls.filter(url => url.includes('/artiklid/')).length, uniquePublished.size, 'One URL per unique published source article');
+const sourceById = new Map(sourceRecords.map(post => [String(post.id), post]));
+for (const url of urls.filter(url => url.includes('/artiklid/'))) {
+  const id = new URL(url).pathname.split('/')[2];
+  const post = sourceById.get(id);
+  const html = await readFile(path.join(root, 'artiklid', id, 'index.html'), 'utf8');
+  if (post.updated) {
+    assert(html.includes(`<time datetime="${post.updated}">`), id + ': visible editorial date');
+    assert(html.includes('<h2>') && html.includes('<ul>'), id + ': semantic sections and lists');
+    assert(!html.includes('<p>##'), id + ': no raw heading markers');
+  }
+  if (post.translation) {
+    const other = sourceById.get(post.translation);
+    assert.equal(other.translation, id, id + ': reciprocal translation');
+    for (const p of [post, other]) {
+      assert(html.includes(`hreflang="${p.locale}-EE" href="${site}/artiklid/${p.id}/"`), id + ': translated equivalent');
+    }
+  } else {
+    assert(!html.includes('rel="alternate"'), id + ': no invented translation');
+  }
+  for (const related of post.related || []) {
+    assert.equal(sourceById.get(related).locale, post.locale, id + ': related article language');
+    assert(html.includes(`href="/artiklid/${related}/"`), id + ': related article link');
+  }
+}
 console.log(`SEO verification passed for ${urls.length} pages: metadata, sitemap, language links, schema and internal links.`);
