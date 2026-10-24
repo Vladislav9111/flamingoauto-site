@@ -110,6 +110,29 @@ test('Upstream failures and missing configuration fail closed without returning 
   assert.equal((await lead(leadRequest())).status, 503);
   process.env.FLAMINGO_TELEGRAM_BOT_TOKEN = saved;
 });
+test('Delivery diagnostics record fixed categories without user data, credentials or upstream errors', async () => {
+  const originalWarn = console.warn;
+  const records = [];
+  console.warn = (...values) => records.push(values.join(' '));
+  try {
+    mockServices();
+    assert.equal((await lead(leadRequest({ phone: '123', note: 'sensitive-user-note-marker' }))).status, 400);
+    mockServices({ hostname: 'private-hostname-marker.invalid' });
+    assert.equal((await lead(leadRequest())).status, 400);
+    mockServices({ messageFailure: true });
+    assert.equal((await lead(leadRequest())).status, 503);
+    globalThis.fetch = async () => { throw new Error('sensitive-upstream-marker/' + process.env.FLAMINGO_TELEGRAM_BOT_TOKEN); };
+    assert.equal((await lead(leadRequest())).status, 503);
+    assert.deepEqual(records, [
+      'FLAMINGO_LEAD_REJECTED contact_format', 'FLAMINGO_LEAD_REJECTED verification_hostname',
+      'FLAMINGO_LEAD_REJECTED service_sendMessage', 'FLAMINGO_LEAD_REJECTED service_upstream'
+    ]);
+    for (const sensitive of ['sensitive-user-note-marker', 'private-hostname-marker', 'sensitive-upstream-marker',
+      process.env.FLAMINGO_TELEGRAM_BOT_TOKEN, process.env.FLAMINGO_TELEGRAM_CHAT_ID]) {
+      assert(!records.join('\n').includes(sensitive));
+    }
+  } finally { console.warn = originalWarn; }
+});
 test('Login checks server hash, issues secure short sessions, rejects tampering and rotation', async () => {
   assert.equal((await session(request('admin-session', 'POST', { password: 'wrong' }))).status, 401);
   assert.equal((await session(request('admin-session', 'POST', { password: testPassword }, null, 'https://example.invalid'))).status, 403);

@@ -296,7 +296,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/lead', { method: 'POST', body: data });
       const result = await response.json();
       if (!response.ok || result.success !== true) {
-        setStatus(response.status === 429 ? text.rate : text.error);
+        const validationMessages = russian ? {
+          'Verification required': 'Пройдите проверку Cloudflare и повторите отправку.',
+          'Verification failed': 'Проверка Cloudflare не прошла. Обновите страницу и попробуйте ещё раз.',
+          'Invalid contact details': 'Проверьте правильность email и номера телефона.',
+          'Invalid field': 'Проверьте обязательные поля и длину введённого текста.',
+          'Please refresh the form and try again': 'Обновите страницу и заполните форму ещё раз.',
+          'Invalid photo': 'Не удалось обработать фотографию. Попробуйте JPEG, PNG или WebP.',
+          'Use up to six JPEG, PNG or WebP photos': 'Добавьте не больше шести фотографий JPEG, PNG или WebP.'
+        } : {
+          'Verification required': 'Läbige Cloudflare’i kontroll ja proovige uuesti.',
+          'Verification failed': 'Cloudflare’i kontroll ebaõnnestus. Värskendage lehte ja proovige uuesti.',
+          'Invalid contact details': 'Kontrollige e-posti aadressi ja telefoninumbrit.',
+          'Invalid field': 'Kontrollige kohustuslikke välju ja teksti pikkust.',
+          'Please refresh the form and try again': 'Värskendage lehte ja täitke vorm uuesti.',
+          'Invalid photo': 'Foto töötlemine ebaõnnestus. Proovige JPEG-, PNG- või WebP-faili.',
+          'Use up to six JPEG, PNG or WebP photos': 'Lisage kuni kuus JPEG-, PNG- või WebP-fotot.'
+        };
+        setStatus(response.status === 429 ? text.rate : validationMessages[result.error] || text.error);
         return;
       }
       document.querySelector('#popup p').textContent = result.photosSent === false ? text.partial : text.sent;

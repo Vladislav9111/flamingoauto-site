@@ -3,6 +3,11 @@ import { json, limitedBody, sameOrigin } from '../lib/security.mjs';
 
 const botUsername = 'flamingoauto_bot';
 const maximumBody = 5 * 1024 * 1024;
+function rejected(status, error, code) {
+  // Fixed categories only: never log form data, identities, URLs or provider bodies.
+  console.warn('FLAMINGO_LEAD_REJECTED ' + code);
+  return json(status, { error });
+}
 const fields = {
   regNumber: ['Регистрационный номер', 20, true], make: ['Марка', 80], model: ['Модель', 80],
   year: ['Год', 4], mileage: ['Пробег', 12], transmission: ['Коробка', 40], engine: ['Двигатель', 80],
@@ -21,7 +26,11 @@ async function telegram(method, body, multipart = false) {
     body: multipart ? body : JSON.stringify(body), signal: AbortSignal.timeout(15000)
   });
   const result = await response.json();
-  if (!response.ok || result.ok !== true) throw new Error('TELEGRAM_UNAVAILABLE');
+  if (!response.ok || result.ok !== true) {
+    const failure = new Error('TELEGRAM_UNAVAILABLE');
+    failure.telegramMethod = method;
+    throw failure;
+  }
   return result.result;
 }
 export function createHandler({ limit = enforceRateLimit } = {}) {
@@ -34,50 +43,51 @@ return async function handler(request, context) {
   const contentType = request.headers.get('content-type') || '';
   if (!contentType.startsWith('multipart/form-data;')) return json(415, { error: 'Multipart form required' });
   if (!process.env.FLAMINGO_TELEGRAM_BOT_TOKEN || !process.env.FLAMINGO_TELEGRAM_CHAT_ID ||
-      !process.env.FLAMINGO_TURNSTILE_SECRET_KEY) return json(503, { error: 'Form temporarily unavailable' });
+      !process.env.FLAMINGO_TURNSTILE_SECRET_KEY) return rejected(503, 'Form temporarily unavailable', 'configuration_incomplete');
   let form;
   try {
     const body = await limitedBody(request, maximumBody);
     form = await new Response(body, { headers: { 'Content-Type': contentType } }).formData();
-  } catch (error) { return json(error.message === 'BODY_LIMIT' ? 413 : 400, { error: 'Invalid form data' }); }
+  } catch (error) { return rejected(error.message === 'BODY_LIMIT' ? 413 : 400, 'Invalid form data', 'invalid_form_body'); }
   try {
-    if (form.get('website')) return json(400, { error: 'Request rejected' });
+    if (form.get('website')) return rejected(400, 'Request rejected', 'honeypot');
     const elapsed = Date.now() - Number(form.get('startedAt'));
     if (!form.get('startedAt') || !Number.isFinite(elapsed) || elapsed < 2000 || elapsed > 3600000) {
-      return json(400, { error: 'Please refresh the form and try again' });
+      return rejected(400, 'Please refresh the form and try again', 'form_timestamp');
     }
     const values = {};
     for (const [key, [, maximum, required]] of Object.entries(fields)) {
-      if (form.getAll(key).length > 1) return json(400, { error: 'Duplicate field' });
+      if (form.getAll(key).length > 1) return rejected(400, 'Duplicate field', 'duplicate_field');
       const raw = form.get(key) ?? '';
-      if (typeof raw !== 'string') return json(400, { error: 'Invalid field' });
+      if (typeof raw !== 'string') return rejected(400, 'Invalid field', 'invalid_field');
       const value = raw.trim();
-      if (value.length > maximum || (required && !value) || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)) return json(400, { error: 'Invalid field' });
+      if (value.length > maximum || (required && !value) || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)) return rejected(400, 'Invalid field', 'invalid_field');
       values[key] = value;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email) || !/^\+?[\d ()-]{6,30}$/.test(values.phone)) return json(400, { error: 'Invalid contact details' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email) || !/^\+?[\d ()-]{6,30}$/.test(values.phone)) return rejected(400, 'Invalid contact details', 'contact_format');
     const photos = [];
     for (const [key, file] of form.entries()) {
       if (typeof file === 'string') continue;
-      if (!/^photo[0-5]$/.test(key) || file.size === 0 || file.size > 3 * 1024 * 1024) return json(400, { error: 'Invalid photo' });
+      if (!/^photo[0-5]$/.test(key) || file.size === 0 || file.size > 3 * 1024 * 1024) return rejected(400, 'Invalid photo', 'photo_size');
       const bytes = new Uint8Array(await file.arrayBuffer());
       const type = imageType(bytes);
-      if (!type || type !== file.type || photos.length >= 6) return json(400, { error: 'Use up to six JPEG, PNG or WebP photos' });
+      if (!type || type !== file.type || photos.length >= 6) return rejected(400, 'Use up to six JPEG, PNG or WebP photos', 'photo_type_or_count');
       photos.push({ bytes, type });
     }
     const challenge = form.get('turnstileToken');
-    if (typeof challenge !== 'string' || !challenge || challenge.length > 2048) return json(400, { error: 'Verification required' });
+    if (typeof challenge !== 'string' || !challenge || challenge.length > 2048) return rejected(400, 'Verification required', 'verification_missing');
     const check = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST', body: new URLSearchParams({ secret: process.env.FLAMINGO_TURNSTILE_SECRET_KEY, response: challenge }),
       signal: AbortSignal.timeout(10000)
     });
-    if (!check.ok) return json(503, { error: 'Verification unavailable' });
+    if (!check.ok) return rejected(503, 'Verification unavailable', 'verification_unavailable');
     const validation = await check.json();
-    if (validation.success !== true || validation.action !== 'flamingo-lead' ||
-        validation.hostname !== new URL(request.headers.get('origin')).hostname) return json(400, { error: 'Verification failed' });
+    if (validation.success !== true) return rejected(400, 'Verification failed', 'verification_rejected');
+    if (validation.action !== 'flamingo-lead') return rejected(400, 'Verification failed', 'verification_action');
+    if (validation.hostname !== new URL(request.headers.get('origin')).hostname) return rejected(400, 'Verification failed', 'verification_hostname');
     // Fail closed if someone accidentally configures a financial or AllCars bot token.
     const identity = await telegram('getMe', {});
-    if (identity.is_bot !== true || identity.username?.toLowerCase() !== botUsername) return json(503, { error: 'Form temporarily unavailable' });
+    if (identity.is_bot !== true || identity.username?.toLowerCase() !== botUsername) return rejected(503, 'Form temporarily unavailable', 'wrong_bot');
     const message = 'Заявка Flamingo Auto\n\n' + Object.entries(fields).filter(([key]) => values[key])
       .map(([key, [label]]) => `${label}: ${values[key]}`).join('\n');
     // Plain text: user input cannot inject Telegram HTML or Markdown.
@@ -99,9 +109,10 @@ return async function handler(request, context) {
       } catch { /* Lead text was delivered; report photo failure without duplicating it. */ }
     }
     return json(200, { success: true, photosSent });
-  } catch {
+  } catch (error) {
     // Never log request bodies, token-bearing URLs, Telegram responses or stack traces.
-    return json(503, { error: 'Could not send the request; please try again later' });
+    const method = ['getMe', 'sendMessage', 'sendPhoto', 'sendMediaGroup'].includes(error?.telegramMethod) ? error.telegramMethod : 'upstream';
+    return rejected(503, 'Could not send the request; please try again later', 'service_' + method);
   }
 };
 }
