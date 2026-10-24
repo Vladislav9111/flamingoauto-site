@@ -40,7 +40,7 @@ export const CHAT_ID = 'ваш_telegram_chat_id';
 
 ### 2. Проверка работы:
 - Откройте admin.html
-- Проверьте вход с паролем: `flamingo2024`
+- Проверьте вход с паролем: `[REMOVED_LEGACY_CREDENTIAL]`
 - Попробуйте создать тестовую запись
 - Проверьте сохранение в GitHub
 

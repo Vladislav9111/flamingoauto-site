@@ -20,7 +20,7 @@
 
 Откройте файл `admin.html` и найдите строку:
 ```javascript
-const GITHUB_TOKEN = 'ghp_Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8';
+const GITHUB_TOKEN = '[REMOVED_LEGACY_CREDENTIAL]';
 ```
 
 Замените на ваш реальный токен:

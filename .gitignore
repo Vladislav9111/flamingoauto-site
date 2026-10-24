@@ -20,3 +20,6 @@ build/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Generated public deployment output
+_site/

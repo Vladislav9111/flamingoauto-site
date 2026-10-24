@@ -1,23 +1,6 @@
-// netlify/functions/get-config.js
-exports.handler = async (event) => {
-  if (event.httpMethod !== 'GET') {
-    return {
-      statusCode: 405,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
-  }
-
-  // НИЧЕГО секретного не выдаём
-  const body = {
-    hasGithubToken: !!process.env.GITHUB_TOKEN,
-    repoOwner: process.env.GITHUB_REPO_OWNER || null,
-    repoName: process.env.GITHUB_REPO_NAME || null
-  };
-
-  return {
-    statusCode: 200,
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-    body: JSON.stringify(body)
-  };
-};
+// Retired insecure legacy endpoint. No credentials, environment details or data writes.
+exports.handler = async () => ({
+  statusCode: 410,
+  headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' },
+  body: JSON.stringify({ error: 'This endpoint has been retired' })
+});

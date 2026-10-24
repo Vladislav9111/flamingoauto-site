@@ -663,3 +663,22 @@ a {
         gap: 0.5rem;
     }
 }
+/* Crawlable guides and article pages. */
+.seo-content, .article-content { padding-top: 2rem; padding-bottom: 2rem; }
+.seo-content h2, .article-content h1 { margin-bottom: 1rem; }
+.seo-content h3 { margin-top: 1.2rem; }
+.seo-content p, .article-content p { margin-bottom: 1rem; }
+.article-content { max-width: 850px; overflow-wrap: anywhere; }
+.article-content .post-body { white-space: pre-line; }
+.post-card { padding: 1.5rem; margin: 1rem 0; background: #fff; border-radius: 8px; }
+.post-card h2 { font-size: 1.25rem; }
+.post-card time { color: #555; }
+.article-cta { margin-top: 2rem; }
+#form-container { scroll-margin-top: 7rem; }
+a:focus-visible, button:focus-visible { outline: 3px solid #5b4fc7; outline-offset: 3px; }
+
+.form-trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+#form-status { margin: 1rem 0; }
+button:disabled { opacity: .6; cursor: wait; }
+
+[hidden] { display: none !important; }

@@ -26,7 +26,7 @@
 ## 🧪 Тестирование:
 
 1. Откройте: https://flamingoauto.eu/admin.html
-2. Войдите с паролем: `flamingo2024`
+2. Войдите с паролем: `[REMOVED_LEGACY_CREDENTIAL]`
 3. Создайте тестовый пост
 4. Проверьте что он сохранился в GitHub
 

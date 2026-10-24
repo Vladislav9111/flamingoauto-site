@@ -1,6 +1,12 @@
-/admin              /admin/index.html   200
-/admin/*            /admin/index.html   200
-/blog               /blog.html          200
-/ru                 /index.html         200
-/et                 /en.html            200
-/en                 /en.html            200
+# Legacy aliases: consolidate on the existing public language routes.
+/index.html         /                  301!
+/ru.html            /ru                301!
+/blog-et.html       /blog-et           301!
+/blog-ru.html       /blog-ru           301!
+/blog.html          /blog-et           301!
+/blog               /blog-et           301!
+/et                 /                  301!
+/en                 /                  301!
+/en.html            /                  301!
+/admin              /admin.html        301!
+/admin/             /admin.html        301!
