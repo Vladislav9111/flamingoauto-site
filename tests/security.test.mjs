@@ -169,12 +169,35 @@ test('Distributed platform rate-limit declarations cover lead and login endpoint
   assert(config.rateLimit.aggregateBy.includes('ip'));
 });
 test('Public form settings expose only the public challenge key', async () => {
+  const destination = process.env.FLAMINGO_TELEGRAM_CHAT_ID;
+  process.env.FLAMINGO_TELEGRAM_CHAT_ID = '0000000';
   process.env.FLAMINGO_TURNSTILE_SITE_KEY = 'local-public-widget-key';
   const response = publicConfig(request('form-config'));
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { turnstileSiteKey: 'local-public-widget-key' });
   delete process.env.FLAMINGO_TURNSTILE_SITE_KEY;
   assert.equal(publicConfig(request('form-config')).status, 503);
+  process.env.FLAMINGO_TELEGRAM_CHAT_ID = destination;
+});
+test('Masked or malformed setup values never enable the form or echo private values', async () => {
+  const names = ['FLAMINGO_TURNSTILE_SITE_KEY', 'FLAMINGO_TURNSTILE_SECRET_KEY', 'FLAMINGO_TELEGRAM_BOT_TOKEN', 'FLAMINGO_TELEGRAM_CHAT_ID'];
+  const original = names.map(name => process.env[name]);
+  const synthetic = ['synthetic-public-key', 'synthetic-private-widget-secret', 'synthetic-private-bot-token', '0000000'];
+  try {
+    names.forEach((name, i) => { process.env[name] = synthetic[i]; });
+    assert.equal(publicConfig(request('form-config')).status, 200);
+    for (let i = 0; i < names.length; i++) {
+      process.env[names[i]] = '**';
+      const response = publicConfig(new Request('https://deploy-preview-1--mellifluous-moxie-db6fec.netlify.app/api/form-config'));
+      assert.equal(response.status, 503);
+      assert.match(response.headers.get('X-Flamingo-Setup-Valid'), /^[01]{4}$/);
+      const text = await response.text();
+      for (const privateValue of synthetic.slice(1)) assert(!text.includes(privateValue));
+      process.env[names[i]] = synthetic[i];
+    }
+  } finally {
+    names.forEach((name, i) => { if (original[i] === undefined) delete process.env[name]; else process.env[name] = original[i]; });
+  }
 });
 test('Signed sessions expire and an unconfigured admin never accepts a legacy password', async () => {
   const realNow = Date.now;
@@ -197,6 +220,7 @@ test('Preview setup diagnostics disclose only presence bits and stay absent on o
   }
   for (const host of ['flamingoauto.eu', 'deploy-preview-1--mellifluous-moxie-db6fec.netlify.app.evil.invalid']) {
     assert.equal(publicConfig(new Request(`https://${host}/api/form-config`)).headers.get('X-Flamingo-Setup'), null);
+    assert.equal(publicConfig(new Request(`https://${host}/api/form-config`)).headers.get('X-Flamingo-Setup-Valid'), null);
   }
   assert.equal(response.headers.get('Cross-Origin-Resource-Policy'), 'same-origin');
 });
