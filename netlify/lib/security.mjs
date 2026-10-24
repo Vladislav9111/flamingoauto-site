@@ -7,6 +7,7 @@ const lifetime = 30 * 60;
 export function json(status, value, extra = {}) {
   return new Response(JSON.stringify(value), { status, headers: {
     'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store',
+    'Cross-Origin-Resource-Policy': 'same-origin',
     'X-Content-Type-Options': 'nosniff', 'X-Robots-Tag': 'noindex, nofollow', ...extra
   } });
 }

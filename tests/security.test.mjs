@@ -187,6 +187,19 @@ test('Signed sessions expire and an unconfigured admin never accepts a legacy pa
   assert.equal((await session(request('admin-session', 'POST', { password: testPassword }))).status, 503);
   process.env.FLAMINGO_ADMIN_PASSWORD_HASH = saved;
 });
+test('Preview setup diagnostics disclose only presence bits and stay absent on other hosts', async () => {
+  const response = publicConfig(new Request('https://deploy-preview-1--mellifluous-moxie-db6fec.netlify.app/api/form-config'));
+  assert.equal(response.status, 503);
+  assert.match(response.headers.get('X-Flamingo-Setup'), /^[01]{4}$/);
+  const serialized = JSON.stringify([...response.headers]) + await response.text();
+  for (const name of ['FLAMINGO_TURNSTILE_SECRET_KEY', 'FLAMINGO_TELEGRAM_BOT_TOKEN', 'FLAMINGO_TELEGRAM_CHAT_ID']) {
+    assert(!serialized.includes(process.env[name]));
+  }
+  for (const host of ['flamingoauto.eu', 'deploy-preview-1--mellifluous-moxie-db6fec.netlify.app.evil.invalid']) {
+    assert.equal(publicConfig(new Request(`https://${host}/api/form-config`)).headers.get('X-Flamingo-Setup'), null);
+  }
+  assert.equal(response.headers.get('Cross-Origin-Resource-Policy'), 'same-origin');
+});
 test('Default function aliases cannot bypass the protected custom API routes', async () => {
   const calls = mockServices();
   for (const [name, handler] of [['send-telegram', lead], ['admin-session', session], ['admin-posts', posts], ['form-config', publicConfig]]) {
