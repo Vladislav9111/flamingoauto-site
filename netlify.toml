@@ -1,6 +1,6 @@
 [build]
   publish = "_site"
-  command = "npm run test:security && npm run build"
+  command = "node scripts/check-lead-services.mjs && npm run test:security && npm run build"
   ignore = ""
 
 [functions]
