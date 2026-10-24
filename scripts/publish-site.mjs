@@ -10,8 +10,9 @@ await mkdir(output, { recursive: true });
 
 const files = [
   'index.html', 'ru.html', 'blog-et.html', 'blog-ru.html', 'blog.html',
-  '404.html', 'style.css', 'script.js', 'admin-secure.js',
-  'favicon.svg', 'favicon.png', 'favicon.ico', 'robots.txt', 'sitemap.xml',
+  'privacy.html', 'privacy-ru.html', 'terms.html', 'terms-ru.html',
+  '404.html', 'style.css', 'landing.css', 'reader.css', 'script.js', 'admin-secure.js',
+  'favicon.svg', 'favicon.png', 'favicon.ico', 'robots.txt', 'sitemap.xml', 'language.js', 'indexnow-key.txt',
   '_headers', '_redirects', 'admin.html', 'admin/index.html',
   'heic-patch.js', 'heic-ios-patch.js', 'heic-fetch-patch.js', 'native-webp-heic-patch.js'
 ];

@@ -4,15 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Выкуп автомобилей в Таллине и по Эстонии | Flamingo Auto</title>
-    <meta name="description" content="Продайте автомобиль быстро и по честной цене. Заполните форму — получаете предложение в течение рабочего дня, оформление и оплата мгновенно.">
-    <meta name="keywords" content="продать авто, купить авто, оценка авто, Flamingo Auto, Таллин">
+    <meta name="description" content="Выкуп автомобилей в Таллине и по Эстонии. Отправьте номер машины и телефон — ответим в течение рабочего дня. Сведения и фотографии можно добавить по желанию.">
     <link rel="canonical" href="https://flamingoauto.eu/ru">
         <link rel="alternate" hreflang="et-EE" href="https://flamingoauto.eu/">
     <link rel="alternate" hreflang="ru-EE" href="https://flamingoauto.eu/ru">
     <link rel="alternate" hreflang="x-default" href="https://flamingoauto.eu/">
     <meta name="robots" content="index, follow">
     <meta property="og:title" content="Выкуп автомобилей в Таллине и по Эстонии | Flamingo Auto">
-    <meta property="og:description" content="Заполните форму, получите честное предложение в течение рабочего дня — оформление документов и мгновенная оплата.">
+    <meta property="og:description" content="Выкуп автомобилей в Таллине и по Эстонии. Отправьте номер машины и телефон — ответим в течение рабочего дня. Сведения и фотографии можно добавить по желанию.">
     <meta property="og:image" content="https://flamingoauto.eu/static/images/flamingo-hero.png">
     <meta property="og:url" content="https://flamingoauto.eu/ru">
     <meta name="twitter:card" content="summary_large_image">
@@ -24,190 +23,50 @@
     <link rel="preload" href="/static/fonts/noto-sans-v42-latin-afc7a910.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/style.css">
     <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "@id": "https://flamingoauto.eu/#website", "name": "Flamingo Auto", "url": "https://flamingoauto.eu/", "inLanguage": ["et-EE", "ru-EE"]}</script>
+    <link rel="stylesheet" href="/landing.css">
 </head>
-<body>
-    <a class="skip-link" href="#main-content">Перейти к содержимому</a>
-
-    <header class="site-header" role="banner">
-        <div class="container">
-            <div class="hero-header">
-                <a class="logo" href="/">FLAMINGO AUTO</a>
-                <div class="lang-switch" role="tablist" aria-label="Language switch">
-                    <a class="lang-btn" href="/" aria-pressed="false" role="tab">ET</a>
-                    <a class="lang-btn" href="/ru" aria-pressed="true" role="tab">RU</a>
-                </div>
-            </div>
+<body class="landing-page">
+  <a class="skip-link" href="#main-content">Перейти к содержимому</a>
+  <header class="site-header"><div class="container header-inner">
+    <a class="logo" href="/ru" aria-label="Flamingo Auto"><img class="brand-mark" src="/static/images/flamingo-mark.svg" width="28" height="32" alt="">FLAMINGO<span class="brand-auto">AUTO</span></a>
+    <nav class="primary-nav" aria-label="Главное меню"><a href="#how-it-works">Как продать</a><a href="#faq">Вопросы</a><a href="/blog-ru">Советы</a></nav>
+    <nav class="lang-switch" aria-label="Язык сайта"><a class="lang-btn" href="/" lang="et" hreflang="et">ET</a><a class="lang-btn" href="/ru" lang="ru" hreflang="ru" aria-current="page">RU</a></nav>
+    <a class="header-cta" href="#form-container">Получить предложение<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </div></header>
+  <aside id="language-suggestion" hidden lang="et"><div class="container"><p>Eelistad eesti keelt?</p><a href="/">Ava eestikeelne leht</a><button type="button" id="dismiss-language">Jätka vene keeles</button></div></aside>
+  <main id="main-content" tabindex="-1">
+    <section class="landing-hero" aria-labelledby="hero-title"><div class="container hero-layout">
+      <div class="hero-copy"><p class="eyebrow">Выкуп автомобилей · Эстония</p><h1 id="hero-title">Продайте авто<br><span>без лишних хлопот.</span></h1><p class="hero-intro">Выкуп автомобилей в Таллине и по всей Эстонии. Расскажите о машине — ответим с предложением в течение одного рабочего дня.</p>
+        <div class="hero-actions"><a class="btn btn-primary" href="#form-container">Получить предложение<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a><a class="text-link" href="#how-it-works">Как это работает</a></div>
+        <ul class="hero-facts"><li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 10 3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>По всей Эстонии</li><li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 10 3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Любое состояние</li><li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 10 3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Ответ в рабочий день</li></ul>
+      </div>
+      <div class="hero-art" aria-hidden="true"><span class="art-label">FLAMINGO AUTO</span><div class="art-orbit"></div><img src="/static/images/flamingo-hero.png" alt="" width="320" height="320" fetchpriority="high"><span class="art-spark">✳</span><p>Ваша машина.<br>Следующий шаг — проще.</p></div>
+    </div></section>
+    <section class="process-section" id="how-it-works" aria-labelledby="process-title"><div class="container"><div class="section-heading"><div><p class="eyebrow">От заявки до сделки</p><h2 id="process-title">Три понятных шага</h2></div></div><ol class="process-steps"><li><span class="step-number">01</span><div><h3>Расскажите о машине</h3><p>Укажите номер автомобиля и контакты. Остальные сведения и фотографии можно добавить по желанию.</p></div></li><li><span class="step-number">02</span><div><h3>Обсудим предложение</h3><p>Ответим в течение одного рабочего дня. Уточним состояние автомобиля и условия продажи.</p></div></li><li><span class="step-number">03</span><div><h3>Согласуем сделку</h3><p>Если предложение подходит, договоримся о передаче автомобиля, документах и оплате.</p></div></li></ol></div></section>
+    <section class="estimate-section" id="form-container" aria-labelledby="estimate-title"><div class="container estimate-layout">
+      <div class="estimate-aside"><p class="eyebrow">Заявка в два простых шага</p><h2 id="estimate-title">Получите предложение <br>по вашему авто.</h2><p class="estimate-intro">Сначала достаточно номера автомобиля и телефона. После отправки контакта можно добавить подробности — это необязательно.</p><div class="next-step"><span aria-hidden="true">↗</span><h3>Что будет дальше?</h3><p>Рассмотрим данные и свяжемся с вами в течение одного рабочего дня. Местонахождение автомобиля и дальнейшие шаги согласуем отдельно.</p></div><div class="aside-contact"><p>Есть вопрос по заявке?</p><a href="mailto:lv.tallinn@gmail.com">lv.tallinn@gmail.com</a></div></div>
+      <div class="estimate-card"><div class="form-heading"><h3 id="form-heading" tabindex="-1">Начните с контакта</h3><p id="required-fields">Два обязательных поля и согласие на связь</p></div>
+      <ol class="step-indicator" aria-label="Шаги заявки"><li aria-current="step">Контакт</li><li>Автомобиль</li></ol>
+      <form id="car-form" method="post" action="/api/lead/start" aria-describedby="required-fields" novalidate>
+        <div id="contact-stage" class="contact-stage"><fieldset><legend>Номер автомобиля и телефон</legend><div class="form-grid"><div class="form-group"><label for="reg-number">Регистрационный номер <span aria-hidden="true">*</span></label><input type="text" id="reg-number" name="reg-number" placeholder="123 ABC" required maxlength="20" autocapitalize="characters" spellcheck="false" autocomplete="off"></div><div class="form-group"><label for="phone">Телефон <span aria-hidden="true">*</span></label><input type="tel" id="phone" name="phone" placeholder="+372 …" required maxlength="30" autocomplete="tel" pattern="\+?[0-9 \(\)\-]{6,30}"></div></div></fieldset>
+        <p class="contact-explanation">После нажатия кнопки номер машины и телефон будут переданы Flamingo Auto. Мы сможем связаться с вами, даже если вы не заполните следующий шаг.</p>
+        <label class="consent-row" for="contact-consent"><input id="contact-consent" name="consent" type="checkbox" value="contact" required><span>Хочу получить предложение и разрешаю связаться со мной по поводу этого автомобиля, даже если не заполню подробности. <a href="/privacy-ru" target="_blank" rel="noopener">Как используются данные</a>.</span></label></div>
+        <div id="details-stage" class="details-stage" hidden><div class="contact-summary"><h4>Контакт уже отправлен</h4><p id="saved-contact"></p><p>Теперь можно добавить сведения и фотографии. Если выйдете без заполнения, базовый контакт уже останется для связи с вами.</p><button type="button" id="edit-contact">Изменить контакт</button></div>
+        <fieldset><legend>Дополнительные контакты <small>Необязательно</small></legend><div class="form-grid"><div class="form-group"><label for="name">Имя</label><input type="text" id="name" name="name" placeholder="Как к вам обращаться"  maxlength="80" autocomplete="name"></div><div class="form-group"><label for="city">Местонахождение автомобиля</label><input type="text" id="city" name="city" placeholder="Tallinn"  maxlength="100" autocomplete="address-level2"></div><div class="form-group full-width"><label for="email">Email</label><input type="email" id="email" name="email" placeholder="you@mail.com"  maxlength="254" autocomplete="email"></div></div></fieldset>
+        <details class="vehicle-details"><summary><span>Добавить сведения об автомобиле<small>Необязательно</small></span><b aria-hidden="true">+</b></summary><div class="form-grid"><div class="form-group"><label for="make">Марка</label><input type="text" id="make" name="make" placeholder="Volkswagen"  maxlength="80"></div><div class="form-group"><label for="model">Модель</label><input type="text" id="model" name="model" placeholder="Golf"  maxlength="80"></div><div class="form-group"><label for="year">Год выпуска</label><input type="text" id="year" name="year" placeholder="2019"  inputmode="numeric" maxlength="4"></div><div class="form-group"><label for="mileage">Пробег, км</label><input type="text" id="mileage" name="mileage" placeholder="150 000"  inputmode="numeric" maxlength="12"></div><div class="form-group"><label for="transmission">Коробка передач</label><input type="text" id="transmission" name="transmission" placeholder="Автомат / механика"  maxlength="40"></div><div class="form-group"><label for="engine">Двигатель</label><input type="text" id="engine" name="engine" placeholder="Например, 1.9 дизель"  maxlength="80"></div><div class="form-group"><label for="price">Желаемая цена, €</label><input type="text" id="price" name="price" placeholder="5 000"  inputmode="decimal" maxlength="20"></div><div class="form-group full-width"><label for="note">Состояние и дополнительная информация</label><textarea id="note" name="note" rows="3" maxlength="1200" placeholder="Известные неисправности, повреждения или что ещё важно знать"></textarea></div></div></details>
+        <div class="photo-upload"><label for="photos">Фотографии автомобиля<small>Необязательно</small></label><p id="photo-hint">До 6 фотографий. Общий вид, салон, приборная панель и повреждения. Если снимков нет, заявку можно отправить без них.</p><input type="file" id="photos" name="photos" multiple accept="image/*" aria-describedby="photo-hint photo-error"><div class="photo-selection-row"><p id="photo-selection" role="status">Фотографии не выбраны.</p><button type="button" id="clear-photos" hidden>Убрать фотографии</button></div><p id="photo-error" class="error-message" role="alert"></p></div>
         </div>
-    </header>
-
-    <main id="main-content" tabindex="-1">
-    <div class="hero">
-        <div class="container">
-            <div class="hero-header">
-                
-            </div>
-            <div class="hero-inner">
-                <div class="hero-content">
-                    <h1>Выкуп автомобилей в Таллине<br>и по всей Эстонии</h1>
-                    <p class="subtitle">Без лишней волокиты — оформляем документы и платим сразу.</p>
-                    <p>Покупаем автомобили по всей Эстонии — независимо от марки, модели или состояния. Давaем честное предложение в течение рабочего дня и организуем все быстро и удобно.</p>
-                    <a href="#form-container" class="btn">Отправить заявку</a>
-                </div>
-                <div class="hero-image" aria-hidden="true">
-                    <img src="/static/images/flamingo-hero.png" alt="" width="320" height="320" fetchpriority="high" />
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="how-it-works">
-        <div class="container">
-            <div class="steps-container">
-                <div class="step">
-                    <h3>1. Заполните форму</h3>
-                    <p>Регистрационный номер, марка и модель, год, пробег, коробка передач.</p>
-                </div>
-                <div class="step">
-                    <h3>2. Получите предложение</h3>
-                    <p>Даем цену в течение рабочего дня.</p>
-                </div>
-                <div class="step">
-                    <h3>3. Сделка</h3>
-                    <p>Оформляем все документы и платим сразу.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container" id="form-container">
-        
-        <h2 class="quote-heading">Получить ценовое предложение</h2>
-        <p class="quote-sub">Ответим в течение одного рабочего дня</p>
-        <form id="car-form" method="post" action="/api/lead" novalidate>
-            <h2>Данные об автомобиле</h2>
-            <div class="form-grid">
-                <div class="form-group full-width">
-                    <label for="reg-number">Регистрационный номер*</label>
-                    <input type="text" id="reg-number" name="reg-number" required placeholder="123 ABC" >
-                </div>
-                <div class="form-group">
-                    <label for="make">Марка</label>
-                    <input type="text" id="make" name="make" placeholder="Volkswagen">
-                </div>
-                <div class="form-group">
-                    <label for="model">Модель</label>
-                    <input type="text" id="model" name="model" placeholder="Golf">
-                </div>
-                <div class="form-group">
-                    <label for="year">Год выпуска</label>
-                    <input type="text" id="year" name="year" inputmode="numeric" placeholder="2019">
-                </div>
-                <div class="form-group">
-                    <label for="mileage">Пробег</label>
-                    <input type="text" id="mileage" name="mileage" inputmode="numeric" placeholder="км">
-                </div>
-                <div class="form-group">
-                    <label for="transmission">Коробка передач</label>
-                    <input type="text" id="transmission" name="transmission" placeholder="автомат / механика">
-                </div>
-                <div class="form-group">
-                    <label for="engine">Двигатель</label>
-                    <input type="text" id="engine" name="engine" placeholder="напр. 1.9 дизель / 2.5 бензин">
-                </div>
-                <div class="form-group">
-                    <label for="price">Желаемая цена (€)</label>
-                    <input type="text" id="price" name="price" inputmode="decimal" placeholder="€">
-                </div>
-                <div class="form-group full-width">
-                    <label for="photos">Фото (до 6)</label>
-                    <input type="file" id="photos" name="photos" multiple accept="image/*">
-                    <small class="photo-hint">Добавьте до 6 фотографий: снаружи, внутри и приборной панели.</small>
-                    <small id="photo-error" class="error-message"></small>
-                </div>
-            </div>
-
-            <h2>Контактные данные</h2>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="name">Имя*</label>
-                    <input type="text" id="name" name="name" autocomplete="name" required placeholder="Ваше имя" >
-                </div>
-                <div class="form-group">
-                    <label for="email">E-mail*</label>
-                    <input type="email" id="email" name="email" autocomplete="email" required placeholder="you@mail.com" >
-                </div>
-                <div class="form-group">
-                    <label for="phone">Телефон*</label>
-                    <input type="tel" id="phone" name="phone" autocomplete="tel" required placeholder="+372 ..." >
-                </div>
-                <div class="form-group">
-                    <label for="city">Город*</label>
-                    <input type="text" id="city" name="city" autocomplete="address-level2" required placeholder="Tallinn" >
-                </div>
-                <div class="form-group full-width">
-                    <label for="note">Доп. информация</label>
-                    <textarea id="note" name="note" rows="4" placeholder="Сообщение…"></textarea>
-                </div>
-            </div>
-
-            <div class="form-trap" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
-            <div id="form-verification"></div>
-            <p id="form-status" role="status" aria-live="polite"></p>
-            <button type="submit" id="submit-btn" disabled>Отправить заявку</button>
-        <noscript><p>Для отправки заявки включите JavaScript.</p></noscript>
-        </form>
-    </div>
-
-    <div id="popup" class="popup hidden">
-        <div class="popup-content">
-            <span class="close-btn">&times;</span>
-            <p>Ваша анкета отправлена</p>
-        </div>
-    </div>
-
-   <!-- (A) Yol sorununu kesin çözmek için kökten ver -->
-    <script src="/script.js" defer></script>
-
-
-    <!-- Netlify Identity for admin access -->
-    <script>
-        if (window.netlifyIdentity) {
-            window.netlifyIdentity.on("init", user => {
-                if (!user) {
-                    window.netlifyIdentity.on("login", () => {
-                        document.location.href = "/admin/";
-                    });
-                }
-            });
-        }
-    </script>
-
-    <!-- Footer -->
-
-    <section class="container seo-content" aria-labelledby="selling-guide">
-        <h2 id="selling-guide">Продажа автомобиля Flamingo Auto</h2>
-        <p>Покупаем автомобили в Таллине и по всей Эстонии независимо от марки, модели и состояния. Для запроса предложения укажите регистрационный номер и контакты. По возможности добавьте марку, модель, год, пробег, местонахождение и желаемую цену.</p>
-        <h3>Что поможет оценить автомобиль?</h3>
-        <p>Опишите состояние и известные неисправности. Фотографии кузова, салона и приборной панели помогут оценить автомобиль перед согласованием следующих шагов. Для аварийной машины или машины не на ходу опишите повреждения и укажите, может ли она передвигаться самостоятельно.</p>
-        <h3>Когда придёт ответ?</h3>
-        <p>Отвечаем на запрос в течение одного рабочего дня. Если предложение подходит, согласуем детали сделки, оформление документов и оплату.</p>
-        <h3>Можно продать машину за пределами Таллина?</h3>
-        <p>Да, покупаем машины по всей Эстонии. Укажите местонахождение автомобиля в форме, чтобы мы могли согласовать следующие шаги.</p>
-        <p><a href="/blog-ru">Прочитайте советы о продаже автомобиля</a> или <a href="#form-container">отправьте данные машины</a>.</p>
-
-        <h3>Перед отправкой заявки</h3>
-        <ul><li><a href="/artiklid/1760961981466/">От чего зависит оценка автомобиля?</a></li><li><a href="/artiklid/1761334331835/">Какие данные и фотографии отправить?</a></li><li><a href="/artiklid/1769328755147/">Продажа аварийного автомобиля или машины не на ходу</a></li></ul>
-        <div class="contact-details" id="contacts"><h3>Контакты</h3><p>По вопросам об автомобиле или уже отправленной заявке напишите нам на email. Для запроса оценки воспользуйтесь формой с данными машины.</p><p><a href="mailto:lv.tallinn@gmail.com">lv.tallinn@gmail.com</a></p></div>
-    </section>
-
-    </main>
-
-    <footer class="site-footer">
-        <div class="container footer-inner">
-            <p>Flamingo Auto. Все права защищены. Таллин, Эстония</p>
-            <a class="blog-btn" href="/blog-ru" aria-label="Блог">Блог</a>
-        </div>
-    </footer>
-
+        <div class="form-trap" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+        <div id="form-verification"></div><p id="form-status" role="status" aria-live="polite">Подготавливаем безопасную отправку…</p>
+        <button type="submit" id="submit-btn" disabled>Отправить контакт и продолжить</button><button type="button" id="finish-without-details" hidden>Завершить без подробностей</button><p class="form-data-note">Не прикладывайте документы с персональными данными. Вопросы по заявке: <a href="mailto:lv.tallinn@gmail.com">lv.tallinn@gmail.com</a>. <a href="/privacy-ru">Как используются данные</a> · <a href="/terms-ru">Условия обращения</a>.</p><noscript><p>Для отправки формы включите JavaScript или напишите на email.</p></noscript>
+      </form></div>
+    </div></section>
+    <section class="faq-section" id="faq" aria-labelledby="faq-title"><div class="container faq-layout"><div><p class="eyebrow">Ответы перед продажей</p><h2 id="faq-title">Частые вопросы</h2><p>Самое важное об оценке автомобиля и следующих шагах.</p></div><div class="faq-list"><details class="faq-item" open><summary>Когда я получу ответ?<span aria-hidden="true">+</span></summary><div><p>Отвечаем на заявку в течение одного рабочего дня. Если предложение подходит, согласуем детали продажи, документы и оплату.</p></div></details><details class="faq-item" ><summary>Какие автомобили можно предложить?<span aria-hidden="true">+</span></summary><div><p>Принимаем заявки на автомобили разных марок, моделей и состояния, в том числе аварийные и не на ходу. Опишите состояние и известные неисправности, чтобы мы могли обсудить вашу машину предметно.</p></div></details><details class="faq-item" ><summary>Нужны ли фотографии для отправки заявки?<span aria-hidden="true">+</span></summary><div><p>Нет, фотографии необязательны. Если есть возможность, добавьте до шести снимков: общий вид, салон, приборную панель и повреждения. Они помогут уточнить оценку.</p></div></details><details class="faq-item" ><summary>Что влияет на предложение по цене?<span aria-hidden="true">+</span></summary><div><p>Марка и модель, год выпуска, пробег, состояние, неисправности и комплектность. Укажите известные особенности автомобиля и желаемую цену в дополнительных сведениях.</p></div></details><details class="faq-item" ><summary>Можно продать автомобиль за пределами Таллина?<span aria-hidden="true">+</span></summary><div><p>Да, работаем с автомобилями по всей Эстонии. Укажите город или местонахождение в заявке. Условия осмотра и передачи машины согласуем отдельно.</p></div></details><details class="faq-item" ><summary>Что делать, если автомобиль не на ходу?<span aria-hidden="true">+</span></summary><div><p>Укажите это в дополнительных сведениях. Опишите неисправность, место стоянки и возможность подъезда. Возможность и условия транспортировки обсуждаются отдельно; бесплатная перевозка заранее не обещается.</p></div></details><details class="faq-item" ><summary>Как уточнить уже отправленную заявку?<span aria-hidden="true">+</span></summary><div><p>Напишите на <a href="mailto:lv.tallinn@gmail.com">lv.tallinn@gmail.com</a> и укажите номер автомобиля, который был в заявке. Не отправляйте документы с чужими персональными данными.</p></div></details></div></div></section>
+    <section class="guides-section" aria-labelledby="guides-title"><div class="container"><div class="section-heading"><div><p class="eyebrow">Подготовьтесь к продаже</p><h2 id="guides-title">Полезно знать заранее</h2></div><a class="text-link" href="/blog-ru">Все советы<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div><div class="guide-grid"><a class="guide-card" href="/artiklid/1760961981466/"><span class="guide-index">01</span><h3>От чего зависит цена автомобиля</h3><p>Что учитывать при сравнении предложений о выкупе.</p><span class="guide-link">Читать материал<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a><a class="guide-card" href="/artiklid/1761334331835/"><span class="guide-index">02</span><h3>Какие данные и фото подготовить</h3><p>Короткий список для содержательной оценки машины.</p><span class="guide-link">Читать материал<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a><a class="guide-card" href="/artiklid/1769328755147/"><span class="guide-index">03</span><h3>Если автомобиль повреждён</h3><p>Что рассказать о машине после аварии или не на ходу.</p><span class="guide-link">Читать материал<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></div></div></section>
+  </main>
+  <footer class="site-footer"><div class="container footer-main"><div><a class="logo" href="/ru">FLAMINGO<span class="brand-auto">AUTO</span></a><p>Выкуп автомобилей в Таллине и по всей Эстонии.</p></div><div><p class="footer-label">Связаться с нами</p><a href="mailto:lv.tallinn@gmail.com">lv.tallinn@gmail.com</a></div><nav aria-label="Главное меню"><a href="#faq">Вопросы</a><a href="/blog-ru">Советы по продаже</a><a href="/privacy-ru">Как используются данные</a><a href="/terms-ru">Условия обращения</a></nav></div><div class="container footer-bottom"><span>Flamingo Auto · Эстония</span><a href="#form-container">Получить предложение ↗</a></div></footer>
+  <dialog id="popup" class="success-dialog" aria-labelledby="success-title"><span class="success-icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 10 3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><h2 id="success-title">Заявка отправлена</h2><p>Спасибо! Ответим в течение одного рабочего дня.</p><button type="button" class="close-btn">Понятно</button></dialog>
+  <script src="/language.js" defer></script>
+  <script src="/script.js" defer></script>
 </body>
 </html>

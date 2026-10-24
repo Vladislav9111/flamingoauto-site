@@ -228,24 +228,85 @@ document.addEventListener('DOMContentLoaded', () => {
   const russian = document.documentElement.lang === 'ru';
   const submit = document.getElementById('submit-btn');
   const status = document.getElementById('form-status');
+  const contactStage = document.getElementById('contact-stage');
+  const detailStage = document.getElementById('details-stage');
+  const consent = document.getElementById('contact-consent');
+  const registration = document.getElementById('reg-number');
+  const phone = document.getElementById('phone');
+  const finish = document.getElementById('finish-without-details');
+  const heading = document.getElementById('form-heading');
+  const required = document.getElementById('required-fields');
+  const initialHeading = heading.textContent;
+  const initialRequired = required.textContent;
+  const steps = document.querySelectorAll('.step-indicator li');
   const text = russian ? {
-    unavailable: 'Форма временно недоступна. Пожалуйста, попробуйте позже.',
-    verify: 'Подтвердите проверку перед отправкой.', sending: 'Отправка…', send: 'Отправить заявку',
-    error: 'Не удалось отправить заявку. Попробуйте позже.', rate: 'Слишком много запросов. Подождите минуту.',
-    photos: 'Можно загрузить до шести фотографий.', sent: 'Ваша заявка отправлена.',
-    partial: 'Заявка отправлена, но фотографии доставить не удалось. Мы уточним детали при связи с вами.'
+    unavailable: 'Проверка отправки временно недоступна. Попробуйте обновить страницу или напишите на email ниже.',
+    verify: 'Подтвердите проверку перед отправкой.', sending: 'Отправка…',
+    contactSend: 'Отправить контакт и продолжить', detailsSend: 'Отправить подробности',
+    detailsHeading: 'Добавьте сведения об автомобиле', optional: 'Все поля второго шага необязательны.',
+    error: 'Не удалось подтвердить отправку. Проверьте соединение и попробуйте ещё раз.', rate: 'Слишком много запросов. Подождите минуту.',
+    photos: 'Можно загрузить до шести фотографий.', photoType: 'Выберите файлы изображений.',
+    phone: 'Укажите номер телефона, содержащий не менее шести цифр.',
+    sent: 'Спасибо! Контакт получен. Ответим в течение одного рабочего дня.',
+    partial: 'Сведения отправлены, но фотографии доставить не удалось. Мы уточним детали при связи с вами.',
+    expired: 'Время добавления подробностей истекло. Ранее отправленный контакт уже получен. Чтобы отправить новую заявку, нажмите «Изменить контакт».',
+    edit: 'Проверьте контакт и подтвердите согласие снова. Повторное нажатие отправит новую контактную заявку.'
   } : {
-    unavailable: 'Vorm on ajutiselt kättesaamatu. Palun proovige hiljem uuesti.',
-    verify: 'Enne saatmist läbige kontroll.', sending: 'Saatmine…', send: 'Saada päring',
-    error: 'Päringut ei õnnestunud saata. Palun proovige hiljem uuesti.', rate: 'Liiga palju päringuid. Palun oodake minut.',
-    photos: 'Saate lisada kuni kuus fotot.', sent: 'Teie päring on saadetud.',
-    partial: 'Päring saadeti, kuid fotosid ei õnnestunud edastada. Täpsustame üksikasju ühendust võttes.'
+    unavailable: 'Saatmise kontroll on ajutiselt kättesaamatu. Värskenda lehte või kirjuta alloleval e-posti aadressil.',
+    verify: 'Enne saatmist läbi kontroll.', sending: 'Saatmine…',
+    contactSend: 'Saada kontakt ja jätka', detailsSend: 'Saada auto andmed',
+    detailsHeading: 'Lisa auto kohta täpsemad andmed', optional: 'Teise sammu kõik väljad on valikulised.',
+    error: 'Saatmist ei õnnestunud kinnitada. Kontrolli ühendust ja proovi uuesti.', rate: 'Liiga palju päringuid. Palun oota minut.',
+    photos: 'Saad lisada kuni kuus fotot.', photoType: 'Vali pildifailid.',
+    phone: 'Sisesta vähemalt kuue numbriga telefoninumber.',
+    sent: 'Aitäh! Kontakt on saadetud. Vastame ühe tööpäeva jooksul.',
+    partial: 'Andmed saadeti, kuid fotosid ei õnnestunud edastada. Täpsustame üksikasju ühendust võttes.',
+    expired: 'Lisainfo saatmise aeg on lõppenud. Varem saadetud kontakt on juba edastatud. Uue päringu saatmiseks vajuta „Muuda kontakti”.',
+    edit: 'Kontrolli kontakti ja kinnita nõusolek uuesti. Uus saatmine loob uue kontaktipäringu.'
   };
+  const messages = russian ? {
+    'Verification required': 'Пройдите проверку Cloudflare и повторите отправку.',
+    'Verification failed': 'Проверка Cloudflare не прошла. Повторите проверку и отправку.',
+    'Invalid contact details': 'Проверьте номер машины, телефон и email, если он указан.',
+    'Contact consent required': 'Подтвердите согласие на связь по поводу автомобиля.',
+    'Invalid field': 'Проверьте поля и длину введённого текста.',
+    'Please refresh the form and try again': 'Обновите страницу и заполните контакт ещё раз.',
+    'Invalid photo': 'Не удалось обработать фотографию. Попробуйте JPEG, PNG или WebP.',
+    'Use up to six JPEG, PNG or WebP photos': 'Добавьте не больше шести фотографий JPEG, PNG или WebP.'
+  } : {
+    'Verification required': 'Läbi Cloudflare’i kontroll ja proovi uuesti.',
+    'Verification failed': 'Cloudflare’i kontroll ebaõnnestus. Läbi kontroll ja proovi uuesti.',
+    'Invalid contact details': 'Kontrolli auto numbrit, telefoni ja e-posti aadressi, kui see on lisatud.',
+    'Contact consent required': 'Kinnita nõusolek auto asjus ühenduse võtmiseks.',
+    'Invalid field': 'Kontrolli välju ja sisestatud teksti pikkust.',
+    'Please refresh the form and try again': 'Värskenda lehte ja täida kontakt uuesti.',
+    'Invalid photo': 'Foto töötlemine ebaõnnestus. Proovi JPEG-, PNG- või WebP-faili.',
+    'Use up to six JPEG, PNG or WebP photos': 'Lisa kuni kuus JPEG-, PNG- või WebP-fotot.'
+  };
+  let phase = 'contact';
+  let leadToken = '';
   let challenge = '';
   let widget;
+  let sending = false;
   let startedAt = Date.now();
-  submit.disabled = true;
-  const setStatus = message => { status.textContent = message; };
+  status.dataset.kind = 'verification';
+  const setStatus = (message, kind = 'form') => { status.textContent = message; status.dataset.kind = kind; };
+  let readinessTimer;
+  const ready = () => {
+    clearTimeout(readinessTimer);
+    const wait = 2100 - (Date.now() - startedAt);
+    submit.disabled = sending || !challenge || wait > 0;
+    finish.disabled = sending;
+    if (challenge && !sending && wait > 0) readinessTimer = setTimeout(ready, wait);
+  };
+  function verificationStatus(message) {
+    if (!status.textContent || status.dataset.kind === 'verification') setStatus(message, 'verification');
+  }
+  function resetChallenge() {
+    challenge = '';
+    ready();
+    if (widget !== undefined) window.turnstile.reset(widget);
+  }
   async function setupVerification() {
     try {
       const response = await fetch('/api/form-config');
@@ -254,89 +315,112 @@ document.addEventListener('DOMContentLoaded', () => {
       await new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-        script.async = true;
-        script.onload = resolve;
-        script.onerror = reject;
+        script.async = true; script.onload = resolve; script.onerror = reject;
         document.head.appendChild(script);
       });
       widget = window.turnstile.render('#form-verification', {
         sitekey: config.turnstileSiteKey, action: 'flamingo-lead', size: 'compact', language: russian ? 'ru' : 'et',
-        callback: token => { challenge = token; submit.disabled = false; setStatus(''); },
-        'expired-callback': () => { challenge = ''; submit.disabled = true; setStatus(text.verify); },
-        'error-callback': () => { challenge = ''; submit.disabled = true; setStatus(text.unavailable); }
+        callback: token => {
+          challenge = token; ready();
+          // A fresh challenge must not erase an explanation of a failed submission.
+          if (status.dataset.kind === 'verification') setStatus('', 'verification');
+        },
+        'expired-callback': () => { challenge = ''; ready(); verificationStatus(text.verify); },
+        'error-callback': () => { challenge = ''; ready(); verificationStatus(text.unavailable); }
       });
-    } catch { setStatus(text.unavailable); }
+    } catch { verificationStatus(text.unavailable); }
   }
+  const photoSelection = document.getElementById('photo-selection');
+  const clearPhotos = document.getElementById('clear-photos');
+  const emptySelection = photoSelection.textContent;
   function validatePhotos() {
-    const valid = photoInput.files.length <= MAX_FILES && Array.from(photoInput.files).every(isImg);
-    photoError.textContent = valid ? '' : text.photos;
+    const files = Array.from(photoInput.files);
+    const valid = files.length <= MAX_FILES && files.every(isImg);
+    photoError.textContent = files.length > MAX_FILES ? text.photos : files.every(isImg) ? '' : text.photoType;
     return valid;
   }
-  photoInput.addEventListener('change', validatePhotos);
+  function updatePhotoSelection() {
+    const count = photoInput.files.length;
+    photoSelection.textContent = count ? (russian ? `Выбрано фотографий: ${count} из 6.` : `Valitud fotosid: ${count} / 6.`) : emptySelection;
+    clearPhotos.hidden = count === 0;
+    validatePhotos();
+  }
+  photoInput.addEventListener('change', updatePhotoSelection);
+  clearPhotos.addEventListener('click', () => { photoInput.value = ''; updatePhotoSelection(); photoInput.focus(); });
+  phone.addEventListener('input', () => phone.setCustomValidity(''));
+  function displayPhase() {
+    const details = phase === 'details';
+    contactStage.hidden = details; detailStage.hidden = !details; finish.hidden = !details;
+    registration.readOnly = details; phone.readOnly = details;
+    steps.forEach((step, index) => { if (index === (details ? 1 : 0)) step.setAttribute('aria-current', 'step'); else step.removeAttribute('aria-current'); });
+    heading.textContent = details ? text.detailsHeading : initialHeading;
+    required.textContent = details ? text.optional : initialRequired;
+    submit.textContent = details ? text.detailsSend : text.contactSend;
+    form.action = details ? '/api/lead' : '/api/lead/start';
+    ready();
+  }
+  function showSuccess(message) {
+    document.querySelector('#popup p').textContent = message;
+    popup.showModal();
+    form.reset(); updatePhotoSelection(); leadToken = ''; phase = 'contact'; startedAt = Date.now(); displayPhase();
+  }
+  document.getElementById('edit-contact').addEventListener('click', () => {
+    phase = 'contact'; leadToken = ''; consent.checked = false; startedAt = Date.now(); displayPhase();
+    setStatus(text.edit); resetChallenge(); registration.focus();
+  });
+  finish.addEventListener('click', () => {
+    if (phase !== 'details' || !leadToken || sending) return;
+    showSuccess(text.sent); resetChallenge();
+  });
   form.addEventListener('submit', async event => {
     event.preventDefault();
-    if (!validatePhotos() || !form.checkValidity()) { form.reportValidity(); return; }
-    if (!challenge) { setStatus(text.verify); return; }
-    submit.disabled = true;
-    submit.textContent = text.sending;
-    setStatus('');
+    if (sending) return;
+    if (phone.value.replace(/\D/g, '').length < 6) phone.setCustomValidity(text.phone);
+    const valid = phase === 'contact'
+      ? [registration, phone, consent].every(input => input.reportValidity())
+      : validatePhotos() && form.reportValidity();
+    if (!valid) return;
+    if (!challenge) { setStatus(text.verify, 'verification'); return; }
+    sending = true; ready(); submit.textContent = text.sending; setStatus('');
     try {
       const data = new FormData();
-      for (const key of ['make', 'model', 'year', 'mileage', 'transmission', 'engine', 'price', 'name', 'email', 'phone', 'city', 'note']) {
-        data.set(key, form.elements[key].value);
+      data.set('regNumber', registration.value); data.set('phone', phone.value);
+      data.set('consent', 'contact'); data.set('website', form.elements.website.value);
+      data.set('startedAt', String(startedAt)); data.set('turnstileToken', challenge);
+      const endpoint = phase === 'contact' ? '/api/lead/start' : '/api/lead';
+      if (phase === 'details') {
+        data.set('leadToken', leadToken);
+        for (const key of ['make', 'model', 'year', 'mileage', 'transmission', 'engine', 'price', 'name', 'email', 'city', 'note']) data.set(key, form.elements[key].value);
+        let files = await initialConvert(Array.from(photoInput.files));
+        if (totalBytes(files) > TRIGGER_BYTES) files = await compressToTarget(files, FINAL_TARGET);
+        if (totalBytes(files) > SERVER_HARD_LIMIT) throw new Error('PHOTO_LIMIT');
+        files.forEach((file, index) => data.append(`photo${index}`, file));
       }
-      data.set('regNumber', form.elements['reg-number'].value);
-      data.set('website', form.elements['website'].value);
-      data.set('startedAt', String(startedAt));
-      data.set('turnstileToken', challenge);
-      let files = await initialConvert(Array.from(photoInput.files));
-      if (totalBytes(files) > TRIGGER_BYTES) files = await compressToTarget(files, FINAL_TARGET);
-      if (totalBytes(files) > SERVER_HARD_LIMIT) throw new Error('PHOTO_LIMIT');
-      files.forEach((file, index) => data.append(`photo${index}`, file));
-      const response = await fetch('/api/lead', { method: 'POST', body: data });
+      const response = await fetch(endpoint, { method: 'POST', body: data });
       const result = await response.json();
       if (!response.ok || result.success !== true) {
-        const validationMessages = russian ? {
-          'Verification required': 'Пройдите проверку Cloudflare и повторите отправку.',
-          'Verification failed': 'Проверка Cloudflare не прошла. Обновите страницу и попробуйте ещё раз.',
-          'Invalid contact details': 'Проверьте правильность email и номера телефона.',
-          'Invalid field': 'Проверьте обязательные поля и длину введённого текста.',
-          'Please refresh the form and try again': 'Обновите страницу и заполните форму ещё раз.',
-          'Invalid photo': 'Не удалось обработать фотографию. Попробуйте JPEG, PNG или WebP.',
-          'Use up to six JPEG, PNG or WebP photos': 'Добавьте не больше шести фотографий JPEG, PNG или WebP.'
-        } : {
-          'Verification required': 'Läbige Cloudflare’i kontroll ja proovige uuesti.',
-          'Verification failed': 'Cloudflare’i kontroll ebaõnnestus. Värskendage lehte ja proovige uuesti.',
-          'Invalid contact details': 'Kontrollige e-posti aadressi ja telefoninumbrit.',
-          'Invalid field': 'Kontrollige kohustuslikke välju ja teksti pikkust.',
-          'Please refresh the form and try again': 'Värskendage lehte ja täitke vorm uuesti.',
-          'Invalid photo': 'Foto töötlemine ebaõnnestus. Proovige JPEG-, PNG- või WebP-faili.',
-          'Use up to six JPEG, PNG or WebP photos': 'Lisage kuni kuus JPEG-, PNG- või WebP-fotot.'
-        };
-        setStatus(response.status === 429 ? text.rate : validationMessages[result.error] || text.error);
+        setStatus(result.code === 'lead_receipt_invalid' ? text.expired : response.status === 429 ? text.rate : messages[result.error] || text.error);
         return;
       }
-      document.querySelector('#popup p').textContent = result.photosSent === false ? text.partial : text.sent;
-      popup.classList.remove('hidden');
-      form.reset();
-      photoError.textContent = '';
-      startedAt = Date.now();
+      if (phase === 'contact') {
+        if (typeof result.leadToken !== 'string' || !result.leadToken) throw new Error('INVALID_RECEIPT');
+        leadToken = result.leadToken; phase = 'details'; startedAt = Date.now();
+        document.getElementById('saved-contact').textContent = registration.value + ' · ' + phone.value;
+        displayPhase(); heading.focus({ preventScroll: true });
+        document.querySelector('.estimate-card').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      } else showSuccess(result.photosSent === false ? text.partial : text.sent);
     } catch { setStatus(text.error); }
-    finally {
-      challenge = '';
-      submit.textContent = text.send;
-      submit.disabled = true;
-      if (widget !== undefined) window.turnstile.reset(widget);
-    }
+    finally { sending = false; displayPhase(); resetChallenge(); }
   });
-  closeBtn.addEventListener('click', () => popup.classList.add('hidden'));
-  popup.addEventListener('click', event => { if (event.target === popup) popup.classList.add('hidden'); });
+  closeBtn.addEventListener('click', () => popup.close());
+  popup.addEventListener('click', event => { if (event.target === popup) popup.close(); });
+  popup.addEventListener('close', () => heading.focus());
   const normalize = value => value.replace(/\/index\.html$/, '/').replace(/\.html$/, '').replace(/\/$/, '') || '/';
   document.querySelectorAll('.lang-btn').forEach(button => {
     const active = normalize(new URL(button.href).pathname) === normalize(location.pathname);
-    button.setAttribute('aria-pressed', String(active));
-    if (active) button.setAttribute('aria-current', 'page');
+    button.removeAttribute('aria-pressed');
+    if (active) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
     button.classList.toggle('active', active);
   });
-  setupVerification();
+  displayPhase(); setupVerification();
 });

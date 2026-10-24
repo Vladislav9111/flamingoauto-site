@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Autode kokkuost Tallinnas ja üle Eesti | Flamingo Auto</title>
-    <meta name="description" content="Autode kokkuost Tallinnas ja üle Eesti. Saada auto andmed ja saa hinnapakkumine ühe tööpäeva jooksul. Dokumentide vormistamine ja makse tehingu sõlmimisel.">
-    <meta name="keywords" content="auto müük, müü auto, hinnapakkumine, osta autod, Flamingo Auto, Tallinn">
+    <meta name="description" content="Autode kokkuost Tallinnas ja üle Eesti. Saada auto number ja telefon ning saa pakkumine ühe tööpäeva jooksul. Lisainfo ja fotod on valikulised.">
     <link rel="canonical" href="https://flamingoauto.eu/">
         <link rel="alternate" hreflang="et-EE" href="https://flamingoauto.eu/">
     <link rel="alternate" hreflang="ru-EE" href="https://flamingoauto.eu/ru">
@@ -13,13 +12,13 @@
     <meta name="robots" content="index, follow">
     <meta property="og:site_name" content="Flamingo Auto">
     <meta property="og:title" content="Autode kokkuost Tallinnas ja üle Eesti | Flamingo Auto">
-    <meta property="og:description" content="Täida müügivorm ja saa aus hinnapakkumine ühe tööpäeva jooksul. Dokumentide vormistamine ning kohene makse.">
+    <meta property="og:description" content="Autode kokkuost Tallinnas ja üle Eesti. Saada auto number ja telefon ning saa pakkumine ühe tööpäeva jooksul. Lisainfo ja fotod on valikulised.">
     <meta property="og:image" content="https://flamingoauto.eu/static/images/flamingo-hero.png">
     <meta property="og:url" content="https://flamingoauto.eu/">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Müü oma auto kiiresti — Flamingo Auto">
-    <meta name="twitter:description" content="Täida müügivorm, saada hinnapakkumine ja korraldame tehingu kiiresti.">
+    <meta name="twitter:description" content="Autode kokkuost Tallinnas ja üle Eesti. Saada auto number ja telefon ning saa pakkumine ühe tööpäeva jooksul. Lisainfo ja fotod on valikulised.">
     <meta name="twitter:image" content="https://flamingoauto.eu/static/images/flamingo-hero.png">
 
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
@@ -31,186 +30,50 @@
     <link rel="preload" href="/static/fonts/noto-sans-v42-latin-afc7a910.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/style.css">
     <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "@id": "https://flamingoauto.eu/#website", "name": "Flamingo Auto", "url": "https://flamingoauto.eu/", "inLanguage": ["et-EE", "ru-EE"]}</script>
+    <link rel="stylesheet" href="/landing.css">
 </head>
-<body>
-    <a class="skip-link" href="#main-content">Liigu põhisisu juurde</a>
-
-    <header class="site-header" role="banner">
-        <div class="container">
-            <div class="hero-header">
-                <a class="logo" href="/">FLAMINGO AUTO</a>
-                <div class="lang-switch" role="tablist" aria-label="Language switch">
-                    <a class="lang-btn" href="/" aria-pressed="true" role="tab">ET</a>
-                    <a class="lang-btn" href="/ru" aria-pressed="false" role="tab">RU</a>
-                </div>
-            </div>
+<body class="landing-page">
+  <a class="skip-link" href="#main-content">Liigu põhisisu juurde</a>
+  <header class="site-header"><div class="container header-inner">
+    <a class="logo" href="/" aria-label="Flamingo Auto"><img class="brand-mark" src="/static/images/flamingo-mark.svg" width="28" height="32" alt="">FLAMINGO<span class="brand-auto">AUTO</span></a>
+    <nav class="primary-nav" aria-label="Peamenüü"><a href="#how-it-works">Kuidas müüa</a><a href="#faq">Küsimused</a><a href="/blog-et">Nõuanded</a></nav>
+    <nav class="lang-switch" aria-label="Veebilehe keel"><a class="lang-btn" href="/" lang="et" hreflang="et" aria-current="page">ET</a><a class="lang-btn" href="/ru" lang="ru" hreflang="ru">RU</a></nav>
+    <a class="header-cta" href="#form-container">Küsi hinnapakkumist<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </div></header>
+  <aside id="language-suggestion" hidden lang="ru"><div class="container"><p>Предпочитаете русский язык?</p><a href="/ru">Открыть русскую версию</a><button type="button" id="dismiss-language">Оставить эстонский</button></div></aside>
+  <main id="main-content" tabindex="-1">
+    <section class="landing-hero" aria-labelledby="hero-title"><div class="container hero-layout">
+      <div class="hero-copy"><p class="eyebrow">Autode kokkuost · Eesti</p><h1 id="hero-title">Müü oma auto<br><span>ilma liigse vaevata.</span></h1><p class="hero-intro">Autode kokkuost Tallinnas ja üle Eesti. Saada auto andmed — vastame pakkumisega ühe tööpäeva jooksul.</p>
+        <div class="hero-actions"><a class="btn btn-primary" href="#form-container">Küsi hinnapakkumist<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a><a class="text-link" href="#how-it-works">Kuidas see käib?</a></div>
+        <ul class="hero-facts"><li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 10 3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Üle Eesti</li><li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 10 3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Igas seisukorras</li><li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 10 3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Vastus tööpäeva jooksul</li></ul>
+      </div>
+      <div class="hero-art" aria-hidden="true"><span class="art-label">FLAMINGO AUTO</span><div class="art-orbit"></div><img src="/static/images/flamingo-hero.png" alt="" width="320" height="320" fetchpriority="high"><span class="art-spark">✳</span><p>Sinu auto.<br>Lihtsam järgmine samm.</p></div>
+    </div></section>
+    <section class="process-section" id="how-it-works" aria-labelledby="process-title"><div class="container"><div class="section-heading"><div><p class="eyebrow">Päringust tehinguni</p><h2 id="process-title">Kolm selget sammu</h2></div></div><ol class="process-steps"><li><span class="step-number">01</span><div><h3>Kirjelda oma autot</h3><p>Sisesta registreerimisnumber ja kontaktandmed. Lisainfo ja fotod võid lisada soovi korral.</p></div></li><li><span class="step-number">02</span><div><h3>Arutame pakkumist</h3><p>Vastame ühe tööpäeva jooksul. Täpsustame auto seisukorda ja müügitingimusi.</p></div></li><li><span class="step-number">03</span><div><h3>Lepime tehingu kokku</h3><p>Kui pakkumine sobib, lepime kokku auto üleandmise, dokumendid ja makse.</p></div></li></ol></div></section>
+    <section class="estimate-section" id="form-container" aria-labelledby="estimate-title"><div class="container estimate-layout">
+      <div class="estimate-aside"><p class="eyebrow">Päring kahe lihtsa sammuga</p><h2 id="estimate-title">Küsi pakkumist <br>oma autole.</h2><p class="estimate-intro">Alustuseks piisab auto registreerimisnumbrist ja telefonist. Pärast kontakti saatmist võid soovi korral lisada täpsemad andmed.</p><div class="next-step"><span aria-hidden="true">↗</span><h3>Mis saab edasi?</h3><p>Vaatame andmed üle ja võtame ühendust ühe tööpäeva jooksul. Auto asukoha ning edasised sammud lepime eraldi kokku.</p></div><div class="aside-contact"><p>Küsimus saadetud päringu kohta?</p><a href="mailto:lv.tallinn@gmail.com">lv.tallinn@gmail.com</a></div></div>
+      <div class="estimate-card"><div class="form-heading"><h3 id="form-heading" tabindex="-1">Alusta kontaktist</h3><p id="required-fields">Kaks kohustuslikku välja ja nõusolek ühenduse võtmiseks</p></div>
+      <ol class="step-indicator" aria-label="Päringu sammud"><li aria-current="step">Kontakt</li><li>Auto andmed</li></ol>
+      <form id="car-form" method="post" action="/api/lead/start" aria-describedby="required-fields" novalidate>
+        <div id="contact-stage" class="contact-stage"><fieldset><legend>Auto number ja telefon</legend><div class="form-grid"><div class="form-group"><label for="reg-number">Registreerimisnumber <span aria-hidden="true">*</span></label><input type="text" id="reg-number" name="reg-number" placeholder="123 ABC" required maxlength="20" autocapitalize="characters" spellcheck="false" autocomplete="off"></div><div class="form-group"><label for="phone">Telefon <span aria-hidden="true">*</span></label><input type="tel" id="phone" name="phone" placeholder="+372 …" required maxlength="30" autocomplete="tel" pattern="\+?[0-9 \(\)\-]{6,30}"></div></div></fieldset>
+        <p class="contact-explanation">Nupule vajutamisel edastatakse auto number ja telefon Flamingo Autole. Võime sinuga ühendust võtta ka siis, kui sa järgmist sammu ei täida.</p>
+        <label class="consent-row" for="contact-consent"><input id="contact-consent" name="consent" type="checkbox" value="contact" required><span>Soovin hinnapakkumist ja luban selle auto asjus ühendust võtta ka siis, kui ma täpsemaid andmeid ei lisa. <a href="/privacy" target="_blank" rel="noopener">Kuidas andmeid kasutame</a>.</span></label></div>
+        <div id="details-stage" class="details-stage" hidden><div class="contact-summary"><h4>Kontakt on juba saadetud</h4><p id="saved-contact"></p><p>Nüüd võid lisada auto andmed ja fotod. Kui lahkud neid lisamata, on põhikontakt juba ühenduse võtmiseks edastatud.</p><button type="button" id="edit-contact">Muuda kontakti</button></div>
+        <fieldset><legend>Täiendavad kontaktandmed <small>Valikuline</small></legend><div class="form-grid"><div class="form-group"><label for="name">Nimi</label><input type="text" id="name" name="name" placeholder="Kuidas sind kutsuda?"  maxlength="80" autocomplete="name"></div><div class="form-group"><label for="city">Auto asukoht</label><input type="text" id="city" name="city" placeholder="Tallinn"  maxlength="100" autocomplete="address-level2"></div><div class="form-group full-width"><label for="email">E-post</label><input type="email" id="email" name="email" placeholder="you@mail.com"  maxlength="254" autocomplete="email"></div></div></fieldset>
+        <details class="vehicle-details"><summary><span>Lisa auto kohta rohkem andmeid<small>Valikuline</small></span><b aria-hidden="true">+</b></summary><div class="form-grid"><div class="form-group"><label for="make">Mark</label><input type="text" id="make" name="make" placeholder="Volkswagen"  maxlength="80"></div><div class="form-group"><label for="model">Mudel</label><input type="text" id="model" name="model" placeholder="Golf"  maxlength="80"></div><div class="form-group"><label for="year">Väljalaskeaasta</label><input type="text" id="year" name="year" placeholder="2019"  inputmode="numeric" maxlength="4"></div><div class="form-group"><label for="mileage">Läbisõit, km</label><input type="text" id="mileage" name="mileage" placeholder="150 000"  inputmode="numeric" maxlength="12"></div><div class="form-group"><label for="transmission">Käigukast</label><input type="text" id="transmission" name="transmission" placeholder="Automaat / manuaal"  maxlength="40"></div><div class="form-group"><label for="engine">Mootor</label><input type="text" id="engine" name="engine" placeholder="Näiteks 1.9 diisel"  maxlength="80"></div><div class="form-group"><label for="price">Soovitud hind, €</label><input type="text" id="price" name="price" placeholder="5 000"  inputmode="decimal" maxlength="20"></div><div class="form-group full-width"><label for="note">Seisukord ja lisainfo</label><textarea id="note" name="note" rows="3" maxlength="1200" placeholder="Teadaolevad rikked, kahjustused või muu oluline info"></textarea></div></div></details>
+        <div class="photo-upload"><label for="photos">Auto fotod<small>Valikuline</small></label><p id="photo-hint">Kuni 6 fotot. Üldvaade, salong, armatuurlaud ja kahjustused. Kui fotosid pole, saab päringu saata ka ilma nendeta.</p><input type="file" id="photos" name="photos" multiple accept="image/*" aria-describedby="photo-hint photo-error"><div class="photo-selection-row"><p id="photo-selection" role="status">Fotosid pole valitud.</p><button type="button" id="clear-photos" hidden>Eemalda fotod</button></div><p id="photo-error" class="error-message" role="alert"></p></div>
         </div>
-    </header>
-
-    <main id="main-content" tabindex="-1">
-    <div class="hero">
-        <div class="container">
-            <div class="hero-header">
-                
-            </div>
-            <div class="hero-inner">
-                <div class="hero-content">
-                    <h1>Autode kokkuost Tallinnas<br>ja üle Eesti</h1>
-                    <p class="subtitle">Ilma liigse sebimiseta — vormistame dokumendid ja maksame kohe.</p>
-                    <p>Ostame autosid üle Eesti — sõltumata margist, mudelist või seisukorrast. Anname ausa hinnapakkumise ühe tööpäeva jooksul ja korraldame kõik toimingud kiiresti ja mugavalt.</p>
-                    <a href="#form-container" class="btn">Saada päring</a>
-                </div>
-                <div class="hero-image" aria-hidden="true">
-                    <img src="/static/images/flamingo-hero.png" alt="" width="320" height="320" fetchpriority="high" />
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="how-it-works">
-        <div class="container">
-            <div class="steps-container">
-                <div class="step">
-                    <h3>1. Täida vorm</h3>
-                    <p>Registreerimisnumber, mark ja mudel, aasta, läbisõit, käigukast.</p>
-                </div>
-                <div class="step">
-                    <h3>2. Saad hinnapakkumise</h3>
-                    <p>Anname hinna ühe tööpäeva jooksul.</p>
-                </div>
-                <div class="step">
-                    <h3>3. Tehing</h3>
-                    <p>Vormistame kõik dokumendid ja maksame raha kohe.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container" id="form-container">
-        <h2 class="quote-heading">Hinnapakkumise saamine</h2>
-        <p class="quote-sub">Vastame ühe tööpäeva jooksul</p>
-        <form id="car-form" method="post" action="/api/lead" novalidate>
-            <h2>Auto andmed</h2>
-            <div class="form-grid">
-                <div class="form-group full-width">
-                    <label for="reg-number">Registreerimisnumber*</label>
-                    <input type="text" id="reg-number" name="reg-number" required placeholder="123 ABC">
-                </div>
-                <div class="form-group">
-                    <label for="make">Mark</label>
-                    <input type="text" id="make" name="make" placeholder="Volkswagen">
-                </div>
-                <div class="form-group">
-                    <label for="model">Mudel</label>
-                    <input type="text" id="model" name="model" placeholder="Golf">
-                </div>
-                <div class="form-group">
-                    <label for="year">Väljalaskeaasta</label>
-                    <input type="text" id="year" name="year" inputmode="numeric" placeholder="2019">
-                </div>
-                <div class="form-group">
-                    <label for="mileage">Läbisõit</label>
-                    <input type="text" id="mileage" name="mileage" inputmode="numeric" placeholder="km">
-                </div>
-                <div class="form-group">
-                    <label for="transmission">Käigukast</label>
-                    <input type="text" id="transmission" name="transmission" placeholder="manuaal / automaat">
-                </div>
-                <div class="form-group">
-                    <label for="engine">Mootor</label>
-                    <input type="text" id="engine" name="engine" placeholder="nt 1.9 diisel / 2.5 bensiin">
-                </div>
-                <div class="form-group">
-                    <label for="price">Soovitud hind (€)</label>
-                    <input type="text" id="price" name="price" inputmode="decimal" placeholder="€">
-                </div>
-                <div class="form-group full-width">
-                    <label for="photos">Fotod (kuni 6)</label>
-                    <input type="file" id="photos" name="photos" multiple accept="image/*">
-                    <small class="photo-hint">Lisage kuni 6 fotot: väljast, seest ja armatuurlaualt.</small>
-                    <small id="photo-error" class="error-message"></small>
-                </div>
-            </div>
-
-            <h2>Kontaktandmed</h2>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="name">Nimi*</label>
-                    <input type="text" id="name" name="name" autocomplete="name" required placeholder="Teie nimi">
-                </div>
-                <div class="form-group">
-                    <label for="email">E-post*</label>
-                    <input type="email" id="email" name="email" autocomplete="email" required placeholder="teie@post.ee">
-                </div>
-                <div class="form-group">
-                    <label for="phone">Telefon*</label>
-                    <input type="tel" id="phone" name="phone" autocomplete="tel" required placeholder="+372 ...">
-                </div>
-                <div class="form-group">
-                    <label for="city">Linn*</label>
-                    <input type="text" id="city" name="city" autocomplete="address-level2" required placeholder="Tallinn">
-                </div>
-                <div class="form-group full-width">
-                    <label for="note">Lisainfo</label>
-                    <textarea id="note" name="note" rows="4" placeholder="Lisainfo..."></textarea>
-                </div>
-            </div>
-
-            <div class="form-trap" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
-            <div id="form-verification"></div>
-            <p id="form-status" role="status" aria-live="polite"></p>
-            <button type="submit" id="submit-btn" disabled>Saada päring</button>
-        <noscript><p>Päringu saatmiseks lubage JavaScript.</p></noscript>
-        </form>
-    </div>
-
-    <div id="popup" class="popup hidden">
-        <div class="popup-content">
-            <span class="close-btn">&times;</span>
-            <p>Teie ankeet on saadetud</p>
-        </div>
-    </div>
-
-
-    <section class="container seo-content" aria-labelledby="selling-guide">
-        <h2 id="selling-guide">Auto müük Flamingo Autole</h2>
-        <p>Ostame autosid Tallinnas ja üle Eesti, sõltumata margist, mudelist või seisukorrast. Hinnapakkumise küsimiseks saada registreerimisnumber ja kontaktandmed. Lisa võimalusel mark, mudel, aasta, läbisõit, asukoht ja soovitud hind.</p>
-        <h3>Mis aitab autot hinnata?</h3>
-        <p>Kirjelda auto seisukorda ja teadaolevaid vigu. Fotod kerest, salongist ning armatuurlauast aitavad hinnata autot enne edasiste sammude kokkuleppimist. Avariilise või mittesõitva auto puhul kirjelda kahjustusi ja märgi, kas auto liigub omal jõul.</p>
-        <h3>Millal saan vastuse?</h3>
-        <p>Vastame hinnapäringule ühe tööpäeva jooksul. Kui ettepanek sobib, lepime kokku tehingu üksikasjad, dokumentide vormistamise ja makse.</p>
-        <h3>Kas saan müüa autot väljaspool Tallinna?</h3>
-        <p>Jah, ostame autosid üle Eesti. Märgi vormis auto asukoht, et saaksime järgmised sammud kokku leppida.</p>
-        <p><a href="/blog-et">Loe nõuandeid auto müümise kohta</a> või <a href="#form-container">saada auto andmed</a>.</p>
-
-        <h3>Enne hinnapäringu saatmist</h3>
-        <ul><li><a href="/artiklid/1760961911148/">Millest sõltub auto hind?</a></li><li><a href="/artiklid/1761334391933/">Milliseid andmeid ja fotosid saata?</a></li><li><a href="/artiklid/1769328495200/">Avariilise või mittesõitva auto müük</a></li></ul>
-        <div class="contact-details" id="contacts"><h3>Kontakt</h3><p>Küsimused auto kohta või juba saadetud päringu täpsustamine: kirjuta meile e-postiga. Hinnapäringuks kasuta auto andmete vormi.</p><p><a href="mailto:lv.tallinn@gmail.com">lv.tallinn@gmail.com</a></p></div>
-    </section>
-
-    </main>
-
-    <footer class="site-footer">
-        <div class="container footer-inner">
-            <p>Flamingo Auto. Kõik õigused kaitstud. Tallinn, Eesti</p>
-            <a class="blog-btn" href="/blog-et" aria-label="Blog">Blogi</a>
-        </div>
-    </footer>
-
-    <script src="/script.js"></script>
-
-    <!-- Netlify Identity for admin access -->
-    <script>
-        if (window.netlifyIdentity) {
-            window.netlifyIdentity.on("init", user => {
-                if (!user) {
-                    window.netlifyIdentity.on("login", () => {
-                        document.location.href = "/admin/";
-                    });
-                }
-            });
-        }
-    </script>
-
+        <div class="form-trap" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+        <div id="form-verification"></div><p id="form-status" role="status" aria-live="polite">Valmistame turvalist saatmist ette…</p>
+        <button type="submit" id="submit-btn" disabled>Saada kontakt ja jätka</button><button type="button" id="finish-without-details" hidden>Lõpeta lisainfota</button><p class="form-data-note">Ära lisa isikuandmetega dokumente. Päringu küsimustes: <a href="mailto:lv.tallinn@gmail.com">lv.tallinn@gmail.com</a>. <a href="/privacy">Kuidas andmeid kasutame</a> · <a href="/terms">Päringu tingimused</a>.</p><noscript><p>Vormi saatmiseks luba JavaScript või kirjuta e-postiga.</p></noscript>
+      </form></div>
+    </div></section>
+    <section class="faq-section" id="faq" aria-labelledby="faq-title"><div class="container faq-layout"><div><p class="eyebrow">Vastused enne müüki</p><h2 id="faq-title">Korduma kippuvad küsimused</h2><p>Oluline info auto hindamise ja järgmiste sammude kohta.</p></div><div class="faq-list"><details class="faq-item" open><summary>Millal saan vastuse?<span aria-hidden="true">+</span></summary><div><p>Vastame päringule ühe tööpäeva jooksul. Kui pakkumine sobib, lepime kokku müügi üksikasjad, dokumendid ja makse.</p></div></details><details class="faq-item" ><summary>Millist autot võin pakkuda?<span aria-hidden="true">+</span></summary><div><p>Ootame päringuid eri marki, mudelit ja seisukorras autode kohta, sealhulgas avariilised ning mittesõitvad autod. Kirjelda seisukorda ja teadaolevaid rikkeid, et saaksime sinu autot täpsemalt arutada.</p></div></details><details class="faq-item" ><summary>Kas päringu saatmiseks on fotod vajalikud?<span aria-hidden="true">+</span></summary><div><p>Ei, fotod on valikulised. Võimaluse korral lisa kuni kuus fotot: üldvaade, salong, armatuurlaud ja kahjustused. Need aitavad hinnangut täpsustada.</p></div></details><details class="faq-item" ><summary>Millest sõltub hinnapakkumine?<span aria-hidden="true">+</span></summary><div><p>Margist ja mudelist, väljalaskeaastast, läbisõidust, seisukorrast, riketest ja komplektsusest. Lisa täiendavatesse andmetesse teadaolevad eripärad ning soovitud hind.</p></div></details><details class="faq-item" ><summary>Kas saan müüa auto väljaspool Tallinna?<span aria-hidden="true">+</span></summary><div><p>Jah, ostame autosid üle Eesti. Lisa päringusse linn või auto asukoht. Ülevaatuse ja üleandmise tingimused lepime eraldi kokku.</p></div></details><details class="faq-item" ><summary>Mida teha, kui auto ei sõida?<span aria-hidden="true">+</span></summary><div><p>Märgi see lisainfosse. Kirjelda riket, parkimiskohta ja ligipääsu. Transpordi võimaluse ning tingimused arutame eraldi läbi; tasuta vedu ei lubata ette.</p></div></details><details class="faq-item" ><summary>Kuidas juba saadetud päringut täpsustada?<span aria-hidden="true">+</span></summary><div><p>Kirjuta aadressil <a href="mailto:lv.tallinn@gmail.com">lv.tallinn@gmail.com</a> ja lisa päringus olnud auto registreerimisnumber. Ära saada teiste inimeste isikuandmetega dokumente.</p></div></details></div></div></section>
+    <section class="guides-section" aria-labelledby="guides-title"><div class="container"><div class="section-heading"><div><p class="eyebrow">Valmistu müügiks</p><h2 id="guides-title">Hea teada enne müüki</h2></div><a class="text-link" href="/blog-et">Kõik nõuanded<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div><div class="guide-grid"><a class="guide-card" href="/artiklid/1760961911148/"><span class="guide-index">01</span><h3>Millest sõltub auto hind?</h3><p>Mida kokkuostupakkumiste võrdlemisel arvestada.</p><span class="guide-link">Loe nõuannet<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a><a class="guide-card" href="/artiklid/1761334391933/"><span class="guide-index">02</span><h3>Millised andmed ja fotod lisada?</h3><p>Lühike nimekiri auto sisuliseks hindamiseks.</p><span class="guide-link">Loe nõuannet<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a><a class="guide-card" href="/artiklid/1769328495200/"><span class="guide-index">03</span><h3>Kui auto on kahjustatud</h3><p>Mida avariilise või mittesõitva auto kohta kirjeldada.</p><span class="guide-link">Loe nõuannet<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></div></div></section>
+  </main>
+  <footer class="site-footer"><div class="container footer-main"><div><a class="logo" href="/">FLAMINGO<span class="brand-auto">AUTO</span></a><p>Autode kokkuost Tallinnas ja üle Eesti.</p></div><div><p class="footer-label">Võta ühendust</p><a href="mailto:lv.tallinn@gmail.com">lv.tallinn@gmail.com</a></div><nav aria-label="Peamenüü"><a href="#faq">Küsimused</a><a href="/blog-et">Auto müügi nõuanded</a><a href="/privacy">Kuidas andmeid kasutame</a><a href="/terms">Päringu tingimused</a></nav></div><div class="container footer-bottom"><span>Flamingo Auto · Eesti</span><a href="#form-container">Küsi hinnapakkumist ↗</a></div></footer>
+  <dialog id="popup" class="success-dialog" aria-labelledby="success-title"><span class="success-icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 10 3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><h2 id="success-title">Päring on saadetud</h2><p>Aitäh! Vastame ühe tööpäeva jooksul.</p><button type="button" class="close-btn">Selge</button></dialog>
+  <script src="/language.js" defer></script>
+  <script src="/script.js" defer></script>
 </body>
 </html>
