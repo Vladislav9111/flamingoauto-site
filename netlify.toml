@@ -55,7 +55,7 @@
 
 # Keep deploy previews and non-production branches out of search results.
 [context.deploy-preview]
-  command = "npm run test:security && npm run build:preview"
+  command = "node scripts/check-lead-services.mjs && npm run test:security && npm run build:preview"
 
 [context.branch-deploy]
   command = "npm run test:security && npm run build:preview"
