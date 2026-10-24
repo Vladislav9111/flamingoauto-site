@@ -1,10 +1,16 @@
 {
   "id": 1761334391933,
-  "title": "Müü oma auto kiiresti ja turvaliselt koos Flamingoautoga",
-  "excerpt": "Aitame autoomanikel üle Eesti oma sõidukid müüa ilma liigse vaevata — ausa hindamise, kohaletuleku ja kohese maksega.",
-  "content": "Flamingoauto on usaldusväärne autode kokkuostu teenus Eestis. Töötame kiiresti, ausalt ja ilma vahendajateta. Piisab vaid sellest, kui saadad taotluse meie veebilehe kaudu, sisestad auto andmed ja saad pakkumise juba ühe tunni jooksul. Meie spetsialist tuleb kohale Tallinna ja Harjumaa piires, teeb ülevaatuse ja vormistab kõik dokumendid. Raha saad kohe pärast tehingut. Ostame nii sõiduautosid kui ka kaubikuid, samuti avariilisi või tehniliste probleemidega sõidukeid. Läbipaistvad tingimused, õiglane hind ja kliendi mugavus teevad Flamingoautost ühe usaldusväärseima partneri Eestis.",
+  "title": "Milliseid andmeid ja fotosid on auto hindamiseks vaja?",
+  "excerpt": "Hinnapäringu kontrollnimekiri: auto andmed, vigade kirjeldus, kuni kuus fotot ja toimivad kontaktandmed.",
+  "content": "Sisukas päring aitab autot arutada ilma pika kirjavahetuseta põhiandmete üle. Professionaalset fotosessiooni ei ole vaja: piisab arusaadavast kirjeldusest ja mõnest informatiivsest pildist.\n\n## Millised väljad on kohustuslikud?\nFlamingo Auto vormis on vaja registreerimisnumbrit, nime, e-posti, telefoni ja linna. Kontrolli kontaktandmed enne saatmist üle: vale number või aadress raskendab vastamist. Märgi linn, kus auto asub, mitte ainult oma elukoht.\n\n## Millist infot tasub lisada?\n- Mark, mudel ja väljalaskeaasta.\n- Läbisõit ja käigukasti tüüp.\n- Mootor ja kütus, kui need on teada.\n- Kere seisukord ja peamised vead.\n- Soovitud hind.\n\nErista kirjelduses teadaolevaid fakte oletustest. Näiteks «mootor ei käivitu alates septembrist» on täpsem kui «vajab väikest remonti», kui diagnostikat ei ole tehtud.\n\n## Milliseid fotosid valida?\nVormi saab lisada kuni kuus fotot. Alusta auto üldvaadetest ning lisa salong, armatuurlaud ja olulise puuduse lähivõte. Pildista hea valgusega ning kontrolli, et vajalik detail oleks terav.\n\nFotod ei ole kohustuslikud. Kui neid veel ei ole, saada kirjeldus ja aruta lisainfot vastuse saamisel. Esialgse hindamise jaoks ära lisa isikuandmeid sisaldavaid dokumente ega pangarekvisiite.\n\n## Kuidas saatmist kontrollida?\nPärast täitmist oota Cloudflare'i kontrolli ning vajuta saatmisnuppu üks kord. Lehel kuvatav kinnitus tähendab, et vorm on vastu võetud. Veateate korral loe sõnumit ning paranda näidatud väli või korda kontrolli.\n\nJuba saadetud päringu kohta kirjuta veebilehe kontaktmeilile. Ära saada järjest mitut ühesugust vormi.",
   "created": "2025-10-24T19:33:11.933Z",
   "locale": "et",
   "photos": [],
-  "author": "Flamingo Auto"
+  "author": "Flamingo Auto",
+  "updated": "2026-10-24",
+  "related": [
+    "1760961911148",
+    "1769328495200"
+  ],
+  "translation": "1761334331835"
 }

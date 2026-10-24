@@ -669,7 +669,16 @@ a {
 .seo-content h3 { margin-top: 1.2rem; }
 .seo-content p, .article-content p { margin-bottom: 1rem; }
 .article-content { max-width: 850px; overflow-wrap: anywhere; }
-.article-content .post-body { white-space: pre-line; }
+.article-content .post-body { line-height: 1.75; }
+.article-content .post-body h2 { margin: 2rem 0 0.8rem; font-size: 1.45rem; }
+.article-content ul, .seo-content ul { padding-left: 1.4rem; margin-bottom: 1.2rem; }
+.article-content li { margin-bottom: 0.5rem; }
+.article-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.article-breadcrumbs, .article-date { margin-bottom: 1rem; }
+.article-date { color: #555; }
+.article-related, .article-references { padding-top: 1rem; margin-top: 1.5rem; border-top: 1px solid #ddd; }
+.contact-details { margin-top: 1.5rem; }
+.contact-details a { overflow-wrap: anywhere; }
 .post-card { padding: 1.5rem; margin: 1rem 0; background: #fff; border-radius: 8px; }
 .post-card h2 { font-size: 1.25rem; }
 .post-card time { color: #555; }
