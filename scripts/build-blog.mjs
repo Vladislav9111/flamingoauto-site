@@ -103,6 +103,7 @@ ${languageLinks}
   <meta property="og:url" content="${site}${url}">
   <meta property="og:description" content="${escape(post.excerpt || '')}">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preload" href="/static/fonts/noto-sans-v42-latin-afc7a910.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
