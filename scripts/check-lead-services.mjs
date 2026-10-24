@@ -1,4 +1,3 @@
-import { createHmac } from 'node:crypto';
 // Read-only build checks. Never log provider bodies or credentials.
 // This script is excluded from the public output directory.
 if (!['production', 'deploy-preview'].includes(process.env.CONTEXT)) {
@@ -36,14 +35,5 @@ if (!['production', 'deploy-preview'].includes(process.env.CONTEXT)) {
       !validation['error-codes']?.some(code => ['invalid-input-secret', 'missing-input-secret'].includes(code));
   } catch { result.turnstile_check_unavailable = true; }
   console.log('FLAMINGO_SERVICE_CHECK ' + JSON.stringify(result));
-  // Temporary incident comparison: keyed, irreversible tags only. The random
-  // session key is shared by these two contexts; tags cannot reveal credentials.
-  const compareKey = process.env.FLAMINGO_ADMIN_SESSION_SECRET;
-  if (compareKey && compareKey.length >= 64) {
-    const tag = value => createHmac('sha256', compareKey).update(value || '').digest('hex');
-    console.log('FLAMINGO_CONTEXT_CHECK ' + JSON.stringify({ context: process.env.CONTEXT,
-      key: tag('flamingo-private-context-comparison'), bot: tag(process.env.FLAMINGO_TELEGRAM_BOT_TOKEN),
-      recipient: tag(process.env.FLAMINGO_TELEGRAM_CHAT_ID), turnstile: tag(process.env.FLAMINGO_TURNSTILE_SECRET_KEY) }));
-  }
   if (!result.bot_identity || !result.recipient_access || !result.turnstile_secret) process.exitCode = 1;
 }
