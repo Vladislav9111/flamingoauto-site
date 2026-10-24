@@ -50,7 +50,8 @@
 
 
 # Server settings are documented in docs/security-release.md.
-# Set credentials in the Netlify UI, scoped to Functions; never in this file.
+# Set credentials in the Netlify UI; prefer Functions scope where available.
+# Free-plan automatic scopes are allowed; never embed credentials in this file.
 
 # Keep deploy previews and non-production branches out of search results.
 [context.deploy-preview]

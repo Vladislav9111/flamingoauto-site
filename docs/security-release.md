@@ -12,7 +12,7 @@ Browser password comparisons, default passwords, unauthenticated credential-rese
 
 ## Owner setup in this Netlify project only
 
-Set new values in **Environment variables**, scoped to **Functions**, with secret values marked secret. Never use `VITE_`, `NEXT_PUBLIC_`, browser scripts or frontend build substitution. Do not copy secrets into `netlify.toml`.
+Set new values in **Environment variables**, scoped to **Functions** where the plan supports it, with secret values marked secret. This project's free plan locks scope selection; **All scopes** is acceptable without upgrading because the reviewed static build does not substitute environment values into public files and only server functions read credentials. Never use `VITE_`, `NEXT_PUBLIC_`, browser scripts or frontend build substitution. Do not copy secrets into `netlify.toml`.
 
 | Variable | Meaning |
 |---|---|
